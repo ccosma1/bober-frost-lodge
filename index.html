@@ -114,7 +114,7 @@
     #pred-read, #night-pred { font-size: 16px; }
     #pred-read.hidden, #dam-read.hidden, #night-panel.hidden, #status-row[hidden] { display: none !important; }
     #stage {
-      flex: 1 1 62%; min-height: 58%; min-width: 0; width: 100%;
+      flex: 1 1 58%; min-height: 55%; min-width: 0; width: 100%;
       position: relative; z-index: 1; background: var(--sky);
       display: flex; align-items: center; justify-content: center;
     }
@@ -145,36 +145,40 @@
       flex: 0 0 auto; background: #1A1028;
       padding: 4px 6px 4px; z-index: 20; position: relative;
       display: flex; flex-direction: column; gap: 4px; pointer-events: auto;
-      max-height: 26%; overflow-x: hidden; overflow-y: auto; min-height: 0;
+      max-height: 32%; overflow: hidden; min-height: 0;
     }
     #job-board {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
-      width: 100%; max-height: 72px; overflow-y: auto; justify-items: stretch;
+      display: flex; flex-direction: column; gap: 4px;
+      width: 100%; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto;
     }
     #job-board.hidden { display: none; }
     .crew-card {
-      background: #3A2A6A; border: 2px solid #5C3A1A; border-radius: 8px;
-      padding: 3px 3px 4px; display: flex; flex-direction: row; flex-wrap: wrap;
-      align-items: center; justify-content: center; gap: 2px 4px;
-      min-width: 0; width: 100%;
+      background: #3A2A6A; border: 2px solid #5C3A1A; border-radius: 10px;
+      padding: 4px 6px; display: grid;
+      grid-template-columns: 40px minmax(48px, 62px) 1fr;
+      align-items: center; gap: 6px;
+      min-width: 0; width: 100%; min-height: 56px; height: 60px;
+      flex: 0 0 auto;
     }
     .crew-card.sel { border-color: var(--yellow); box-shadow: 0 0 0 1px #F5C40055; }
-    .crew-card img { width: 32px; height: 32px; object-fit: contain; pointer-events: none; flex: 0 0 auto; }
-    .crew-card .nm { font-weight: 900; font-size: 9px; color: var(--yellow); letter-spacing: 0.03em; line-height: 1.1; }
-    .crew-card .st { font-size: 8px; font-weight: 800; color: var(--cream); line-height: 1.1; }
+    .crew-card img { width: 40px; height: 40px; object-fit: contain; pointer-events: none; }
+    .crew-card .meta { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .crew-card .nm { font-weight: 900; font-size: 11px; color: var(--yellow); letter-spacing: 0.03em; line-height: 1.15; }
+    .crew-card .st { font-size: 10px; font-weight: 800; color: var(--cream); line-height: 1.1; }
     .crew-card .st.hurt { color: var(--danger); }
-    .crew-card .tr { display: none; }
-    .jobs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 100%; }
+    .jobs { display: flex; gap: 3px; width: 100%; justify-content: flex-end; align-items: center; min-width: 0; }
     .jobs button {
-      min-height: 22px; height: 22px; border: 2px solid var(--fur-dark); background: var(--fur);
-      color: var(--cream); border-radius: 5px; font-weight: 800; font-size: 8px;
-      letter-spacing: 0.01em; cursor: pointer; padding: 0 1px;
+      width: 36px; min-width: 36px; height: 36px; min-height: 36px; flex: 0 0 36px;
+      border: 2px solid var(--fur-dark); background: var(--fur);
+      color: var(--cream); border-radius: 8px; font-weight: 800; font-size: 9px;
+      letter-spacing: 0.01em; cursor: pointer; padding: 0;
     }
-    .jobs button.on { border-color: var(--yellow); background: var(--yellow); color: var(--ink); }
+    .jobs button.on { border-color: var(--yellow); background: var(--yellow); color: var(--ink); box-shadow: 0 0 0 2px #F5C40088; }
     .jobs button:disabled { opacity: 0.35; cursor: default; }
-    .jobs button.need { font-size: 7px; letter-spacing: 0; border-color: var(--ice); color: var(--ice); }
+    .jobs button.need { width: auto; min-width: 36px; flex: 1 1 auto; font-size: 8px; padding: 0 4px; border-color: var(--ice); color: var(--ice); }
     #btn-phase, #btn-stoke {
-      width: 100%; height: 44px; min-height: 44px; max-height: 44px; border: 3px solid var(--yellow); background: var(--yellow);
+      width: 100%; height: 44px; min-height: 44px; max-height: 44px; flex: 0 0 44px;
+      border: 3px solid var(--yellow); background: var(--yellow);
       color: var(--ink); border-radius: 10px; font-weight: 900; font-size: 16px;
       letter-spacing: 0.04em; cursor: pointer; display: flex; flex-direction: row;
       align-items: center; justify-content: center; gap: 8px; line-height: 1.1;
@@ -294,7 +298,6 @@
         <div class="chip fish" id="chip-fish">F 0</div>
         <div class="chip sap" id="chip-sap">SA 0</div>
         <div class="chip stone" id="chip-stone">ST 0</div>
-        <div class="chip heat" id="chip-heat">H 80%</div>
       </div>
       <div class="btns">
         <button class="icon-btn" id="btn-speed" title="Speed" aria-label="Speed">×1</button>
@@ -1113,8 +1116,6 @@
     document.getElementById("chip-sap").textContent = sapTxt;
     document.getElementById("chip-stone").textContent = "ST " + Math.floor(state.stone);
     var h = Math.round(state.heat);
-    var heatEl = document.getElementById("chip-heat");
-    heatEl.textContent = "Heat " + h + "%";
     var heatRead = document.getElementById("heat-read");
     heatRead.textContent = "Heat " + h + "%";
     var bar = document.getElementById("heatbar");
@@ -1123,7 +1124,6 @@
     bar.classList.toggle("low", state.heat < 30);
     var wont = predictedHeat(0) <= 0;
     bar.classList.toggle("kill", wont);
-    heatEl.classList.toggle("low", state.heat < 30 || wont);
     heatRead.classList.toggle("low", state.heat < 30 || wont);
     document.getElementById("btn-speed").textContent = "×" + state.speed;
     document.getElementById("btn-speed").classList.toggle("on", state.speed > 1);
@@ -1203,7 +1203,6 @@
     document.getElementById("night-panel").classList.toggle("hidden", !night);
     var board = document.getElementById("job-board");
     board.innerHTML = "";
-    board.style.gridTemplateColumns = "repeat(" + Math.min(3, Math.max(1, state.beavers.length)) + ", 1fr)";
     if (!dawn) return;
     state.beavers.forEach(function (b) {
       var card = document.createElement("div");
@@ -1211,21 +1210,21 @@
       var img = document.createElement("img");
       img.src = b.id === "bober" ? SPR_SRC.hat : SPR_SRC.idle;
       img.alt = b.name; img.style.filter = crewFilter(b);
+      var meta = document.createElement("div"); meta.className = "meta";
       var nm = document.createElement("div"); nm.className = "nm";
       nm.textContent = b.trait ? (b.name + " · " + b.trait) : b.name;
-      card.appendChild(img); card.appendChild(nm);
-      if (b.status !== "ok") {
-        var st = document.createElement("div");
-        st.className = "st hurt";
-        st.textContent = b.status === "down" ? "DOWN" : "INJURED";
-        card.appendChild(st);
-      }
+      var st = document.createElement("div");
+      st.className = "st" + (b.status !== "ok" ? " hurt" : "");
+      st.textContent = b.status === "down" ? "DOWN" : (b.status === "injured" ? "INJURED" : (JOB_LBL[b.job] || ""));
+      meta.appendChild(nm); meta.appendChild(st);
+      card.appendChild(img); card.appendChild(meta);
       var jobs = document.createElement("div"); jobs.className = "jobs";
       JOBS.forEach(function (j) {
         var btn = document.createElement("button");
         btn.type = "button";
         if (j === "miner" && !hasBuilding("quarry")) {
-          btn.textContent = "Need Quarry Bench";
+          btn.textContent = "Need Quarry";
+          btn.title = "Need Quarry Bench";
           btn.classList.add("need");
         } else {
           btn.textContent = JOB_LBL[j];
@@ -1801,8 +1800,8 @@
     var h = app.clientHeight || 640;
     var stage = document.getElementById("stage");
     var dock = document.getElementById("dock");
-    stage.style.minHeight = Math.floor(h * 0.58) + "px";
-    dock.style.maxHeight = Math.floor(h * 0.26) + "px";
+    stage.style.minHeight = Math.floor(h * 0.55) + "px";
+    dock.style.maxHeight = Math.floor(h * 0.32) + "px";
   }
   function resize() {
     layoutChrome();
