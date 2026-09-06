@@ -74,7 +74,28 @@ def main() -> int:
         "After the dam, winter came looking for a hearth.",
         "HOLD THE FIRE.",
         "assets/history/f0.jpg",
+        "assets/history/a0.jpg",
+        "assets/cameos/e50.jpg",
+        "assets/cameos/e75-check.jpg",
+        "assets/cameos/e75-drill.jpg",
+        "assets/cameos/e100.jpg",
         "bober-history-v1",
+        "AFTER THE FREEZE",
+        "John Snow from the white. Bober nodded. Nobody asked.",
+        "Checklist: wood · fire · nerve.",
+        "John Snow drilled the cold out of Bober — almost.",
+        "Fire held. Frost King cracked.",
+        "Two legends, one lodge — winter blinked first.",
+        "The lodge warmed. Folks started calling it a green home.",
+        "Something small. Something heavy. Not wood.",
+        "A grey wanderer leaned on a stick. Quiet place, he said.",
+        "Ash lands wait. Blade first. The long road after.",
+        "afterFreezeUnlock",
+        "maybeEndlessCameo",
+        "CAMEO_BEATS",
+        "state.day >= 50",
+        "state.day >= 75",
+        "state.day >= 100",
         "#241848",
         "chip-fork",
         "pulse-kill",
@@ -106,7 +127,7 @@ def main() -> int:
     if "d *= 0.6;" in text:
         errors.append("old tender ×0.6 still live")
 
-    banned = ["wallet", "gacha", "nickname", "leaderboard", "connect wallet"]
+    banned = ["wallet", "gacha", "nickname", "leaderboard", "connect wallet", "Night King"]
     low = text.lower()
     for s in banned:
         if s.lower() in low:
@@ -144,9 +165,12 @@ def main() -> int:
     if start_st - quarry + mined < 12:
         errors.append("beacon stone unreachable on a normal miner")
 
-    for name in ("f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg"):
+    for name in ("f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg", "a0.jpg", "a1.jpg", "a2.jpg", "a3.jpg"):
         if not (ROOT / "assets" / "history" / name).exists():
             errors.append(f"missing history still {name}")
+    for name in ("e50.jpg", "e75-check.jpg", "e75-drill.jpg", "e100.jpg"):
+        if not (ROOT / "assets" / "cameos" / name).exists():
+            errors.append(f"missing cameo still {name}")
 
     if errors:
         print("PLAYTEST FAIL")

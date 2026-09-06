@@ -286,6 +286,33 @@
     }
     #hist-skip:active { filter: brightness(0.85); }
     #hist-skip:disabled { opacity: 0.35; cursor: default; }
+    #cameo {
+      z-index: 30; justify-content: center; align-items: center; cursor: pointer;
+      background: rgba(26, 16, 40, 0.55); padding: 12px;
+    }
+    #cameo .cameo-stage {
+      position: relative; display: flex; flex-direction: column;
+      width: min(960px, 92vw); height: min(72vh, 620px); overflow: hidden;
+      border-radius: 14px; box-shadow: 0 10px 36px #0009; background: #1A1028;
+    }
+    #cameo img.hero {
+      position: relative; flex: 1 1 auto; width: 100%; min-height: 0;
+      object-fit: contain; z-index: 1; background: #1A1028;
+    }
+    #cameo .cameo-bar {
+      position: relative; flex: 0 0 auto; min-height: 72px; z-index: 2;
+      background: rgba(58, 42, 106, 0.92);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 10px 14px 12px;
+    }
+    #cameo .cameo-line {
+      margin: 0; max-width: 36em; width: 100%;
+      font-size: clamp(14px, 3.4vw, 19px); font-weight: 900; line-height: 1.2;
+      color: var(--yellow); text-shadow: 0 2px 0 #1A1028; text-align: center;
+    }
+    #cameo .cameo-skip {
+      margin: 0; font-size: 11px; font-weight: 700; color: var(--cream); opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -422,6 +449,15 @@
       </div>
     </div>
     <footer>Also play · <a href="https://ccosma1.github.io/bober-yeet/">Yeet</a> · <a href="https://ccosma1.github.io/bober-dam-defense/">Dam Defense</a></footer>
+    <div id="cameo" class="overlay hidden" role="dialog" aria-label="Cameo">
+      <div class="cameo-stage">
+        <img id="cameo-img" class="hero" alt="" />
+        <div class="cameo-bar">
+          <p class="cameo-line" id="cameo-line"></p>
+          <p class="cameo-skip">tap to continue</p>
+        </div>
+      </div>
+    </div>
   </div>
   <script>
 (function () {
@@ -486,6 +522,7 @@
   var viewScale = 1, viewOx = 0, viewOy = 0;
   var playing = false, paused = false, lastTs = 0, clock = 0;
   var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
+  var cameoLock = false, cameoTimer = 0, cameoDone = null, cameoSkipArmed = 0;
   var snow = [], pops = [], embers = [], streaks = [], sparkles = [];
   var padPop = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   var bannerQ = [], bannerTimer = 0, SPR = {};
@@ -559,7 +596,8 @@
       beavers: newBeavers(),
       speed: 1, ended: null, nightDrain: 0, fedTonight: false, dawnHint: true,
       beaconUsedNight: false, beaconJoke: false, damBonus: false, fork: null, fork18: null, lodgeLevel: 1, acts: {},
-      endless: false, padsN: 8, endlessIntro: false
+      endless: false, padsN: 8, endlessIntro: false,
+      cameos: {}, afterFreezeUnlock: false
     };
   }
 
@@ -603,7 +641,8 @@
         nightDrain: state.nightDrain, fedTonight: state.fedTonight, dawnHint: state.dawnHint,
         beaconUsedNight: state.beaconUsedNight, beaconJoke: state.beaconJoke, damBonus: state.damBonus,
         fork: state.fork || null, fork18: state.fork18 || null, lodgeLevel: lodgeLevel(), acts: state.acts || {},
-        endless: !!state.endless, padsN: padCount(), endlessIntro: !!state.endlessIntro
+        endless: !!state.endless, padsN: padCount(), endlessIntro: !!state.endlessIntro,
+        cameos: state.cameos || {}, afterFreezeUnlock: !!state.afterFreezeUnlock
       }));
     } catch (e) {}
   }
@@ -628,8 +667,10 @@
       state.fork = d.fork === "stockpile" || d.fork === "scout" ? d.fork : null;
       state.fork18 = d.fork18 === "reinforce" || d.fork18 === "expand" ? d.fork18 : null;
       state.acts = d.acts && typeof d.acts === "object" ? d.acts : {};
-      state.endless = !!d.endless;
-      state.endlessIntro = !!d.endlessIntro;
+      state.endless = false;
+      state.endlessIntro = false;
+      state.cameos = {};
+      state.afterFreezeUnlock = afterFreezeUnlocked();
       state.padsN = typeof d.padsN === "number" ? clamp(d.padsN, 8, 12) : (state.fork18 === "expand" ? 9 : 8);
       while (state.buildings.length < padCount()) state.buildings.push(null);
       if (!isEndless() && state.fork18 !== "expand") state.buildings = state.buildings.slice(0, 8);
@@ -943,6 +984,7 @@
       if (!isEndless() && state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false; }
       if (forkPending()) showFork("pick");
       if (fork18Pending()) showFork18();
+      maybeEndlessCameo();
     } else {
       dawnGoT = -1;
     }
@@ -1019,7 +1061,8 @@
         nightDrain: 0, fedTonight: false, dawnHint: false,
         beaconUsedNight: false, beaconJoke: state.beaconJoke, damBonus: state.damBonus,
         fork: state.fork || null, fork18: state.fork18 || null, lodgeLevel: lodgeLevel(), acts: {},
-        endless: true, padsN: padCount(), endlessIntro: false
+        endless: true, padsN: padCount(), endlessIntro: false,
+        cameos: state.cameos || {}, afterFreezeUnlock: !!state.afterFreezeUnlock
       };
       localStorage.setItem(ENDLESS_KEY, JSON.stringify(snap));
     } catch (e) {}
@@ -1042,6 +1085,8 @@
     state.speed = d.speed === 4 || d.speed === 2 ? d.speed : 1;
     state.ended = null; state.endlessIntro = !!d.endlessIntro;
     state.damBonus = !!d.damBonus; Sfx.muted = !!d.muted;
+    state.cameos = d.cameos && typeof d.cameos === "object" ? d.cameos : {};
+    state.afterFreezeUnlock = !!d.afterFreezeUnlock || afterFreezeUnlocked();
     if (Array.isArray(d.beavers) && d.beavers.length >= 3) {
       state.beavers = d.beavers.map(function (s, i) {
         return {
@@ -1061,7 +1106,7 @@
         var saved = JSON.parse(raw);
         applyEndlessData(saved);
         if (saved.ended === "lose") { retryEndless(); return; }
-      } catch (e) { applyEndlessData({ buildings: state.buildings, beavers: state.beavers, padsN: padCount(), heat: state.heat, wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone, syrup: state.syrup, rations: state.rations, fork: state.fork, fork18: state.fork18, damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed }); }
+      } catch (e) { applyEndlessData({ buildings: state.buildings, beavers: state.beavers, padsN: padCount(), heat: state.heat, wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone, syrup: state.syrup, rations: state.rations, fork: state.fork, fork18: state.fork18, damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed, cameos: state.cameos || {}, afterFreezeUnlock: !!state.afterFreezeUnlock }); }
     } else {
       snapshotEndless();
       applyEndlessData({
@@ -1088,7 +1133,8 @@
     applyEndlessData({
       day: 1, buildings: blds, beavers: crew, padsN: padsN, fork: fork, fork18: fork18,
       wood: 20, fish: 12, sap: 10, stone: 10, syrup: 0, rations: 0, heat: 70,
-      damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed, endlessIntro: true
+      damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed, endlessIntro: true,
+      cameos: state.cameos || {}, afterFreezeUnlock: !!state.afterFreezeUnlock
     });
     playing = true; paused = false; state.ended = null;
     document.getElementById("endcard").classList.add("hidden");
@@ -1150,6 +1196,7 @@
     hud(); save();
   }
   function fireBeacon() {
+    if (cameoLock || historyOpen()) return;
     if (state.ended || !playing) return;
     if (state.phase !== "night") { banner("Fire the Beacon at night.", 1600); return; }
     if (!hasBuilding("beacon")) { banner("Build a Beacon Tower first.", 1600); return; }
@@ -1171,12 +1218,14 @@
     hud(); save();
   }
   function canNightAct() {
+    if (cameoLock || historyOpen()) return false;
     if (state.ended || !playing) return false;
     if (state.phase !== "dusk" && state.phase !== "night") { banner("Stoke at dusk and night.", 1400); return false; }
     return true;
   }
 
   function assignJob(id, job) {
+    if (cameoLock || historyOpen()) return;
     if (state.phase !== "dawn" || state.ended) return;
     var b = state.beavers.find(function (x) { return x.id === id; });
     if (!b || b.status === "down") return;
@@ -1286,6 +1335,7 @@
   }
 
   function skipDawn() {
+    if (cameoLock || historyOpen()) return;
     if (state.phase !== "dawn" || state.ended) return;
     if (forkPending()) { showFork("pick"); return; }
     if (fork18Pending()) { showFork18(); return; }
@@ -1295,6 +1345,9 @@
 
   function hardReset() {
     var muted = Sfx.muted;
+    if (cameoTimer) { clearTimeout(cameoTimer); cameoTimer = 0; }
+    cameoLock = false; cameoDone = null;
+    if (cameoEl) cameoEl.classList.add("hidden");
     Sfx.stopWind(); wipeSave(); state = newState(); applyDamBonus(); Sfx.muted = muted;
     paused = false; playing = true; bannerQ = []; hideBanner();
     document.getElementById("endcard").classList.add("hidden");
@@ -2145,7 +2198,7 @@
     return { x: (x - viewOx) / viewScale, y: (y - viewOy) / viewScale };
   }
   function onCanvasTap(ev) {
-    if (!playing || paused || state.ended) return;
+    if (!playing || paused || state.ended || cameoLock || historyOpen()) return;
     Sfx.ensure();
     var p = canvasPos(ev);
     var hit = -1;
@@ -2169,7 +2222,7 @@
     requestAnimationFrame(loop);
     if (!lastTs) lastTs = ts;
     var dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
-    if (playing && !paused && !state.ended) {
+    if (playing && !paused && !state.ended && !cameoLock && !historyOpen()) {
       var step = dt * state.speed; clock += step;
       tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step);
       if (bannerTimer && clock > bannerTimer) hideBanner();
@@ -2179,7 +2232,7 @@
     draw();
   }
 
-  var HIST_BEATS = [
+  var HIST_FREEZE = [
     { src: "assets/history/f0.jpg", line: "After the dam, winter came looking for a hearth.", t: 0 },
     { src: "assets/history/f1.jpg", line: "Frost Lodge kept one flame. That was the deal.", t: 5.5 },
     { src: "assets/history/f2.jpg", line: "Whiteouts ate the map. Beavers stayed.", t: 11 },
@@ -2187,16 +2240,67 @@
     { src: "assets/history/f4.jpg", line: "Then the freeze learned the door.", t: 22 },
     { src: "assets/history/f5.jpg", line: "HOLD THE FIRE.", t: 27.5 }
   ];
-  var HIST_END = 33;
+  var HIST_AFTER = [
+    { src: "assets/history/a0.jpg", line: "The lodge warmed. Folks started calling it a green home.", t: 0 },
+    { src: "assets/history/a1.jpg", line: "Something small. Something heavy. Not wood.", t: 5.5 },
+    { src: "assets/history/a2.jpg", line: "A grey wanderer leaned on a stick. Quiet place, he said.", t: 11 },
+    { src: "assets/history/a3.jpg", line: "Ash lands wait. Blade first. The long road after.", t: 16.5 }
+  ];
+  var HIST_END = 33, HIST_AFTER_END = 22;
+  var HIST_BEATS = HIST_FREEZE;
   var histEl = document.getElementById("history");
   var histImg = document.getElementById("hist-img");
   var histLine = document.getElementById("hist-line");
+  var histSub = document.getElementById("hist-sub");
   var histSkipBtn = document.getElementById("hist-skip");
   var histRaf = 0, histTimer = 0, histI = -1, histAfter = null, histT0 = 0, histStopping = false, histSkipArmed = 0;
+  var histChapter = "freeze";
+
+  var CAMEO_BEATS = {
+    e50: [
+      { src: "assets/cameos/e50.jpg", line: "John Snow from the white. Bober nodded. Nobody asked." }
+    ],
+    e75: [
+      { src: "assets/cameos/e75-check.jpg", line: "Checklist: wood · fire · nerve." },
+      { src: "assets/cameos/e75-drill.jpg", line: "John Snow drilled the cold out of Bober — almost." }
+    ],
+    e100: [
+      { src: "assets/cameos/e100.jpg", line: "Fire held. Frost King cracked." },
+      { src: "assets/cameos/e100.jpg", line: "Two legends, one lodge — winter blinked first." }
+    ]
+  };
+  var cameoEl = document.getElementById("cameo");
+  var cameoImg = document.getElementById("cameo-img");
+  var cameoLine = document.getElementById("cameo-line");
+
+  function histFlags() {
+    try {
+      var raw = localStorage.getItem(HIST_SEEN_KEY);
+      if (!raw) return {};
+      if (raw === "1") return { freeze: true };
+      var o = JSON.parse(raw);
+      return o && typeof o === "object" ? o : {};
+    } catch (e) { return {}; }
+  }
+  function writeHistFlags(patch) {
+    var f = histFlags(), k;
+    for (k in patch) if (Object.prototype.hasOwnProperty.call(patch, k)) f[k] = patch[k];
+    try { localStorage.setItem(HIST_SEEN_KEY, JSON.stringify(f)); } catch (e) {}
+  }
+  function afterFreezeUnlocked() {
+    var f = histFlags();
+    return !!(f.afterFreezeUnlock || f.afterFreeze || (state && state.afterFreezeUnlock));
+  }
+  function unlockAfterFreeze() {
+    state.afterFreezeUnlock = true;
+    writeHistFlags({ afterFreezeUnlock: true });
+    save();
+  }
 
   function historyOpen() { return !!(histEl && !histEl.classList.contains("hidden")); }
   function markHistorySeen() {
-    try { localStorage.setItem(HIST_SEEN_KEY, JSON.stringify({ freeze: true })); } catch (e) {}
+    if (histChapter === "after") writeHistFlags({ afterFreeze: true });
+    else writeHistFlags({ freeze: true });
   }
   function haltHistory() {
     if (histRaf) { cancelAnimationFrame(histRaf); histRaf = 0; }
@@ -2211,15 +2315,18 @@
     var cb = histAfter; histAfter = null; histStopping = false;
     if (cb) cb();
   }
+  function currentHistBeats() { return histChapter === "after" ? HIST_AFTER : HIST_FREEZE; }
+  function currentHistEnd() { return histChapter === "after" ? HIST_AFTER_END : HIST_END; }
   function applyHistBeat(i) {
-    if (i < 0 || i >= HIST_BEATS.length) return;
+    var beats = currentHistBeats();
+    if (i < 0 || i >= beats.length) return;
     histI = i;
-    histImg.src = HIST_BEATS[i].src;
-    histLine.textContent = HIST_BEATS[i].line;
+    histImg.src = beats[i].src;
+    histLine.textContent = beats[i].line;
   }
   function histFrameAt(t) {
-    var i = 0;
-    for (var k = 0; k < HIST_BEATS.length; k++) if (t >= HIST_BEATS[k].t) i = k;
+    var beats = currentHistBeats(), i = 0, k;
+    for (k = 0; k < beats.length; k++) if (t >= beats[k].t) i = k;
     return i;
   }
   function histTick() {
@@ -2227,10 +2334,17 @@
     var t = (performance.now() - histT0) / 1000;
     var i = histFrameAt(t);
     if (i !== histI) applyHistBeat(i);
-    if (t >= HIST_END - 0.05) { stopHistory(); return; }
+    if (t >= currentHistEnd() - 0.05) { stopHistory(); return; }
     histRaf = requestAnimationFrame(histTick);
   }
-  function playHistory(after) {
+  function playHistory(after, chapter) {
+    histChapter = chapter || "freeze";
+    HIST_BEATS = currentHistBeats();
+    if (histSub) {
+      histSub.textContent = histChapter === "after"
+        ? "AFTER THE FREEZE · a fan game tale · not official"
+        : "THE FREEZE · a fan game tale · not official";
+    }
     histAfter = after || null;
     histStopping = false;
     histSkipArmed = Date.now() + 450;
@@ -2244,13 +2358,76 @@
     if (histRaf) cancelAnimationFrame(histRaf);
     histRaf = requestAnimationFrame(histTick);
   }
+  function playHistoryChain(after) {
+    playHistory(function () {
+      if (afterFreezeUnlocked()) playHistory(after, "after");
+      else if (after) after();
+    }, "freeze");
+  }
   function historyFromSplash() {
     document.getElementById("splash").classList.add("hidden");
-    playHistory(function () { document.getElementById("splash").classList.remove("hidden"); });
+    playHistoryChain(function () { document.getElementById("splash").classList.remove("hidden"); });
   }
   function historyFromEnd() {
     document.getElementById("endcard").classList.add("hidden");
-    playHistory(function () { document.getElementById("endcard").classList.remove("hidden"); });
+    playHistoryChain(function () { document.getElementById("endcard").classList.remove("hidden"); });
+  }
+
+  function dismissCameo() {
+    if (cameoTimer) { clearTimeout(cameoTimer); cameoTimer = 0; }
+    if (cameoEl) cameoEl.classList.add("hidden");
+    var cb = cameoDone;
+    cameoDone = null;
+    if (cb) cb();
+  }
+  function showCameoBeat(beat, after) {
+    if (!beat) { if (after) after(); return; }
+    cameoLock = true;
+    cameoDone = after;
+    cameoSkipArmed = Date.now() + 400;
+    if (cameoImg) cameoImg.src = beat.src;
+    if (cameoLine) cameoLine.textContent = beat.line;
+    if (cameoEl) cameoEl.classList.remove("hidden");
+    Sfx.ensure();
+    Sfx.beep(392, 0.08, "square", 0.04);
+    if (cameoTimer) clearTimeout(cameoTimer);
+    cameoTimer = setTimeout(dismissCameo, 10000);
+  }
+  function playCameoKey(key, after) {
+    var beats = CAMEO_BEATS[key];
+    if (!beats || !beats.length) { if (after) after(); return; }
+    state.cameos = state.cameos || {};
+    state.cameos[key] = true;
+    if (key === "e100") unlockAfterFreeze();
+    save();
+    var i = 0;
+    function next() {
+      if (i >= beats.length) {
+        cameoLock = false;
+        if (key === "e100") {
+          cameoLock = true;
+          playHistory(function () { cameoLock = false; if (after) after(); }, "after");
+        } else if (after) after();
+        return;
+      }
+      showCameoBeat(beats[i++], next);
+    }
+    next();
+  }
+  function maybeEndlessCameo() {
+    if (!isEndless() || state.ended) return;
+    state.cameos = state.cameos || {};
+    var keys = [];
+    if (state.day >= 50 && !state.cameos.e50) keys.push("e50");
+    if (state.day >= 75 && !state.cameos.e75) keys.push("e75");
+    if (state.day >= 100 && !state.cameos.e100) keys.push("e100");
+    if (!keys.length) return;
+    var n = 0;
+    function step() {
+      if (n >= keys.length) { cameoLock = false; return; }
+      playCameoKey(keys[n++], step);
+    }
+    step();
   }
 
   function askRestart() { document.getElementById("confirm").classList.remove("hidden"); document.getElementById("paused").classList.add("hidden"); }
@@ -2284,6 +2461,7 @@
     hud(); save();
   });
   document.getElementById("btn-pause").addEventListener("click", function () {
+    if (cameoLock || historyOpen()) return;
     if (!playing || state.ended) return; paused = !paused;
     document.getElementById("paused").classList.toggle("hidden", !paused);
   });
@@ -2309,6 +2487,18 @@
     if (Date.now() < histSkipArmed) return;
     stopHistory();
   });
+  document.getElementById("cameo").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (!cameoEl || cameoEl.classList.contains("hidden")) return;
+    if (Date.now() < cameoSkipArmed) return;
+    dismissCameo();
+  });
+  document.getElementById("cameo").addEventListener("touchend", function (ev) {
+    ev.preventDefault();
+    if (!cameoEl || cameoEl.classList.contains("hidden")) return;
+    if (Date.now() < cameoSkipArmed) return;
+    dismissCameo();
+  }, { passive: false });
   document.getElementById("btn-wipe").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); hardReset(); });
   document.getElementById("btn-keep").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); });
   document.getElementById("btn-sheet-close").addEventListener("click", closeSheet);
