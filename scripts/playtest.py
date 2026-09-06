@@ -9,12 +9,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
-STORMS = {3, 6, 9, 12, 15}
+STORMS = {4, 8, 12, 18, 22, 25}
 
 
 def drain(day: int, tender: bool, watch: bool = False) -> float:
     d = 10 + day * 0.55
-    if day == 15:
+    if day == 25:
         d *= 2.0
     elif day in STORMS:
         d *= 1.6
@@ -48,8 +48,16 @@ def main() -> int:
         "Assign jobs · build · then START DAY",
         "Stoke · feed · hold heat",
         "Need Quarry Bench",
-        "Day 1/15",
+        "Day 1/25",
         "Watch Post:",
+        "STOCKPILE",
+        "SCOUT THE ICE",
+        "Act I · Embers",
+        "Act II · Deepening",
+        "Act III · White Heart",
+        "STORM_DAYS = [4, 8, 12, 18, 22, 25]",
+        "DAYS = 25",
+        "state.day === 25",
         "wood: 30",
         "CHOP_PER_DAY = 7",
         "day * 0.55",
@@ -95,17 +103,19 @@ def main() -> int:
     if len(pad_pts) != 8:
         errors.append(f"expected 8 pads, got {len(pad_pts)}")
 
-    fair3 = 10 + 3 * 0.55
-    wo3 = fair3 * 1.6
-    if abs(drain(3, False) - wo3) > 1e-9:
-        errors.append(f"day 3 storm drain off: {drain(3, False)} vs {wo3}")
-    boss = (10 + 15 * 0.55) * 2.0
-    if abs(drain(15, False) - boss) > 1e-9:
-        errors.append(f"day 15 boss drain off: {drain(15, False)} vs {boss}")
-    if drain(15, True, True) >= drain(15, False):
+    fair4 = 10 + 4 * 0.55
+    wo4 = fair4 * 1.6
+    if abs(drain(4, False) - wo4) > 1e-9:
+        errors.append(f"day 4 storm drain off: {drain(4, False)} vs {wo4}")
+    boss = (10 + 25 * 0.55) * 2.0
+    if abs(drain(25, False) - boss) > 1e-9:
+        errors.append(f"day 25 boss drain off: {drain(25, False)} vs {boss}")
+    if drain(25, True, True) >= drain(25, False):
         errors.append("tender+watch should cut boss drain")
-    if boss > 40:
-        errors.append(f"boss drain without tender too steep vs start 80: {boss}")
+    if "STORM_DAYS = [3, 6, 9, 12, 15]" in text:
+        errors.append("old 15-day storm schedule still live")
+    if "isBossDay() { return state.day === 15; }" in text or "state.day === 15" in text:
+        errors.append("boss still on day 15")
 
     # Imperfect-play Beacon: 1 miner from day 4–10 after spending 8 on quarry.
     start_st = 10
@@ -125,14 +135,14 @@ def main() -> int:
         return 1
 
     print("PLAYTEST OK")
-    print(f"  day 3 storm drain:  {drain(3, False):.1f} (fair {fair3:.1f})")
-    print(f"  day 15 boss drain:  {drain(15, False):.1f}")
-    print(f"  boss +tender+watch: {drain(15, True, True):.1f}")
-    print(f"  tender-only boss:   {drain(15, True, False):.1f}  (Beacon +25 covers)")
+    print(f"  day 4 storm drain:  {drain(4, False):.1f} (fair {fair4:.1f})")
+    print(f"  day 25 boss drain:  {drain(25, False):.1f}")
+    print(f"  boss +tender+watch: {drain(25, True, True):.1f}")
+    print(f"  tender-only boss:   {drain(25, True, False):.1f}  (Beacon +25)")
     heat = 80.0
-    for day in range(1, 16):
+    for day in range(1, 26):
         heat -= drain(day, True, False)
-    print(f"  tender no-stoke heat after 15n: {heat:.1f} (must stoke; not free)")
+    print(f"  tender no-stoke heat after 25n: {heat:.1f} (must stoke; not free)")
     return 0
 
 

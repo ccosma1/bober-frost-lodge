@@ -2,7 +2,7 @@
 
 Fan game by a holder. Not affiliated with any token, studio, or official Bober project.
 
-Chapter 3 of the beaver river story: a winter colony. Hold the Lodge Fire for **15 days**.
+Chapter 3 of the beaver river story: a winter colony. Hold the Lodge Fire for **25 days**.
 
 No install. No wallet. No login. No ads. No gacha. No PvP.
 
@@ -12,13 +12,14 @@ Run `START.bat` or open `index.html` in a browser.
 
 ## How to play
 
-Survive **Days 1–15**. Night 15 is the boss Whiteout. Win is **THAW HOLDS** at **dawn of Day 16** if the lodge is standing and at least one beaver is up — and you either **fired the Beacon** that night or hold **≥40% heat**.
+Survive **Days 1–25**. Night 25 is the boss Whiteout. Win is **THAW HOLDS** at **dawn of Day 26** if the lodge is standing and at least one beaver is up — and you either **fired the Beacon** that night or hold **≥40% heat**.
 
 1. Tap **HOLD THE FIRE**.
 2. **Dawn** waits until every living beaver has a job, then **START DAY** (or tap the snow). Jobs: **Chopper**, **Fisher**, **Tender**, **Tapper**, **Miner**. ×2 / ×4 if you want it faster.
 3. **Day** (~30s): they walk and gather. Tap a **pad** (there are eight) to build.
-4. **Dusk / Night**: stoke wood (or syrup). Whiteouts on nights **3, 6, 9, 12, 15**.
-5. Heat 0 at night end, or the whole crew Down, is a freeze lose.
+4. **Dusk / Night**: stoke wood (or syrup). Whiteouts on nights **4, 8, 12, 18, 22**. Night **25** is the boss.
+5. **Day 12 dawn** you must pick **STOCKPILE** (bank wood/sap, harder storms 12–18) or **SCOUT THE ICE** (temp beaver 12–16, lighter storms 12–18).
+6. Heat 0 at night end, or the whole crew Down, is a freeze lose.
 
 ### Buildings (day-gated, max one each except Bunk Hut ×2)
 
@@ -31,7 +32,7 @@ Survive **Days 1–15**. Night 15 is the boss Whiteout. Win is **THAW HOLDS** at
 | Bunk Hut | 3 | 20W 5Sa | +1 beaver (start 3, cap 5) |
 | Watch Post | 5 | 18W 10St | “Whiteout tomorrow”; −2 night drain |
 | Workshop | 6 | 25W 12St 8Sa | Faster gathering |
-| Beacon Tower | 10 | 30W 12St 10Sa | Once/night +25 heat (5W+3Sa). Day 15 ritual. |
+| Beacon Tower | 10 | 30W 12St 10Sa | Once/night +25 heat (5W+3Sa). Day 25 ritual. |
 
 Miner needs a Quarry. Tapper can gather raw sap slowly before the Boiler.
 
