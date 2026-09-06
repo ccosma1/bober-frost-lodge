@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#3A2A6A" />
-  <meta name="description" content="Bober Frost Lodge — fan game by a holder. Hold the lodge fire through fifteen winter days." />
+  <meta name="description" content="Bober Frost Lodge — fan game by a holder. Hold the lodge fire through twenty-five winter days." />
   <title>Bober Frost Lodge</title>
   <link rel="icon" href="assets/icons/bober-frost.ico" />
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
@@ -46,11 +46,23 @@
     .chip.sap { color: #e8b060; }
     .chip.stone { color: #d4cdc0; }
     .chip.heat.low { border-color: var(--danger); color: var(--danger); }
+    .chip.storm {
+      border-color: var(--ice); background: #243868; color: var(--ice);
+      box-shadow: 0 0 0 1px #A8C4E888, 0 0 10px #A8C4E844;
+    }
+    .chip.fork {
+      background: var(--cream); color: var(--ink); border-color: var(--cream);
+      font-size: 9px; padding: 2px 6px; letter-spacing: 0.04em;
+    }
     .chip.gain { animation: popchip 0.35s ease; background: #4a3a18; }
     .chip.flash { animation: shake 0.35s ease; background: #6a2a3a; }
     @keyframes popchip { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
     @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 #E85D4C88; } 50% { box-shadow: 0 0 0 6px #E85D4C00; } }
+    @keyframes pulse-kill {
+      0%, 100% { box-shadow: 0 0 6px #E85D4C, 0 0 0 0 #E85D4Ccc; filter: brightness(1); }
+      50% { box-shadow: 0 0 20px #E85D4C, 0 0 0 11px #E85D4C00; filter: brightness(1.4); }
+    }
     @keyframes ready { 0%, 100% { box-shadow: 0 4px 0 #8a6a00, 0 0 0 0 #F5C40088; } 50% { box-shadow: 0 4px 0 #8a6a00, 0 0 0 7px #F5C40000; } }
     .btns { display: flex; gap: 4px; flex: 0 0 auto; }
     .icon-btn {
@@ -65,9 +77,11 @@
     #heatfill { background: var(--cream); box-shadow: 0 0 10px #F4E6C388; }
     #heatbar.mid #heatfill { background: var(--yellow); }
     #heatbar.low #heatfill { background: var(--danger); animation: pulse 0.9s ease infinite; }
-    #heatbar.kill #heatfill { animation: pulse 0.75s ease infinite; box-shadow: 0 0 12px #E85D4C88; }
+    #heatbar.kill { animation: pulse 0.48s ease infinite; }
+    #heatbar.kill #heatfill { background: var(--danger); animation: pulse-kill 0.38s ease infinite; box-shadow: 0 0 16px #E85D4Caa; }
     #clockfill { background: var(--yellow); }
     #stage { flex: 1; min-height: 0; min-width: 0; position: relative; background: var(--sky); display: flex; align-items: center; justify-content: center; }
+    #app.act3, #app.act3 #stage { background: #241848; }
     canvas { display: block; width: 100%; height: 100%; cursor: pointer; touch-action: none; }
     #banner {
       position: absolute; left: 10px; right: 10px; top: 10px; z-index: 6;
@@ -218,6 +232,7 @@
     <header>
       <div class="chips">
         <div class="chip" id="chip-day">Day 1/25</div>
+        <div class="chip fork" id="chip-fork" hidden>STOCK</div>
         <div class="chip wood" id="chip-wood">W 0</div>
         <div class="chip fish" id="chip-fish">F 0</div>
         <div class="chip sap" id="chip-sap">SA 0</div>
@@ -387,7 +402,7 @@
   var ctx = canvas.getContext("2d");
   var app = document.getElementById("app");
   var playing = false, paused = false, lastTs = 0, clock = 0;
-  var selectedPad = -1, saveAcc = 0, shake = 0, flakesN = 48, dawnGoT = -1, beaconPulse = 0;
+  var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
   var snow = [], pops = [], embers = [], streaks = [];
   var padPop = [0, 0, 0, 0, 0, 0, 0, 0];
   var bannerQ = [], bannerTimer = 0, SPR = {};
@@ -551,6 +566,7 @@
   function heatPerWood() { return tenderPresent() ? 10 : 8; }
   function isStormDay(d) { return STORM_DAYS.indexOf(d == null ? state.day : d) !== -1; }
   function isBossDay() { return state.day === 25; }
+  function isActIII() { return state.day >= 17 && state.day <= 25; }
   function isWhiteoutNight() { return isStormDay() && state.phase === "night"; }
   function whiteoutLook() { return isStormDay() && (state.phase === "dusk" || state.phase === "night"); }
   function calcDrain() {
@@ -950,13 +966,15 @@
         left.innerHTML = bd.name + (why ? "<span class='why'>" + why + "</span>" : "<span class='why'>" + bd.blurb + "</span>");
         var right = document.createElement("span"); right.className = "cost"; right.textContent = costLine(bd);
         btn.appendChild(left); btn.appendChild(right);
+        btn.addEventListener("pointerenter", function () { hoverBuild = bd.id; });
+        btn.addEventListener("pointerleave", function () { if (hoverBuild === bd.id) hoverBuild = null; });
         btn.addEventListener("click", function () { tryBuild(bd.id); });
         list.appendChild(btn);
       });
     }
     document.getElementById("sheet").classList.remove("hidden");
   }
-  function closeSheet() { document.getElementById("sheet").classList.add("hidden"); selectedPad = -1; }
+  function closeSheet() { document.getElementById("sheet").classList.add("hidden"); selectedPad = -1; hoverBuild = null; }
 
   function skipDawn() {
     if (state.phase !== "dawn" || state.ended) return;
@@ -1004,7 +1022,14 @@
   }
 
   function hud() {
-    document.getElementById("chip-day").textContent = "Day " + Math.min(state.day, DAYS) + "/" + DAYS;
+    var dayChip = document.getElementById("chip-day");
+    dayChip.textContent = "Day " + Math.min(state.day, DAYS) + "/" + DAYS;
+    dayChip.classList.toggle("storm", playing && !state.ended && isStormDay());
+    var forkChip = document.getElementById("chip-fork");
+    var forkTag = playing && !state.ended && state.fork && state.day >= 12 && state.day <= 16;
+    forkChip.hidden = !forkTag;
+    if (forkTag) forkChip.textContent = state.fork === "scout" ? "SCOUT" : "STOCK";
+    app.classList.toggle("act3", playing && isActIII());
     document.getElementById("chip-wood").textContent = "W " + Math.floor(state.wood);
     var fishTxt = "F " + Math.floor(state.fish);
     if (state.rations > 0) fishTxt += " · R " + Math.floor(state.rations);
@@ -1179,30 +1204,35 @@
 
   function initSnow() {
     snow = [];
-    for (var i = 0; i < 180; i++) snow.push({ x: Math.random() * W, y: Math.random() * H, s: 1.1 + Math.random() * 2.6, v: 22 + Math.random() * 44, drift: (Math.random() - 0.5) * 28 });
+    for (var i = 0; i < 320; i++) snow.push({ x: Math.random() * W, y: Math.random() * H, s: 1.1 + Math.random() * 2.8, v: 22 + Math.random() * 48, drift: (Math.random() - 0.5) * 32 });
     streaks = [];
-    for (var j = 0; j < 18; j++) streaks.push({ x: Math.random() * W, y: Math.random() * H, len: 18 + Math.random() * 28, v: 90 + Math.random() * 70 });
+    for (var j = 0; j < 40; j++) streaks.push({ x: Math.random() * W, y: Math.random() * H, len: 16 + Math.random() * 34, v: 90 + Math.random() * 80 });
   }
   function spawnEmber(hot) {
     embers.push({ x: LODGE.x + (Math.random() - 0.5) * 16, y: LODGE.y + 4, vx: (Math.random() - 0.5) * (hot ? 28 : 12), vy: -20 - Math.random() * (hot ? 50 : 28), life: 0.5 + Math.random() * 0.5 });
   }
   function tickSnow(dt) {
-    var storm = whiteoutLook(), n = storm ? 180 : flakesN;
+    var storm = whiteoutLook(), n = storm ? snow.length : flakesN;
     for (var i = 0; i < n; i++) {
       var f = snow[i];
-      f.y += f.v * dt * (storm ? 1.85 : 1);
-      f.x += f.drift * dt * (storm ? 2.6 : 1) + (storm ? 18 * dt : 0);
+      f.y += f.v * dt * (storm ? 2.15 : 1);
+      f.x += f.drift * dt * (storm ? 3.1 : 1) + (storm ? 26 * dt : 0);
       if (f.y > H) { f.y = -4; f.x = Math.random() * W; }
       if (f.x < -8) f.x = W + 4; if (f.x > W + 8) f.x = -4;
     }
-    if (storm) streaks.forEach(function (s) { s.x += s.v * dt * 0.6; s.y += s.v * dt; if (s.y > H || s.x > W) { s.x = Math.random() * W; s.y = -10; } });
-    if (state.heat > 1 && Math.random() < dt * (storm ? 6 : 10)) spawnEmber(false);
+    if (storm) streaks.forEach(function (s) { s.x += s.v * dt * 0.75; s.y += s.v * dt * 1.15; if (s.y > H || s.x > W) { s.x = Math.random() * W; s.y = -10; } });
+    if (state.heat > 1 && Math.random() < dt * (storm ? 10 : 16)) spawnEmber(false);
     for (var e = embers.length - 1; e >= 0; e--) {
       embers[e].life -= dt; embers[e].x += embers[e].vx * dt; embers[e].y += embers[e].vy * dt; embers[e].vy += 18 * dt;
       if (embers[e].life <= 0) embers.splice(e, 1);
     }
     for (var p = 0; p < 8; p++) padPop[p] = Math.max(0, padPop[p] - dt * 2.4);
-    shake = Math.max(0, shake - dt * 1.6);
+    if (whiteoutLook()) {
+      var gust = isBossDay() ? 0.7 : (state.phase === "night" ? 0.48 : 0.26);
+      shake = Math.max(shake * 0.9, gust);
+    } else {
+      shake = Math.max(0, shake - dt * 1.6);
+    }
     beaconPulse = Math.max(0, beaconPulse - dt * 0.7);
   }
   function tickPops(dt) {
@@ -1210,11 +1240,16 @@
   }
 
   function skyColors() {
-    if (isBossDay() && whiteoutLook()) return ["#140818", "#3a2048"];
+    if (isBossDay() && whiteoutLook()) return ["#140818", "#241848"];
+    if (isActIII() && whiteoutLook()) return ["#181028", "#241848"];
     if (isWhiteoutNight()) return ["#1c2844", "#3d4e6a"];
+    if (isActIII() && state.phase === "night") return ["#120818", "#241848"];
     if (state.phase === "night") return ["#120a1c", "#2a1c4e"];
+    if (isActIII() && state.phase === "dusk") return ["#241848", "#8a3850"];
     if (state.phase === "dusk") return ["#4a2458", "#c45a32"];
+    if (isActIII() && state.phase === "dawn") return ["#241848", "#c47868"];
     if (state.phase === "dawn") return ["#5a3a78", "#e8a878"];
+    if (isActIII()) return ["#241848", "#4a6088"];
     return ["#3A2A6A", "#7a96c4"];
   }
   function roundRect(c, x, y, w, h, r) {
@@ -1279,6 +1314,76 @@
     c.fillStyle = fill; c.fill();
     c.strokeStyle = "#1A1028"; c.lineWidth = 3.2; c.lineJoin = "round"; c.lineCap = "round"; c.stroke();
   }
+  function drawBuilding(c, kind, ghost) {
+    var lit = !ghost && kind === "beacon" && state.beaconUsedNight && (state.phase === "night" || state.phase === "dusk");
+    if (kind === "woodshed") {
+      c.beginPath(); roundRect(c, -32, 6, 64, 14, 4); inkFill(c, "#3a2410");
+      for (var k = 0; k < 5; k++) {
+        var yy = -10 + k * 6.2;
+        c.beginPath(); roundRect(c, -30, yy, 60, 6, 3); inkFill(c, k % 2 ? "#8B5A2B" : "#6B4423");
+        c.fillStyle = "#C4894A";
+        c.beginPath(); c.arc(-30, yy + 3, 3.1, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(30, yy + 3, 3.1, 0, Math.PI * 2); c.fill();
+      }
+      c.beginPath(); c.moveTo(-36, -8); c.lineTo(0, -24); c.lineTo(36, -8); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-26, -10); c.lineTo(0, -22); c.lineTo(26, -10); c.closePath(); inkFill(c, "#F4E6C3");
+    } else if (kind === "smokehouse") {
+      c.beginPath(); roundRect(c, -24, -6, 42, 26, 6); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -8, 2, 14, 18, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); c.moveTo(-28, -4); c.lineTo(-4, -26); c.lineTo(22, -4); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-18, -8); c.lineTo(-4, -24); c.lineTo(12, -8); c.closePath(); inkFill(c, "#F4E6C3");
+      c.fillStyle = "#E86A2A"; c.fillRect(-18, 4, 7, 10); c.fillRect(6, 4, 7, 10);
+      c.beginPath(); roundRect(c, 16, -28, 10, 36, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); roundRect(c, 13, -34, 16, 8, 3); inkFill(c, "#8B5A2B");
+      if (!ghost) {
+        c.fillStyle = "rgba(210,210,220," + (0.45 + Math.sin(clock * 2) * 0.2) + ")";
+        c.beginPath(); c.ellipse(22, -42 - Math.sin(clock * 1.5) * 3, 7, 11, 0.2, 0, Math.PI * 2); c.fill();
+      }
+    } else if (kind === "sapboiler") {
+      c.beginPath(); roundRect(c, -22, 4, 44, 14, 4); inkFill(c, "#5C3A1A");
+      c.beginPath(); c.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2); inkFill(c, "#6a6a70");
+      c.beginPath(); c.ellipse(0, -4, 16, 11, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
+      c.beginPath(); c.ellipse(0, -8, 10, 6, 0, 0, Math.PI * 2); inkFill(c, "#F5C400");
+      c.fillStyle = "#8B5A2B"; c.fillRect(14, -18, 5, 16);
+      c.fillStyle = "rgba(244,230,195,0.55)"; c.beginPath(); c.ellipse(8, -24, 8, 10, 0.15, 0, Math.PI * 2); c.fill();
+    } else if (kind === "quarry") {
+      c.beginPath(); roundRect(c, -26, 2, 52, 16, 4); inkFill(c, "#8a8480");
+      c.beginPath(); c.moveTo(-22, 4); c.lineTo(-12, -18); c.lineTo(4, 4); c.closePath(); inkFill(c, "#6a6560");
+      c.beginPath(); c.moveTo(-4, 4); c.lineTo(10, -16); c.lineTo(22, 4); c.closePath(); inkFill(c, "#9a948e");
+      c.beginPath(); roundRect(c, 14, -22, 7, 26, 2); inkFill(c, "#8B5A2B");
+      c.beginPath(); c.moveTo(10, -22); c.lineTo(28, -26); c.lineTo(28, -18); c.closePath(); inkFill(c, "#d4cdc0");
+    } else if (kind === "bunk") {
+      c.beginPath(); roundRect(c, -26, -6, 52, 26, 5); inkFill(c, "#8B5A2B");
+      c.beginPath(); c.moveTo(-28, -6); c.lineTo(0, -26); c.lineTo(28, -6); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-16, -8); c.lineTo(0, -24); c.lineTo(16, -8); c.closePath(); inkFill(c, "#F4E6C3");
+      c.beginPath(); roundRect(c, -8, 2, 16, 18, 3); inkFill(c, "#5C3A1A");
+      c.fillStyle = "#F5C400"; c.fillRect(-4, 8, 8, 4);
+      c.beginPath(); roundRect(c, -22, 2, 10, 8, 2); inkFill(c, "#F4E6C3");
+      c.beginPath(); roundRect(c, 12, 2, 10, 8, 2); inkFill(c, "#F4E6C3");
+    } else if (kind === "watch") {
+      c.beginPath(); roundRect(c, -7, -8, 14, 28, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); roundRect(c, -18, -28, 36, 20, 4); inkFill(c, "#8B5A2B");
+      c.beginPath(); c.moveTo(-20, -26); c.lineTo(0, -44); c.lineTo(20, -26); c.closePath(); inkFill(c, "#3A2A6A");
+      c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -18, 5, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = "#1A1028"; c.lineWidth = 2.4;
+      c.beginPath(); c.moveTo(-10, 12); c.lineTo(-10, -8); c.lineTo(10, -8); c.stroke();
+    } else if (kind === "workshop") {
+      c.beginPath(); roundRect(c, -28, -8, 56, 28, 5); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -22, 0, 44, 8, 2); inkFill(c, "#5C3A1A");
+      c.beginPath(); c.arc(-8, -4, 8, 0, Math.PI * 2); inkFill(c, "#F5C400");
+      c.beginPath(); roundRect(c, 8, -16, 12, 12, 2); inkFill(c, "#F4E6C3");
+    } else if (kind === "beacon") {
+      c.beginPath(); roundRect(c, -16, 8, 32, 12, 3); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -8, -30, 16, 40, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); roundRect(c, -14, -46, 28, 18, 4); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
+      c.beginPath(); roundRect(c, -9, -42, 18, 10, 2); inkFill(c, lit ? "#E86A2A" : "#F4E6C3");
+      c.beginPath(); c.moveTo(-10, -44); c.lineTo(0, -64); c.lineTo(10, -44); c.closePath(); inkFill(c, lit ? "#F5C400" : "#F4E6C3");
+      if (lit) {
+        c.fillStyle = "rgba(245,196,0," + (0.4 + Math.sin(clock * 9) * 0.16) + ")";
+        c.beginPath(); c.arc(0, -36, 18 + Math.sin(clock * 8) * 3, 0, Math.PI * 2); c.fill();
+      }
+    }
+  }
   function drawPad(c, i) {
     var p = PADS[i], kind = state.buildings[i];
     var canBuild = state.phase === "dawn" || state.phase === "day";
@@ -1289,7 +1394,6 @@
     c.beginPath(); c.ellipse(2, 22, 40, 12, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = "#d8cbb0";
     c.beginPath(); c.ellipse(0, 14, 44, 16, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#F4E6C3";
     c.beginPath(); c.ellipse(0, 10, 42, 15, 0, 0, Math.PI * 2); inkFill(c, "#F4E6C3");
     if (!kind) {
       if (canBuild) {
@@ -1303,57 +1407,13 @@
         c.strokeStyle = "#1A1028"; c.lineWidth = 2;
         c.beginPath(); c.ellipse(0, 8, 46, 21, 0, 0, Math.PI * 2); c.stroke();
       }
-    } else if (kind === "woodshed") {
-      c.fillStyle = "#3a2410"; c.fillRect(-26, 4, 54, 12);
-      for (var k = 0; k < 4; k++) {
-        var yy = -4 + k * 7;
-        c.beginPath(); roundRect(c, -24, yy, 48, 7, 3.5); inkFill(c, k % 2 ? "#8B5A2B" : "#6B4423");
-        c.fillStyle = "#C4894A"; c.beginPath(); c.arc(-24, yy + 3.5, 3.2, 0, Math.PI * 2); c.fill();
-        c.beginPath(); c.arc(24, yy + 3.5, 3.2, 0, Math.PI * 2); c.fill();
+      if (selectedPad === i && hoverBuild) {
+        c.globalAlpha = 0.42 + Math.sin(clock * 5) * 0.1;
+        drawBuilding(c, hoverBuild, true);
+        c.globalAlpha = 1;
       }
-      c.beginPath(); c.moveTo(-30, -2); c.lineTo(0, -26); c.lineTo(30, -2); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-22, -6); c.lineTo(0, -24); c.lineTo(22, -6); c.closePath(); inkFill(c, "#F4E6C3");
-    } else if (kind === "smokehouse") {
-      c.beginPath(); roundRect(c, -24, -8, 48, 28, 6); inkFill(c, "#8B5A2B");
-      c.fillStyle = "#5C3A1A"; c.fillRect(-8, 2, 16, 18);
-      c.beginPath(); c.moveTo(-28, -6); c.lineTo(0, -28); c.lineTo(28, -6); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-18, -10); c.lineTo(0, -26); c.lineTo(18, -10); c.closePath(); inkFill(c, "#F4E6C3");
-      c.fillStyle = "#E86A2A"; c.fillRect(-18, 4, 7, 10); c.fillRect(12, 4, 7, 10);
-      c.fillStyle = "rgba(210,210,220," + (0.45 + Math.sin(clock * 2) * 0.2) + ")";
-      c.beginPath(); c.ellipse(8, -34 - Math.sin(clock * 1.5) * 3, 8, 12, 0.2, 0, Math.PI * 2); c.fill();
-    } else if (kind === "sapboiler") {
-      c.beginPath(); roundRect(c, -20, 2, 40, 14, 4); inkFill(c, "#5C3A1A");
-      c.beginPath(); c.ellipse(0, -2, 18, 14, 0, 0, Math.PI * 2); inkFill(c, "#6a6a70");
-      c.beginPath(); c.ellipse(0, -4, 11, 7, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
-      c.fillStyle = "rgba(244,230,195,0.55)"; c.beginPath(); c.ellipse(6, -22, 8, 10, 0.15, 0, Math.PI * 2); c.fill();
-    } else if (kind === "quarry") {
-      c.beginPath(); roundRect(c, -22, 0, 44, 16, 4); inkFill(c, "#8a8480");
-      c.beginPath(); c.moveTo(-18, 2); c.lineTo(-10, -16); c.lineTo(2, 2); c.closePath(); inkFill(c, "#6a6560");
-      c.beginPath(); c.moveTo(-2, 2); c.lineTo(10, -14); c.lineTo(20, 2); c.closePath(); inkFill(c, "#9a948e");
-      c.beginPath(); roundRect(c, 12, -18, 6, 22, 2); inkFill(c, "#8B5A2B");
-    } else if (kind === "bunk") {
-      c.beginPath(); roundRect(c, -24, -6, 48, 24, 5); inkFill(c, "#8B5A2B");
-      c.beginPath(); c.moveTo(-26, -6); c.lineTo(0, -26); c.lineTo(26, -6); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-16, -8); c.lineTo(0, -24); c.lineTo(16, -8); c.closePath(); inkFill(c, "#F4E6C3");
-      c.beginPath(); roundRect(c, -7, 2, 14, 16, 3); inkFill(c, "#5C3A1A");
-      c.fillStyle = "#F5C400"; c.fillRect(-3, 8, 6, 4);
-    } else if (kind === "watch") {
-      c.beginPath(); roundRect(c, -8, -6, 16, 26, 3); inkFill(c, "#5C3A1A");
-      c.beginPath(); roundRect(c, -16, -24, 32, 18, 4); inkFill(c, "#8B5A2B");
-      c.beginPath(); c.moveTo(-18, -22); c.lineTo(0, -38); c.lineTo(18, -22); c.closePath(); inkFill(c, "#3A2A6A");
-      c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -16, 4, 0, Math.PI * 2); c.fill();
-    } else if (kind === "workshop") {
-      c.beginPath(); roundRect(c, -26, -8, 52, 26, 5); inkFill(c, "#8B5A2B");
-      c.beginPath(); roundRect(c, -20, -2, 40, 8, 2); inkFill(c, "#5C3A1A");
-      c.beginPath(); roundRect(c, -10, -14, 10, 10, 2); inkFill(c, "#F5C400");
-    } else if (kind === "beacon") {
-      var lit = state.beaconUsedNight && (state.phase === "night" || state.phase === "dusk");
-      c.beginPath(); roundRect(c, -12, 8, 24, 10, 3); inkFill(c, "#8B5A2B");
-      c.beginPath(); roundRect(c, -6, -10, 12, 22, 3); inkFill(c, "#5C3A1A");
-      c.beginPath(); c.moveTo(-10, -8); c.lineTo(0, -32); c.lineTo(10, -8); c.closePath(); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
-      if (lit) {
-        c.beginPath(); c.moveTo(-5, -20); c.lineTo(0, -40); c.lineTo(5, -20); c.closePath(); inkFill(c, "#E86A2A");
-      }
+    } else {
+      drawBuilding(c, kind, false);
     }
     c.restore();
   }
@@ -1361,23 +1421,37 @@
   function drawLodge(c) {
     var heat = state.heat / 100, storm = isWhiteoutNight();
     var lean = storm ? Math.sin(clock * 9) * 5 : 0;
-    var flick = storm ? 0.55 + Math.sin(clock * 22) * 0.28 : 0.82 + Math.sin(clock * 11) * 0.12;
+    var flick = storm
+      ? 0.46 + Math.sin(clock * 28) * 0.34 + Math.sin(clock * 47) * 0.12
+      : 0.68 + Math.sin(clock * 17) * 0.24 + Math.sin(clock * 31) * 0.12;
     c.save(); c.translate(LODGE.x, LODGE.y);
     c.fillStyle = "rgba(26,16,40,0.32)"; c.beginPath(); c.ellipse(0, 40, 62, 14, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = "#5C3A1A"; c.beginPath(); c.ellipse(0, 12, 62, 40, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = "#8B5A2B"; c.beginPath(); c.ellipse(0, 6, 56, 36, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(0, -12, 50, 20, 0, Math.PI, Math.PI * 2); c.fill();
+    if (isActIII()) {
+      var ices = [[-38, -8, 11], [-26, -14, 15], [-14, -18, 12], [-2, -20, 17], [10, -18, 13], [22, -14, 16], [34, -8, 10]];
+      ices.forEach(function (ic) {
+        c.beginPath();
+        c.moveTo(ic[0] - 3.2, ic[1]);
+        c.lineTo(ic[0], ic[1] + ic[2]);
+        c.lineTo(ic[0] + 3.2, ic[1]);
+        c.closePath();
+        inkFill(c, "#A8C4E8");
+      });
+    }
     c.fillStyle = "#1A1028"; roundRect(c, -18, 0, 36, 32, 7); c.fill();
     var fh = (16 + heat * 44) * flick; if (storm) fh *= 0.72;
     if (heat > 0.01) {
       var halo = c.createRadialGradient(0, 10, 4, 0, 10, 62 + heat * 34);
-      halo.addColorStop(0, "rgba(245,196,0," + (0.62 + heat * 0.28) + ")");
-      halo.addColorStop(0.45, "rgba(232,106,42," + (0.22 + heat * 0.16) + ")");
+      halo.addColorStop(0, "rgba(245,196,0," + (0.58 + heat * 0.32 + flick * 0.12) + ")");
+      halo.addColorStop(0.45, "rgba(232,106,42," + (0.2 + heat * 0.18) + ")");
       halo.addColorStop(1, "rgba(245,196,0,0)");
       c.fillStyle = halo; c.beginPath(); c.ellipse(lean * 0.3, 8, 42 + heat * 26, 28 + heat * 16, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-11 + lean, 22); c.quadraticCurveTo(lean, 22 - fh, 11 + lean, 22); c.closePath(); c.fill();
-      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-7 + lean * 0.6, 22); c.quadraticCurveTo(lean * 0.6, 22 - fh * 0.72, 7 + lean * 0.6, 22); c.closePath(); c.fill();
-      c.fillStyle = "#F4E6C3"; c.beginPath(); c.moveTo(-3.5, 22); c.lineTo(lean * 0.3, 22 - fh * 0.42); c.lineTo(3.5, 22); c.closePath(); c.fill();
+      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-12 + lean, 22); c.quadraticCurveTo(lean, 22 - fh, 12 + lean, 22); c.closePath(); c.fill();
+      var lean2 = lean + Math.sin(clock * 23) * 3.4;
+      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-8 + lean2 * 0.6, 22); c.quadraticCurveTo(lean2 * 0.6, 22 - fh * 0.78, 8 + lean2 * 0.6, 22); c.closePath(); c.fill();
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.moveTo(-3.8, 22); c.lineTo(lean * 0.3 + Math.sin(clock * 29) * 1.6, 22 - fh * 0.48); c.lineTo(3.8, 22); c.closePath(); c.fill();
     } else { c.fillStyle = "#3a3030"; c.fillRect(-7, 14, 14, 8); }
     c.restore();
     embers.forEach(function (e) { c.globalAlpha = Math.max(0, e.life); c.fillStyle = "#F5C400"; c.beginPath(); c.arc(e.x, e.y, 2.2, 0, Math.PI * 2); c.fill(); });
@@ -1412,18 +1486,30 @@
     var job = b.status === "injured" ? "HURT" : (JOB_LBL[b.job] || "");
     c.strokeText(b.name + "  " + job, 0, 0); c.fillText(b.name + "  " + job, 0, 0);
     c.restore();
+    if (!isActIII()) return;
+    var phase = (clock * 0.9 + (b.id.charCodeAt(0) % 7) * 0.31) % 1.7;
+    if (phase > 0.9) return;
+    var t = phase / 0.9, face = b.facing || 1;
+    var fx = b.x + face * 11, fy = b.y - SPRITE_H + 20 + bob;
+    c.fillStyle = "#F4E6C3";
+    c.globalAlpha = (1 - t) * 0.58;
+    c.beginPath(); c.ellipse(fx + face * t * 11, fy - t * 16, 4.2 + t * 5, 2.5 + t * 2.2, 0, 0, Math.PI * 2); c.fill();
+    c.globalAlpha = (1 - t) * 0.32;
+    c.beginPath(); c.ellipse(fx + face * t * 18, fy - t * 26, 3.2 + t * 4, 2 + t * 2, 0, 0, Math.PI * 2); c.fill();
+    c.globalAlpha = 1;
   }
   function drawSnow(c) {
-    var storm = whiteoutLook(), n = storm ? 180 : flakesN;
+    var storm = whiteoutLook(), n = storm ? snow.length : flakesN;
     c.fillStyle = "#F4E6C3";
-    for (var i = 0; i < n; i++) { c.globalAlpha = storm ? 0.92 : 0.7; c.beginPath(); c.arc(snow[i].x, snow[i].y, snow[i].s, 0, Math.PI * 2); c.fill(); }
+    for (var i = 0; i < n; i++) { c.globalAlpha = storm ? 0.94 : 0.7; c.beginPath(); c.arc(snow[i].x, snow[i].y, snow[i].s * (storm ? 1.12 : 1), 0, Math.PI * 2); c.fill(); }
     if (storm) {
-      c.strokeStyle = "rgba(244,230,195,0.45)"; c.lineWidth = 1.4;
-      streaks.forEach(function (s) { c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(s.x - s.len * 0.5, s.y - s.len); c.stroke(); });
-      c.fillStyle = "rgba(190,210,230," + (isBossDay() ? 0.32 : (state.phase === "night" ? 0.26 : 0.14)) + ")"; c.fillRect(0, 0, W, H);
+      c.strokeStyle = "rgba(244,230,195,0.55)"; c.lineWidth = 1.6;
+      streaks.forEach(function (s) { c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(s.x - s.len * 0.62, s.y - s.len); c.stroke(); });
+      c.fillStyle = "rgba(190,210,230," + (isBossDay() ? 0.38 : (state.phase === "night" ? 0.3 : 0.16)) + ")"; c.fillRect(0, 0, W, H);
     }
     c.globalAlpha = 1;
-    if (state.phase === "night" && !storm) { c.fillStyle = "rgba(18,10,28,0.18)"; c.fillRect(0, 0, W, H); }
+    if (isActIII() && !storm) { c.fillStyle = "rgba(36,24,72,0.16)"; c.fillRect(0, 0, W, H); }
+    else if (state.phase === "night" && !storm) { c.fillStyle = "rgba(18,10,28,0.18)"; c.fillRect(0, 0, W, H); }
   }
   function drawPops(c) {
     c.font = "900 13px Trebuchet MS, sans-serif"; c.textAlign = "center";
@@ -1431,7 +1517,14 @@
     c.globalAlpha = 1;
   }
   function draw() {
-    if (shake > 0.02) { ctx.save(); ctx.translate((Math.random() - 0.5) * 8 * shake, (Math.random() - 0.5) * 6 * shake); }
+    var wind = whiteoutLook() ? (isBossDay() ? 2.6 : 1.8) : 0;
+    if (shake > 0.02 || wind) {
+      ctx.save();
+      ctx.translate(
+        (Math.random() - 0.5) * 8 * shake + Math.sin(clock * 13) * wind * 0.35,
+        (Math.random() - 0.5) * 6 * shake + Math.cos(clock * 9) * wind * 0.22
+      );
+    }
     var sky = skyColors(), g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     drawGround(ctx); drawPines(ctx); drawChopSite(ctx); drawFishSite(ctx); drawSapSite(ctx); drawMineSite(ctx);
@@ -1463,7 +1556,7 @@
       ctx.fillText(label + "  " + sec + "s", W / 2, 22);
     }
     ctx.shadowBlur = 0;
-    if (shake > 0.02) ctx.restore();
+    if (shake > 0.02 || wind) ctx.restore();
   }
 
   function resize() {
@@ -1637,6 +1730,7 @@
   document.getElementById("btn-wipe").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); hardReset(); });
   document.getElementById("btn-keep").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); });
   document.getElementById("btn-sheet-close").addEventListener("click", closeSheet);
+  document.getElementById("sheet-list").addEventListener("pointerleave", function () { hoverBuild = null; });
   canvas.addEventListener("pointerdown", onCanvasTap);
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", function () { if (document.hidden) save(); });

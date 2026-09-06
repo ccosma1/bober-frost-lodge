@@ -70,6 +70,11 @@ def main() -> int:
         "HOLD THE FIRE.",
         "assets/history/f0.jpg",
         "bober-history-v1",
+        "#241848",
+        "chip-fork",
+        "pulse-kill",
+        "hoverBuild",
+        "isActIII",
     ]
     for s in needed:
         if s not in text:
