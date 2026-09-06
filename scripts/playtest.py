@@ -75,6 +75,13 @@ def main() -> int:
         "pulse-kill",
         "hoverBuild",
         "isActIII",
+        "REINFORCE",
+        "EXPAND CLEARING",
+        "Lodge grows",
+        "fork18",
+        "PAD_EXPAND",
+        "Brace the lodge",
+        "Push the snow back",
     ]
     for s in needed:
         if s not in text:
