@@ -65,6 +65,7 @@
     #heatfill { background: var(--cream); box-shadow: 0 0 10px #F4E6C388; }
     #heatbar.mid #heatfill { background: var(--yellow); }
     #heatbar.low #heatfill { background: var(--danger); animation: pulse 0.9s ease infinite; }
+    #heatbar.kill #heatfill { animation: pulse 0.75s ease infinite; box-shadow: 0 0 12px #E85D4C88; }
     #clockfill { background: var(--yellow); }
     #stage { flex: 1; min-height: 0; min-width: 0; position: relative; background: var(--sky); display: flex; align-items: center; justify-content: center; }
     canvas { display: block; width: 100%; height: 100%; cursor: pointer; touch-action: none; }
@@ -74,9 +75,18 @@
       border-radius: 14px; padding: 10px 12px; font-weight: 800; font-size: 15px;
       text-align: center; line-height: 1.3; box-shadow: 0 6px 18px #0007; pointer-events: none;
     }
-    #banner.hidden { display: none; }
+    #banner.hidden { display: none !important; }
     #banner.storm { background: #dce7f8; border-color: var(--ice); }
     #banner.danger { background: #f4d0c8; border-color: var(--danger); color: #5a1810; }
+    #banner.bleed {
+      inset: 0; left: 0; right: 0; top: 0; bottom: 0;
+      border-radius: 0; border: none; z-index: 15;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(22px, 6.5vw, 38px); letter-spacing: 0.04em;
+      background: rgba(26, 16, 40, 0.88); color: var(--cream);
+      padding: 24px;
+    }
+    #banner.bleed.storm { background: rgba(32, 48, 82, 0.9); color: var(--cream); border: none; }
     #dock { flex: 0 0 auto; background: linear-gradient(#1a1028ee, #2a1c4ecc); padding: 6px 8px 6px; z-index: 4; display: flex; flex-direction: column; gap: 6px; }
     #job-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 38vh; overflow-y: auto; }
     #job-board.hidden { display: none; }
@@ -98,6 +108,7 @@
     }
     .jobs button.on { border-color: var(--yellow); background: var(--yellow); color: var(--ink); }
     .jobs button:disabled { opacity: 0.35; cursor: default; }
+    .jobs button.need { grid-column: 1 / -1; font-size: 8px; letter-spacing: 0.01em; border-color: var(--ice); color: var(--ice); }
     #btn-phase, #night-row button {
       min-height: 48px; border: 3px solid var(--yellow); background: var(--yellow);
       color: var(--ink); border-radius: 14px; font-weight: 900; font-size: 14px;
@@ -201,7 +212,7 @@
   <div id="app" class="booting">
     <header>
       <div class="chips">
-        <div class="chip" id="chip-day">DAY 1/15</div>
+        <div class="chip" id="chip-day">Day 1/15</div>
         <div class="chip wood" id="chip-wood">W 0</div>
         <div class="chip fish" id="chip-fish">F 0</div>
         <div class="chip sap" id="chip-sap">SA 0</div>
@@ -279,7 +290,7 @@
       </div>
     </div>
     <div id="dock">
-      <div id="phase-hint">DAWN — assign jobs</div>
+      <div id="phase-hint">Assign jobs · build · then START DAY</div>
       <div id="job-board" class="hidden"></div>
       <button id="btn-phase" type="button">START DAY<small id="phase-sub">assign jobs first</small></button>
       <div id="night-row" class="hidden">
@@ -659,8 +670,15 @@
   }
 
   function duskWarn() {
-    if (isBossDay()) banner("BOSS WHITEOUT — fire the Beacon or hold 40%", 3400, "storm");
-    else if (isStormDay()) banner("WHITEOUT TONIGHT", 2600, "storm");
+    if (isStormDay()) {
+      Sfx.startWind();
+      var wo = isBossDay()
+        ? "DAY " + state.day + " BOSS WHITEOUT"
+        : "DAY " + state.day + " WHITEOUT";
+      if (hasBuilding("watch")) wo = "Watch Post: " + wo + " TONIGHT";
+      banner(wo, 2500, "storm bleed");
+      if (isBossDay()) banner("BOSS WHITEOUT — fire the Beacon or hold 40%", 3400, "storm");
+    }
     if (hasBuilding("beacon") && !isBossDay()) banner("Beacon ready", 2000);
     var need = 0;
     state.beavers.forEach(function (b) { need += b.trait === "hungry" ? 2 : 1; });
@@ -766,7 +784,7 @@
     if (state.phase !== "dawn" || state.ended) return;
     var b = state.beavers.find(function (x) { return x.id === id; });
     if (!b || b.status === "down") return;
-    if (job === "miner" && !hasBuilding("quarry")) { banner("Miner needs a Quarry Bench.", 1600); return; }
+    if (job === "miner" && !hasBuilding("quarry")) { banner("Need Quarry Bench", 1800); return; }
     b.job = job; Sfx.assign();
     dawnGoT = jobsReady() ? 3 : -1;
     syncDock(); save();
@@ -898,7 +916,7 @@
   }
 
   function hud() {
-    document.getElementById("chip-day").textContent = "DAY " + Math.min(state.day, DAYS) + "/" + DAYS;
+    document.getElementById("chip-day").textContent = "Day " + Math.min(state.day, DAYS) + "/" + DAYS;
     document.getElementById("chip-wood").textContent = "W " + Math.floor(state.wood);
     var fishTxt = "F " + Math.floor(state.fish);
     if (state.rations > 0) fishTxt += " · R " + Math.floor(state.rations);
@@ -914,7 +932,8 @@
     document.getElementById("heatfill").style.width = clamp(state.heat, 0, 100) + "%";
     bar.classList.toggle("mid", state.heat < 55 && state.heat >= 30);
     bar.classList.toggle("low", state.heat < 30);
-    heatEl.classList.toggle("low", state.heat < 30);
+    bar.classList.toggle("kill", predictedHeat(0) <= 0);
+    heatEl.classList.toggle("low", state.heat < 30 || predictedHeat(0) <= 0);
     document.getElementById("btn-speed").textContent = "×" + state.speed;
     document.getElementById("btn-speed").classList.toggle("on", state.speed > 1);
     document.getElementById("btn-mute").textContent = Sfx.muted ? "🔇" : "🔊";
@@ -963,10 +982,10 @@
     }
     document.getElementById("night-row").classList.toggle("hidden", !night);
     var hint = {
-      dawn: jobsReady() ? "DAWN — START DAY when ready" : "DAWN — give every beaver a job",
+      dawn: "Assign jobs · build · then START DAY",
       day: "DAY — " + crewLine(),
       dusk: "DUSK — back to the lodge",
-      night: isWhiteoutNight() ? (isBossDay() ? "BOSS WHITEOUT — hold the fire" : "WHITEOUT — hold the fire") : "NIGHT — eat, burn, rest"
+      night: "Stoke · feed · hold heat  →  " + Math.round(predictedHeat(0)) + "%"
     }[state.phase] || "";
     document.getElementById("phase-hint").textContent = hint;
     var board = document.getElementById("job-board");
@@ -987,9 +1006,15 @@
       var jobs = document.createElement("div"); jobs.className = "jobs";
       JOBS.forEach(function (j) {
         var btn = document.createElement("button");
-        btn.type = "button"; btn.textContent = JOB_LBL[j];
+        btn.type = "button";
+        if (j === "miner" && !hasBuilding("quarry")) {
+          btn.textContent = "Need Quarry Bench";
+          btn.classList.add("need");
+        } else {
+          btn.textContent = JOB_LBL[j];
+        }
         if (b.job === j) btn.classList.add("on");
-        btn.disabled = b.status === "down" || (j === "miner" && !hasBuilding("quarry"));
+        btn.disabled = b.status === "down";
         btn.addEventListener("click", function () { assignJob(b.id, j); });
         jobs.appendChild(btn);
       });
