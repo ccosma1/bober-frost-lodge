@@ -52,4 +52,4 @@ Static root. After push, enable Pages on `main` / root. `.nojekyll` is included.
 
 This is a fan game by a holder. It does not connect to a chain, a wallet, or a score server.
 
-Part of the Boberverse: [Yeet](https://ccosma1.github.io/bober-yeet/) · [Dam Defense](https://ccosma1.github.io/bober-dam-defense/). Other games are not required to play.
+Also play · [Yeet](https://ccosma1.github.io/bober-yeet/) · [Dam Defense](https://ccosma1.github.io/bober-dam-defense/). Other games are not required to play.
