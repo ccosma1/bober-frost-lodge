@@ -328,6 +328,7 @@
         <p id="dam-tip" class="hidden">Dam reserves: +10 Sap this run.</p>
         <button class="play" id="btn-hold" type="button">HOLD THE FIRE</button>
         <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
+        <button class="play ghost" id="btn-splash-endless" type="button" hidden>ENDLESS WINTER</button>
       </div>
       <div id="paused" class="overlay hidden">
         <div class="tip-card">
@@ -345,7 +346,7 @@
         <div class="end-actions">
           <button class="play" id="btn-new-winter" type="button">NEW WINTER</button>
           <button class="play ghost" id="btn-end-history" type="button">HISTORY</button>
-          <button class="play ghost" id="btn-keep-warming" type="button" disabled>KEEP WARMING<small style="display:block;font-size:11px;letter-spacing:0.04em">Coming later</small></button>
+          <button class="play ghost" id="btn-keep-warming" type="button">ENDLESS WINTER</button>
           <button class="play ghost" id="btn-end-restart" type="button">RETRY</button>
         </div>
       </div>
@@ -428,6 +429,8 @@
 
   var SAVE_KEY = "bober-frost-lodge-v1";
   var SAVE_OLD = "bober-frost-lodge-v0";
+  var ENDLESS_KEY = "bober-frost-endless-v1";
+  var CLEARED_KEY = "bober-frost-cleared-v1";
   var HIST_SEEN_KEY = "bober-history-v1";
   var VERSE_KEY = "boberverse-v1";
   var DAM_KEY = "bober-dam-campaign-v1";
@@ -444,6 +447,7 @@
     { x: 180, y: 434 }, { x: 88, y: 400 }, { x: 50, y: 318 }, { x: 88, y: 236 }
   ];
   var PAD_EXPAND = { x: 180, y: 510 };
+  var PADS_MORE = [{ x: 115, y: 512 }, { x: 245, y: 512 }, { x: 340, y: 390 }];
   var SITE_CHOP = { x: 52, y: 530 };
   var SITE_FISH = { x: 308, y: 534 };
   var SITE_SAP = { x: 36, y: 478 };
@@ -483,7 +487,7 @@
   var playing = false, paused = false, lastTs = 0, clock = 0;
   var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
   var snow = [], pops = [], embers = [], streaks = [], sparkles = [];
-  var padPop = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  var padPop = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   var bannerQ = [], bannerTimer = 0, SPR = {};
   var state = newState();
 
@@ -554,7 +558,8 @@
       buildings: [null, null, null, null, null, null, null, null],
       beavers: newBeavers(),
       speed: 1, ended: null, nightDrain: 0, fedTonight: false, dawnHint: true,
-      beaconUsedNight: false, beaconJoke: false, damBonus: false, fork: null, fork18: null, lodgeLevel: 1, acts: {}
+      beaconUsedNight: false, beaconJoke: false, damBonus: false, fork: null, fork18: null, lodgeLevel: 1, acts: {},
+      endless: false, padsN: 8, endlessIntro: false
     };
   }
 
@@ -585,7 +590,7 @@
 
   function save() {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({
+      localStorage.setItem(isEndless() ? ENDLESS_KEY : SAVE_KEY, JSON.stringify({
         day: state.day, phase: state.phase, phaseT: state.phaseT,
         wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone,
         syrup: state.syrup, rations: state.rations, heat: Math.round(state.heat * 10) / 10,
@@ -597,7 +602,8 @@
         muted: Sfx.muted, speed: state.speed, ended: state.ended,
         nightDrain: state.nightDrain, fedTonight: state.fedTonight, dawnHint: state.dawnHint,
         beaconUsedNight: state.beaconUsedNight, beaconJoke: state.beaconJoke, damBonus: state.damBonus,
-        fork: state.fork || null, fork18: state.fork18 || null, lodgeLevel: lodgeLevel(), acts: state.acts || {}
+        fork: state.fork || null, fork18: state.fork18 || null, lodgeLevel: lodgeLevel(), acts: state.acts || {},
+        endless: !!state.endless, padsN: padCount(), endlessIntro: !!state.endlessIntro
       }));
     } catch (e) {}
   }
@@ -622,8 +628,11 @@
       state.fork = d.fork === "stockpile" || d.fork === "scout" ? d.fork : null;
       state.fork18 = d.fork18 === "reinforce" || d.fork18 === "expand" ? d.fork18 : null;
       state.acts = d.acts && typeof d.acts === "object" ? d.acts : {};
+      state.endless = !!d.endless;
+      state.endlessIntro = !!d.endlessIntro;
+      state.padsN = typeof d.padsN === "number" ? clamp(d.padsN, 8, 12) : (state.fork18 === "expand" ? 9 : 8);
       while (state.buildings.length < padCount()) state.buildings.push(null);
-      if (state.fork18 !== "expand") state.buildings = state.buildings.slice(0, 8);
+      if (!isEndless() && state.fork18 !== "expand") state.buildings = state.buildings.slice(0, 8);
       state.lodgeLevel = lodgeLevel();
       if (Array.isArray(d.beavers) && d.beavers.length >= 3) {
         state.beavers = d.beavers.map(function (s, i) {
@@ -643,8 +652,16 @@
   function clamp(n, a, b) { n = +n || 0; return n < a ? a : n > b ? b : n; }
   function depthT(y) { return clamp((y - HORIZON) / (530 - HORIZON), 0, 1); }
   function depthScale(y) { return 0.92 + depthT(y) * 0.14; }
-  function padCount() { return state.fork18 === "expand" ? 9 : 8; }
-  function allPads() { return padCount() === 9 ? PADS.concat([PAD_EXPAND]) : PADS; }
+  function isEndless() { return !!(state && state.endless); }
+  function padCount() {
+    if (isEndless()) return clamp(state.padsN || (state.fork18 === "expand" ? 9 : 8), 8, 12);
+    return state.fork18 === "expand" ? 9 : 8;
+  }
+  function allPads() {
+    var n = padCount(), list = PADS.slice(), extra = [PAD_EXPAND].concat(PADS_MORE), i;
+    for (i = 0; i < n - 8 && i < extra.length; i++) list.push(extra[i]);
+    return list;
+  }
   function uniqueKinds() {
     var seen = {};
     state.buildings.forEach(function (b) { if (b) seen[b] = 1; });
@@ -665,13 +682,29 @@
   function bedCap() { return Math.min(5, 3 + countBuilding("bunk")); }
   function tenderPresent() { return state.beavers.some(function (b) { return b.job === "tender" && b.status !== "down"; }); }
   function heatPerWood() { return tenderPresent() ? 10 : 8; }
-  function isStormDay(d) { return STORM_DAYS.indexOf(d == null ? state.day : d) !== -1; }
-  function isBossDay() { return state.day === 25; }
-  function isActIII() { return state.day >= 17 && state.day <= 25; }
+  function isStormDay(d) {
+    var n = d == null ? state.day : d;
+    if (isEndless()) return n > 0 && n % 4 === 0;
+    return STORM_DAYS.indexOf(n) !== -1;
+  }
+  function isBossDay() {
+    if (isEndless()) return state.day > 0 && state.day % 10 === 0;
+    return state.day === 25;
+  }
+  function isActIII() { return isEndless() || (state.day >= 17 && state.day <= 25); }
   function isWhiteoutNight() { return isStormDay() && state.phase === "night"; }
   function whiteoutLook() { return isStormDay() && (state.phase === "dusk" || state.phase === "night"); }
   function calcDrain() {
-    var d = 10 + state.day * 0.55;
+    var d;
+    if (isEndless()) {
+      d = 10 + 25 * 0.55 + 0.15 * state.day;
+      if (isBossDay()) d *= 2.0;
+      else if (isStormDay()) d *= 1.6;
+      if (tenderPresent()) d *= 0.65;
+      if (hasBuilding("watch")) d -= 2;
+      return Math.max(4, d);
+    }
+    d = 10 + state.day * 0.55;
     if (isBossDay()) d *= 2.0;
     else if (isStormDay()) d *= 1.6;
     if (tenderPresent()) d *= 0.65;
@@ -795,13 +828,26 @@
     }
   }
   function maybeScoutLeave() {
-    if (state.day !== 17) return;
+    if (isEndless() || state.day !== 17) return;
     var i = state.beavers.findIndex(function (b) { return b.id === "scout"; });
     if (i < 0) return;
     state.beavers.splice(i, 1);
     banner("The scout headed back across the ice.", 2200);
   }
+  function addEndlessPad(quiet) {
+    if (!isEndless() || padCount() >= 12) return false;
+    state.padsN = padCount() + 1;
+    while (state.buildings.length < state.padsN) state.buildings.push(null);
+    while (padPop.length < 12) padPop.push(0);
+    if (!quiet) banner("The clearing grows. +1 pad.", 1800);
+    return true;
+  }
+  function maybeEndlessGrow() {
+    if (!isEndless() || state.day < 2) return;
+    if (state.day % 5 === 0) addEndlessPad();
+  }
   function maybeActBanner() {
+    if (isEndless()) return;
     var line = ACTS[state.day];
     if (!line) return;
     state.acts = state.acts || {};
@@ -809,8 +855,8 @@
     state.acts[state.day] = true;
     banner(line, 2000);
   }
-  function forkPending() { return state.day === 12 && !state.fork && state.phase === "dawn" && !state.ended; }
-  function fork18Pending() { return state.day === 18 && !state.fork18 && state.phase === "dawn" && !state.ended; }
+  function forkPending() { return !isEndless() && state.day === 12 && !state.fork && state.phase === "dawn" && !state.ended; }
+  function fork18Pending() { return !isEndless() && state.day === 18 && !state.fork18 && state.phase === "dawn" && !state.ended; }
   function showFork18() { document.getElementById("fork18").classList.remove("hidden"); }
   function showFork(stage) {
     var el = document.getElementById("fork");
@@ -889,7 +935,12 @@
       maybeScoutLeave();
       maybeRecruit();
       maybeActBanner();
-      if (state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false; }
+      maybeEndlessGrow();
+      if (isEndless() && !state.endlessIntro) {
+        banner("The thaw was a lie. Hold forever.", 2800);
+        state.endlessIntro = true;
+      }
+      if (!isEndless() && state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false; }
       if (forkPending()) showFork("pick");
       if (fork18Pending()) showFork18();
     } else {
@@ -902,8 +953,8 @@
     if (isStormDay()) {
       Sfx.startWind();
       var wo = isBossDay()
-        ? "DAY " + state.day + " BOSS WHITEOUT"
-        : "DAY " + state.day + " WHITEOUT";
+        ? (isEndless() ? "E-DAY " + state.day + " MINI-BOSS WHITEOUT" : "DAY " + state.day + " BOSS WHITEOUT")
+        : ((isEndless() ? "E-DAY " : "DAY ") + state.day + " WHITEOUT");
       if (hasBuilding("watch")) wo = "Watch Post: " + wo + " TONIGHT";
       banner(wo, 2500, "storm bleed");
       if (isBossDay()) banner("BOSS WHITEOUT — fire the Beacon or hold 40%", 3400, "storm");
@@ -922,6 +973,15 @@
     if (state.ended) return;
     if (state.heat <= 0.05) { state.heat = 0; lose("heat"); return; }
     if (aliveCount() < 1) { lose("crew"); return; }
+    if (isEndless()) {
+      if (isBossDay() && !(state.beaconUsedNight || state.heat >= 40)) { lose("boss"); return; }
+      Sfx.cheer();
+      if (isStormDay()) banner("The lodge held.", 1800);
+      state.day += 1;
+      state.beavers.forEach(function (b) { b.acc = 0; });
+      enterPhase("dawn");
+      return;
+    }
     if (isBossDay()) {
       if (state.beaconUsedNight || state.heat >= 40) {
         state.day = 26;
@@ -937,14 +997,120 @@
     enterPhase("dawn");
   }
 
+  function campaignCleared() {
+    try { return localStorage.getItem(CLEARED_KEY) === "1"; } catch (e) { return false; }
+  }
+  function markCleared() {
+    try { localStorage.setItem(CLEARED_KEY, "1"); } catch (e) {}
+    var b = document.getElementById("btn-splash-endless");
+    if (b) b.hidden = false;
+  }
+  function snapshotEndless() {
+    try {
+      var snap = {
+        day: 1, phase: "dawn", phaseT: 0,
+        wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone,
+        syrup: state.syrup, rations: state.rations, heat: Math.max(50, state.heat),
+        buildings: state.buildings.slice(),
+        beavers: state.beavers.filter(function (b) { return b.id !== "scout"; }).map(function (b) {
+          return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: b.status === "down" ? "injured" : "ok", hungry: 0, x: b.x, y: b.y, facing: b.facing, acc: 0 };
+        }),
+        muted: Sfx.muted, speed: state.speed, ended: null,
+        nightDrain: 0, fedTonight: false, dawnHint: false,
+        beaconUsedNight: false, beaconJoke: state.beaconJoke, damBonus: state.damBonus,
+        fork: state.fork || null, fork18: state.fork18 || null, lodgeLevel: lodgeLevel(), acts: {},
+        endless: true, padsN: padCount(), endlessIntro: false
+      };
+      localStorage.setItem(ENDLESS_KEY, JSON.stringify(snap));
+    } catch (e) {}
+  }
+  function applyEndlessData(d) {
+    state = newState();
+    state.endless = true;
+    state.day = typeof d.day === "number" && d.day >= 1 ? d.day : 1;
+    state.phase = d.phase || "dawn"; state.phaseT = d.phaseT || 0;
+    state.wood = clamp(d.wood, 0, CAP); state.fish = clamp(d.fish, 0, CAP);
+    state.sap = clamp(d.sap || 0, 0, CAP); state.stone = clamp(d.stone || 0, 0, CAP);
+    state.syrup = clamp(d.syrup || 0, 0, CAP); state.rations = clamp(d.rations || 0, 0, CAP);
+    state.heat = clamp(d.heat == null ? 50 : d.heat, 0, 100);
+    state.buildings = Array.isArray(d.buildings) ? d.buildings.slice(0, 12) : state.buildings;
+    state.fork = d.fork === "stockpile" || d.fork === "scout" ? d.fork : null;
+    state.fork18 = d.fork18 === "reinforce" || d.fork18 === "expand" ? d.fork18 : null;
+    state.padsN = typeof d.padsN === "number" ? clamp(d.padsN, 8, 12) : padCount();
+    while (state.buildings.length < padCount()) state.buildings.push(null);
+    state.lodgeLevel = lodgeLevel();
+    state.speed = d.speed === 4 || d.speed === 2 ? d.speed : 1;
+    state.ended = null; state.endlessIntro = !!d.endlessIntro;
+    state.damBonus = !!d.damBonus; Sfx.muted = !!d.muted;
+    if (Array.isArray(d.beavers) && d.beavers.length >= 3) {
+      state.beavers = d.beavers.map(function (s, i) {
+        return {
+          id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
+          trait: s.trait || null, status: s.status === "down" ? "injured" : (s.status || "ok"),
+          hungry: 0, x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 58,
+          facing: s.facing || 1, acc: 0, moving: false
+        };
+      });
+    }
+  }
+  function startEndless(fromSave) {
+    var raw = null;
+    try { raw = localStorage.getItem(ENDLESS_KEY); } catch (e) {}
+    if (fromSave && raw) {
+      try {
+        var saved = JSON.parse(raw);
+        applyEndlessData(saved);
+        if (saved.ended === "lose") { retryEndless(); return; }
+      } catch (e) { applyEndlessData({ buildings: state.buildings, beavers: state.beavers, padsN: padCount(), heat: state.heat, wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone, syrup: state.syrup, rations: state.rations, fork: state.fork, fork18: state.fork18, damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed }); }
+    } else {
+      snapshotEndless();
+      applyEndlessData({
+        day: 1, buildings: state.buildings, beavers: state.beavers, padsN: padCount(),
+        heat: Math.max(50, state.heat), wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone,
+        syrup: state.syrup, rations: state.rations, fork: state.fork, fork18: state.fork18,
+        damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed, endlessIntro: false
+      });
+    }
+    playing = true; paused = false; state.ended = null;
+    document.getElementById("endcard").classList.add("hidden");
+    document.getElementById("splash").classList.add("hidden");
+    app.classList.remove("booting");
+    hideFork(); closeSheet(); hideBanner(); bannerQ = [];
+    enterPhase("dawn");
+  }
+  function retryEndless() {
+    var blds = state.buildings.slice();
+    var padsN = padCount();
+    var fork = state.fork, fork18 = state.fork18;
+    var crew = state.beavers.map(function (b) {
+      return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 58, facing: 1, acc: 0 };
+    });
+    applyEndlessData({
+      day: 1, buildings: blds, beavers: crew, padsN: padsN, fork: fork, fork18: fork18,
+      wood: 20, fish: 12, sap: 10, stone: 10, syrup: 0, rations: 0, heat: 70,
+      damBonus: state.damBonus, muted: Sfx.muted, speed: state.speed, endlessIntro: true
+    });
+    playing = true; paused = false; state.ended = null;
+    document.getElementById("endcard").classList.add("hidden");
+    hideFork(); closeSheet();
+    enterPhase("dawn");
+  }
   function setEndButtons(isWin) {
-    document.getElementById("btn-new-winter").style.display = isWin ? "" : "none";
-    document.getElementById("btn-keep-warming").style.display = isWin ? "" : "none";
-    document.getElementById("btn-end-restart").style.display = isWin ? "none" : "";
+    var endlessFail = isEndless() && !isWin;
+    document.getElementById("btn-new-winter").style.display = isWin && !isEndless() ? "" : "none";
+    var keep = document.getElementById("btn-keep-warming");
+    keep.style.display = isWin && !isEndless() ? "" : "none";
+    keep.disabled = false;
+    var retry = document.getElementById("btn-end-restart");
+    retry.style.display = isWin ? "none" : "";
+    retry.textContent = endlessFail ? "RETRY ENDLESS" : "RETRY";
   }
   function win() {
     state.ended = "win";
-    Sfx.stopWind(); Sfx.win(); save();
+    Sfx.stopWind(); Sfx.win();
+    markCleared();
+    snapshotEndless();
+    save();
     document.getElementById("end-title").textContent = "THAW HOLDS";
     document.getElementById("end-msg").textContent = "The lodge fire outlasted the freeze.";
     setEndButtons(true);
@@ -1072,6 +1238,11 @@
     if (lv > (state.lodgeLevel || 1)) {
       state.lodgeLevel = lv;
       banner("Lodge grows", 1800);
+      if (isEndless()) {
+        addEndlessPad(true);
+        state.wood = clamp(state.wood + 5, 0, CAP);
+        pop(LODGE.x, LODGE.y - 36, "+5 wood", "#F5C400");
+      }
     }
     closeSheet(); hud(); save();
   }
@@ -1163,11 +1334,11 @@
 
   function hud() {
     var dayChip = document.getElementById("chip-day");
-    dayChip.textContent = "Day " + Math.min(state.day, DAYS) + "/" + DAYS;
+    dayChip.textContent = isEndless() ? ("E-Day " + state.day) : ("Day " + Math.min(state.day, DAYS) + "/" + DAYS);
     dayChip.classList.toggle("storm", playing && !state.ended && isStormDay());
     var forkChip = document.getElementById("chip-fork");
-    var forkTag = playing && !state.ended && state.fork && state.day >= 12 && state.day <= 16;
-    var f18Tag = playing && !state.ended && state.fork18 && state.day >= 18 && state.day <= 25;
+    var forkTag = !isEndless() && playing && !state.ended && state.fork && state.day >= 12 && state.day <= 16;
+    var f18Tag = !isEndless() && playing && !state.ended && state.fork18 && state.day >= 18 && state.day <= 25;
     forkChip.hidden = !(forkTag || f18Tag);
     if (f18Tag) forkChip.textContent = state.fork18 === "expand" ? "EXPAND" : "BRACE";
     else if (forkTag) forkChip.textContent = state.fork === "scout" ? "SCOUT" : "STOCK";
@@ -2025,6 +2196,7 @@
   function askRestart() { document.getElementById("confirm").classList.remove("hidden"); document.getElementById("paused").classList.add("hidden"); }
 
   if (damHasStars()) document.getElementById("dam-tip").classList.remove("hidden");
+  if (campaignCleared()) document.getElementById("btn-splash-endless").hidden = false;
 
   document.getElementById("btn-hold").addEventListener("click", function () {
     Sfx.ensure();
@@ -2060,9 +2232,15 @@
   document.getElementById("btn-pause-restart").addEventListener("click", askRestart);
   document.getElementById("btn-end-restart").addEventListener("click", function () {
     document.getElementById("confirm").classList.add("hidden");
-    newWinter();
+    if (isEndless()) retryEndless();
+    else newWinter();
   });
   document.getElementById("btn-new-winter").addEventListener("click", newWinter);
+  document.getElementById("btn-keep-warming").addEventListener("click", function () { startEndless(false); });
+  document.getElementById("btn-splash-endless").addEventListener("click", function () {
+    Sfx.ensure();
+    startEndless(true);
+  });
   document.getElementById("btn-splash-history").addEventListener("click", historyFromSplash);
   document.getElementById("btn-end-history").addEventListener("click", historyFromEnd);
   document.getElementById("history").addEventListener("click", function (ev) {
