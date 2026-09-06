@@ -94,12 +94,12 @@
     #clockfill { background: var(--yellow); }
     #phase-hint {
       flex: 0 0 auto; text-align: center; font-size: 14px; font-weight: 800; color: var(--cream);
-      line-height: 1.25; min-height: 18px; padding: 6px 10px 4px; letter-spacing: 0.02em;
+      line-height: 1.25; min-height: 16px; padding: 4px 8px 2px; letter-spacing: 0.02em;
       background: #1A1028; text-shadow: 0 2px 0 #000, 0 0 2px #1A1028;
     }
     #status-row {
       display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
-      padding: 2px 8px 8px; background: #1A1028;
+      padding: 2px 8px 4px; background: #1A1028;
     }
     #status-row .read {
       background: #2a1c4e; border: 2px solid #F5C400; color: var(--cream);
@@ -114,7 +114,7 @@
     #pred-read, #night-pred { font-size: 16px; }
     #pred-read.hidden, #dam-read.hidden, #night-panel.hidden, #status-row[hidden] { display: none !important; }
     #stage {
-      flex: 1 1 auto; min-height: 0; min-width: 0; width: 100%;
+      flex: 1 1 62%; min-height: 58%; min-width: 0; width: 100%;
       position: relative; z-index: 1; background: var(--sky);
       display: flex; align-items: center; justify-content: center;
     }
@@ -143,58 +143,58 @@
     #banner.bleed.storm { background: rgba(32, 48, 82, 0.9); color: var(--cream); border: none; }
     #dock {
       flex: 0 0 auto; background: #1A1028;
-      padding: 8px 8px 8px; z-index: 20; position: relative;
-      display: flex; flex-direction: column; gap: 8px; pointer-events: auto;
+      padding: 4px 6px 4px; z-index: 20; position: relative;
+      display: flex; flex-direction: column; gap: 4px; pointer-events: auto;
+      max-height: 26%; overflow-x: hidden; overflow-y: auto; min-height: 0;
     }
     #job-board {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
-      width: 100%; max-height: 26vh; overflow-y: auto; justify-items: stretch;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+      width: 100%; max-height: 72px; overflow-y: auto; justify-items: stretch;
     }
     #job-board.hidden { display: none; }
     .crew-card {
-      background: #3A2A6A; border: 3px solid #5C3A1A; border-radius: 12px;
-      padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: #3A2A6A; border: 2px solid #5C3A1A; border-radius: 8px;
+      padding: 3px 3px 4px; display: flex; flex-direction: row; flex-wrap: wrap;
+      align-items: center; justify-content: center; gap: 2px 4px;
       min-width: 0; width: 100%;
     }
-    .crew-card.sel { border-color: var(--yellow); box-shadow: 0 0 0 2px #F5C40055; }
-    .crew-card img { width: 48px; height: 40px; object-fit: contain; pointer-events: none; }
-    .crew-card .nm { font-weight: 900; font-size: 10px; color: var(--yellow); letter-spacing: 0.04em; }
-    .crew-card .st { font-size: 8px; font-weight: 800; color: var(--cream); }
+    .crew-card.sel { border-color: var(--yellow); box-shadow: 0 0 0 1px #F5C40055; }
+    .crew-card img { width: 32px; height: 32px; object-fit: contain; pointer-events: none; flex: 0 0 auto; }
+    .crew-card .nm { font-weight: 900; font-size: 9px; color: var(--yellow); letter-spacing: 0.03em; line-height: 1.1; }
+    .crew-card .st { font-size: 8px; font-weight: 800; color: var(--cream); line-height: 1.1; }
     .crew-card .st.hurt { color: var(--danger); }
-    .crew-card .tr { font-size: 8px; font-weight: 800; color: var(--yellow); letter-spacing: 0.04em; }
-    .jobs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; }
+    .crew-card .tr { display: none; }
+    .jobs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 100%; }
     .jobs button {
-      min-height: 26px; border: 2px solid var(--fur-dark); background: var(--fur);
-      color: var(--cream); border-radius: 7px; font-weight: 800; font-size: 9px;
-      letter-spacing: 0.02em; cursor: pointer; padding: 2px 1px;
+      min-height: 22px; height: 22px; border: 2px solid var(--fur-dark); background: var(--fur);
+      color: var(--cream); border-radius: 5px; font-weight: 800; font-size: 8px;
+      letter-spacing: 0.01em; cursor: pointer; padding: 0 1px;
     }
     .jobs button.on { border-color: var(--yellow); background: var(--yellow); color: var(--ink); }
     .jobs button:disabled { opacity: 0.35; cursor: default; }
-    .jobs button.need { grid-column: 1 / -1; font-size: 8px; letter-spacing: 0.01em; border-color: var(--ice); color: var(--ice); }
-    #btn-phase, #night-row button {
-      min-height: 48px; border: 3px solid var(--yellow); background: var(--yellow);
-      color: var(--ink); border-radius: 14px; font-weight: 900; font-size: 16px;
-      letter-spacing: 0.05em; cursor: pointer; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 4px; line-height: 1.25;
+    .jobs button.need { font-size: 7px; letter-spacing: 0; border-color: var(--ice); color: var(--ice); }
+    #btn-phase, #btn-stoke {
+      width: 100%; height: 44px; min-height: 44px; max-height: 44px; border: 3px solid var(--yellow); background: var(--yellow);
+      color: var(--ink); border-radius: 10px; font-weight: 900; font-size: 16px;
+      letter-spacing: 0.04em; cursor: pointer; display: flex; flex-direction: row;
+      align-items: center; justify-content: center; gap: 8px; line-height: 1.1;
     }
     #btn-phase.ready { animation: ready 1.1s ease infinite; }
-    #btn-phase:active, #night-row button:active { transform: translateY(1px); }
-    #btn-phase small, #night-row small { font-size: 14px; font-weight: 800; line-height: 1.25; opacity: 0.95; }
+    #btn-phase:active, #btn-stoke:active, #night-row button:active { transform: translateY(1px); }
+    #btn-phase small, #btn-stoke small { font-size: 11px; font-weight: 800; line-height: 1.1; opacity: 0.95; }
     #btn-phase.hidden { display: none; }
-    #night-pred {
-      width: 100%; text-align: center; font-size: 16px; font-weight: 800; line-height: 1.25;
-      color: var(--cream); background: #2a1c4e; border: 2px solid #F5C400;
-      border-radius: 12px; padding: 8px 10px;
+    #night-pred { display: none; }
+    #night-row { display: flex; gap: 4px; }
+    #night-row button {
+      flex: 1; min-width: 0; height: 36px; min-height: 36px; border: 2px solid var(--cream);
+      background: #a06a34; color: var(--cream); border-radius: 8px; font-weight: 800; font-size: 12px;
+      cursor: pointer;
     }
-    #night-row { display: flex; gap: 6px; }
-    #night-row button { flex: 1; min-width: 0; background: #a06a34; color: var(--cream); border-color: var(--cream); }
-    #btn-stoke.danger { border-color: var(--danger); background: #6a2a3a; }
+    #btn-stoke.danger { border-color: var(--danger); background: #6a2a3a; color: var(--cream); }
     #btn-beacon { border-color: var(--yellow); }
-    #btn-stoke { min-height: 56px; }
-    #btn-stoke strong { font-size: 18px; letter-spacing: 0.04em; }
-    #btn-stoke small { font-size: 14px; }
-    #btn-stoke em { font-style: normal; color: var(--yellow); font-size: 14px; font-weight: 800; line-height: 1.25; }
-    footer { flex: 0 0 auto; text-align: center; font-size: 11px; font-weight: 700; color: #cbbda0; padding: 4px 8px max(8px, env(safe-area-inset-bottom)); background: #1A1028; z-index: 20; position: relative; }
+    #btn-stoke strong { font-size: 16px; letter-spacing: 0.04em; }
+    #btn-stoke em { font-style: normal; color: var(--yellow); font-size: 11px; font-weight: 800; line-height: 1.1; }
+    footer { flex: 0 0 auto; text-align: center; font-size: 10px; font-weight: 700; color: #cbbda0; padding: 2px 8px max(4px, env(safe-area-inset-bottom)); background: #1A1028; z-index: 20; position: relative; }
     footer a { color: var(--cream); text-decoration: underline; }
     .overlay {
       position: absolute; inset: 0; z-index: 12; display: flex; flex-direction: column;
@@ -221,14 +221,14 @@
     .play:disabled { opacity: 0.42; cursor: default; box-shadow: none; filter: grayscale(0.2); }
     .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .end-msg { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 6px #000; }
-    #sheet { justify-content: flex-end; background: #1a102866; padding: 16px 12px 12px; }
+    #sheet { justify-content: center; align-items: center; background: #1a1028aa; padding: 20px 16px; }
     #sheet .sheet-card {
-      width: 100%; background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px;
-      padding: 12px 12px 12px; box-shadow: 0 10px 28px #0008; text-align: left;
-      display: flex; flex-direction: column; max-height: 100%; min-height: 0;
+      width: min(340px, 100%); background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px;
+      padding: 12px; box-shadow: 0 10px 28px #0008; text-align: left;
+      display: flex; flex-direction: column; max-height: min(70%, 420px); min-height: 0;
     }
-    #sheet h3 { margin: 0 0 8px; color: var(--yellow); font-size: 16px; text-align: center; flex: 0 0 auto; }
-    #sheet-list { padding-top: 8px; max-height: 46vh; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+    #sheet h3 { margin: 0 0 6px; color: var(--yellow); font-size: 16px; text-align: center; flex: 0 0 auto; }
+    #sheet-list { padding-top: 8px; max-height: none; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
     #sheet-list .build-btn:first-child { margin-top: 0; }
     .build-btn {
       width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
@@ -393,19 +393,17 @@
       <button id="btn-phase" type="button">START DAY<small id="phase-sub">assign jobs first</small></button>
       <div id="night-panel" class="hidden">
         <div id="night-pred">Tonight ends ~80%</div>
+        <button id="btn-stoke" type="button">
+          <strong>STOKE FIRE</strong>
+          <small id="stoke-pred">Heat after stoke → 83%</small>
+          <em id="stoke-warn" hidden>Tonight’s drain will kill the fire</em>
+        </button>
         <div id="night-row">
-          <button id="btn-stoke" type="button">
-            <strong>STOKE FIRE</strong>
-            <small id="stoke-pred">Heat after stoke → 83%</small>
-            <em id="stoke-warn" hidden>Tonight’s drain will kill the fire</em>
-          </button>
           <button id="btn-syrup" type="button" hidden>
-            <strong>SYRUP</strong>
-            <small id="syrup-pred">+14 heat</small>
+            SYRUP <small id="syrup-pred">+14</small>
           </button>
           <button id="btn-beacon" type="button" hidden>
-            <strong>BEACON</strong>
-            <small>5W+3Sa → +25</small>
+            BEACON <small>5W+3Sa → +25</small>
           </button>
         </div>
       </div>
@@ -1213,12 +1211,15 @@
       var img = document.createElement("img");
       img.src = b.id === "bober" ? SPR_SRC.hat : SPR_SRC.idle;
       img.alt = b.name; img.style.filter = crewFilter(b);
-      var nm = document.createElement("div"); nm.className = "nm"; nm.textContent = b.name;
-      var st = document.createElement("div");
-      st.className = "st" + (b.status !== "ok" ? " hurt" : "");
-      st.textContent = b.status === "down" ? "DOWN" : (b.status === "injured" ? "INJURED" : (JOB_LBL[b.job] || ""));
-      card.appendChild(img); card.appendChild(nm); card.appendChild(st);
-      if (b.trait) { var tr = document.createElement("div"); tr.className = "tr"; tr.textContent = b.trait.toUpperCase(); card.appendChild(tr); }
+      var nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = b.trait ? (b.name + " · " + b.trait) : b.name;
+      card.appendChild(img); card.appendChild(nm);
+      if (b.status !== "ok") {
+        var st = document.createElement("div");
+        st.className = "st hurt";
+        st.textContent = b.status === "down" ? "DOWN" : "INJURED";
+        card.appendChild(st);
+      }
       var jobs = document.createElement("div"); jobs.className = "jobs";
       JOBS.forEach(function (j) {
         var btn = document.createElement("button");
@@ -1236,6 +1237,7 @@
       });
       card.appendChild(jobs); board.appendChild(card);
     });
+    layoutChrome();
   }
 
   function moveBeavers(dt) {
@@ -1795,7 +1797,15 @@
     if (shake > 0.02 || wind) ctx.restore();
   }
 
+  function layoutChrome() {
+    var h = app.clientHeight || 640;
+    var stage = document.getElementById("stage");
+    var dock = document.getElementById("dock");
+    stage.style.minHeight = Math.floor(h * 0.58) + "px";
+    dock.style.maxHeight = Math.floor(h * 0.26) + "px";
+  }
   function resize() {
+    layoutChrome();
     var r = document.getElementById("stage").getBoundingClientRect();
     var dpr = Math.min(2, window.devicePixelRatio || 1);
     var cssW = Math.max(1, r.width), cssH = Math.max(1, r.height);
