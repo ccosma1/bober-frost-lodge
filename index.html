@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#3A2A6A" />
+  <meta name="description" content="Bober Frost Lodge — fan game by a holder. Hold the lodge fire through fifteen winter days." />
+  <title>Bober Frost Lodge</title>
+  <link rel="icon" href="assets/icons/bober-frost.ico" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root {
+      --sky: #3A2A6A; --sky-deep: #1A1028; --fur: #8B5A2B; --fur-dark: #5C3A1A;
+      --yellow: #F5C400; --cream: #F4E6C3; --ink: #1A1028; --ice: #A8C4E8;
+      --danger: #E85D4C; --ok: #7ED957;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; height: 100%; background: var(--ink); color: var(--cream);
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      user-select: none; overflow: hidden; touch-action: manipulation;
+    }
+    #app {
+      display: flex; flex-direction: column; height: 100dvh; height: 100svh;
+      width: 100%; max-width: 480px; margin: 0 auto; background: var(--sky);
+      position: relative; overflow: hidden;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    header {
+      flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 6px; padding: 6px 8px 4px;
+      background: linear-gradient(#2a1c4ecc, #1a1028ee); z-index: 4; min-width: 0;
+    }
+    .chips { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+    .chip {
+      background: #3A2A6A; border: 2px solid #F5C400; color: var(--cream);
+      border-radius: 999px; padding: 2px 7px; font-weight: 800; font-size: 10px;
+      letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .chip.wood { color: var(--yellow); }
+    .chip.fish { color: var(--ice); }
+    .chip.sap { color: #e8b060; }
+    .chip.stone { color: #d4cdc0; }
+    .chip.heat.low { border-color: var(--danger); color: var(--danger); }
+    .chip.gain { animation: popchip 0.35s ease; background: #4a3a18; }
+    .chip.flash { animation: shake 0.35s ease; background: #6a2a3a; }
+    @keyframes popchip { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 #E85D4C88; } 50% { box-shadow: 0 0 0 6px #E85D4C00; } }
+    @keyframes ready { 0%, 100% { box-shadow: 0 4px 0 #8a6a00, 0 0 0 0 #F5C40088; } 50% { box-shadow: 0 4px 0 #8a6a00, 0 0 0 7px #F5C40000; } }
+    .btns { display: flex; gap: 4px; flex: 0 0 auto; }
+    .icon-btn {
+      width: 36px; height: 36px; border: 2px solid var(--cream); background: var(--fur);
+      color: var(--cream); border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; padding: 0;
+    }
+    .icon-btn:active { transform: translateY(1px); filter: brightness(0.85); }
+    .icon-btn.on { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+    #heatbar, #clockbar { height: 8px; background: #1a1028; flex: 0 0 auto; z-index: 4; }
+    #heatbar { height: 10px; }
+    #heatbar > i, #clockbar > i { display: block; height: 100%; width: 0%; }
+    #heatfill { background: var(--cream); box-shadow: 0 0 10px #F4E6C388; }
+    #heatbar.mid #heatfill { background: var(--yellow); }
+    #heatbar.low #heatfill { background: var(--danger); animation: pulse 0.9s ease infinite; }
+    #clockfill { background: var(--yellow); }
+    #stage { flex: 1; min-height: 0; min-width: 0; position: relative; background: var(--sky); display: flex; align-items: center; justify-content: center; }
+    canvas { display: block; width: 100%; height: 100%; cursor: pointer; touch-action: none; }
+    #banner {
+      position: absolute; left: 10px; right: 10px; top: 10px; z-index: 6;
+      background: var(--cream); color: var(--ink); border: 3px solid var(--yellow);
+      border-radius: 14px; padding: 10px 12px; font-weight: 800; font-size: 15px;
+      text-align: center; line-height: 1.3; box-shadow: 0 6px 18px #0007; pointer-events: none;
+    }
+    #banner.hidden { display: none; }
+    #banner.storm { background: #dce7f8; border-color: var(--ice); }
+    #banner.danger { background: #f4d0c8; border-color: var(--danger); color: #5a1810; }
+    #dock { flex: 0 0 auto; background: linear-gradient(#1a1028ee, #2a1c4ecc); padding: 6px 8px 6px; z-index: 4; display: flex; flex-direction: column; gap: 6px; }
+    #job-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 38vh; overflow-y: auto; }
+    #job-board.hidden { display: none; }
+    .crew-card {
+      background: #3A2A6A; border: 3px solid #5C3A1A; border-radius: 12px;
+      padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .crew-card.sel { border-color: var(--yellow); box-shadow: 0 0 0 2px #F5C40055; }
+    .crew-card img { width: 48px; height: 40px; object-fit: contain; pointer-events: none; }
+    .crew-card .nm { font-weight: 900; font-size: 10px; color: var(--yellow); letter-spacing: 0.04em; }
+    .crew-card .st { font-size: 8px; font-weight: 800; color: var(--cream); }
+    .crew-card .st.hurt { color: var(--danger); }
+    .crew-card .tr { font-size: 8px; font-weight: 800; color: var(--yellow); letter-spacing: 0.04em; }
+    .jobs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; }
+    .jobs button {
+      min-height: 26px; border: 2px solid var(--fur-dark); background: var(--fur);
+      color: var(--cream); border-radius: 7px; font-weight: 800; font-size: 9px;
+      letter-spacing: 0.02em; cursor: pointer; padding: 2px 1px;
+    }
+    .jobs button.on { border-color: var(--yellow); background: var(--yellow); color: var(--ink); }
+    .jobs button:disabled { opacity: 0.35; cursor: default; }
+    #btn-phase, #night-row button {
+      min-height: 48px; border: 3px solid var(--yellow); background: var(--yellow);
+      color: var(--ink); border-radius: 14px; font-weight: 900; font-size: 14px;
+      letter-spacing: 0.05em; cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px; line-height: 1.15;
+    }
+    #btn-phase.ready { animation: ready 1.1s ease infinite; }
+    #btn-phase:active, #night-row button:active { transform: translateY(1px); }
+    #btn-phase small, #night-row small { font-size: 10px; font-weight: 800; opacity: 0.95; }
+    #btn-phase.hidden { display: none; }
+    #night-row { display: flex; gap: 6px; }
+    #night-row.hidden { display: none; }
+    #night-row button { flex: 1; min-width: 0; background: #a06a34; color: var(--cream); border-color: var(--cream); }
+    #btn-stoke.danger { border-color: var(--danger); background: #6a2a3a; }
+    #btn-beacon { border-color: var(--yellow); }
+    #btn-stoke { min-height: 64px; }
+    #btn-stoke strong { font-size: 18px; letter-spacing: 0.08em; }
+    #btn-stoke small { font-size: 12px; }
+    #btn-stoke em { font-style: normal; color: var(--yellow); font-size: 12px; font-weight: 900; }
+    #phase-hint { text-align: center; font-size: 11px; font-weight: 800; color: var(--yellow); min-height: 14px; }
+    footer { flex: 0 0 auto; text-align: center; font-size: 10px; font-weight: 700; color: #cbbda0; padding: 4px 8px 6px; background: #1a1028ee; }
+    footer a { color: var(--cream); text-decoration: underline; }
+    .overlay {
+      position: absolute; inset: 0; z-index: 12; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end; padding: 18px 18px 24px;
+      background: linear-gradient(to top, #1a1028ee 0%, #1a102866 38%, #3A2A6A22 100%);
+      text-align: center;
+    }
+    .overlay.hidden { display: none; }
+    #paused { justify-content: center; background: #1a1028e8; }
+    .overlay img.hero { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+    .overlay h1 { margin: 0 0 6px; font-size: clamp(26px, 8vw, 40px); line-height: 0.95; color: var(--yellow); text-shadow: 0 3px 0 #1A1028, 0 6px 16px #000; }
+    .overlay h2 { margin: 0 0 8px; font-size: 28px; color: var(--yellow); text-shadow: 0 3px 0 #1A1028; }
+    .tagline { margin: 0 0 10px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 8px #000; }
+    .how { margin: 0 0 12px; max-width: 24em; font-size: 13px; line-height: 1.4; color: var(--cream); text-shadow: 0 1px 6px #000; }
+    #dam-tip { margin: 0 0 12px; font-size: 12px; font-weight: 800; color: var(--yellow); text-shadow: 0 2px 6px #000; }
+    #dam-tip.hidden { display: none; }
+    .play {
+      appearance: none; border: 3px solid #1A1028; background: var(--yellow); color: var(--ink);
+      font-weight: 900; font-size: 18px; letter-spacing: 0.08em; padding: 12px 24px;
+      border-radius: 16px; cursor: pointer; box-shadow: 0 4px 0 #8a6a00;
+    }
+    .play:active { transform: translateY(2px); box-shadow: 0 2px 0 #8a6a00; }
+    .play.ghost { background: transparent; color: var(--cream); border-color: var(--cream); box-shadow: none; margin-top: 8px; }
+    .play:disabled { opacity: 0.42; cursor: default; box-shadow: none; filter: grayscale(0.2); }
+    .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .end-msg { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 6px #000; }
+    #sheet { justify-content: flex-end; background: #1a102866; padding: 12px; }
+    #sheet .sheet-card { width: 100%; background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px; padding: 14px 12px 12px; box-shadow: 0 10px 28px #0008; text-align: left; }
+    #sheet h3 { margin: 0 0 8px; color: var(--yellow); font-size: 16px; text-align: center; }
+    #sheet-list { max-height: 46vh; overflow-y: auto; }
+    .build-btn {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      min-height: 56px; margin: 0 0 8px; padding: 10px 12px; border: 3px solid var(--fur-dark);
+      background: var(--fur); color: var(--cream); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px;
+    }
+    .build-btn .cost { color: var(--yellow); font-size: 12px; text-align: right; line-height: 1.25; }
+    .build-btn .why { display: block; font-size: 11px; color: var(--ice); font-weight: 700; margin-top: 2px; }
+    .build-btn.locked { opacity: 0.55; filter: grayscale(0.25); background: #4a3420; }
+    #confirm .tip-card, #paused .tip-card {
+      background: #3A2A6Aee; border: 3px solid var(--yellow); border-radius: 16px;
+      padding: 22px 20px 16px; max-width: 20em; box-shadow: 0 8px 28px #0008;
+    }
+    #confirm { justify-content: center; background: #1a1028e6; }
+    .row-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    #app.booting header .chips, #app.booting #dock, #app.booting #clockbar, #app.booting #heatbar { visibility: hidden; }
+    #history {
+      z-index: 21; justify-content: center; align-items: center; cursor: default;
+      background: rgba(26, 16, 40, 0.55); padding: 12px;
+    }
+    #history .hist-stage {
+      position: relative; display: flex; flex-direction: column;
+      width: min(960px, 92vw); height: min(78vh, 680px); overflow: hidden;
+      border-radius: 14px; box-shadow: 0 10px 36px #0009; background: #1A1028;
+    }
+    #history img { position: relative; flex: 1 1 auto; width: 100%; min-height: 0; object-fit: contain; background: #1A1028; }
+    #history .hist-bar {
+      flex: 0 0 auto; min-height: 96px; background: #3A2A6A;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 5px; padding: 10px 14px 12px;
+    }
+    #history .hist-sub {
+      margin: 0; font-size: 11px; font-weight: 800; color: var(--cream);
+      letter-spacing: 0.04em; text-align: center;
+    }
+    #history .hist-line {
+      margin: 0; max-width: 30em; width: 100%;
+      font-size: clamp(13px, 3.2vw, 18px); font-weight: 900; line-height: 1.25;
+      color: var(--yellow); text-shadow: 0 2px 0 #1A1028; text-align: center;
+    }
+    #hist-skip {
+      appearance: none; border: 2px solid var(--cream); background: #1A1028; color: var(--cream);
+      font-family: inherit; font-weight: 800; font-size: 11px; letter-spacing: 0.04em;
+      padding: 5px 12px; border-radius: 10px; cursor: pointer;
+    }
+    #hist-skip:active { filter: brightness(0.85); }
+    #hist-skip:disabled { opacity: 0.35; cursor: default; }
+  </style>
+</head>
+<body>
+  <div id="app" class="booting">
+    <header>
+      <div class="chips">
+        <div class="chip" id="chip-day">DAY 1/15</div>
+        <div class="chip wood" id="chip-wood">W 0</div>
+        <div class="chip fish" id="chip-fish">F 0</div>
+        <div class="chip sap" id="chip-sap">SA 0</div>
+        <div class="chip stone" id="chip-stone">ST 0</div>
+        <div class="chip heat" id="chip-heat">H 80%</div>
+      </div>
+      <div class="btns">
+        <button class="icon-btn" id="btn-speed" title="Speed" aria-label="Speed">×1</button>
+        <button class="icon-btn" id="btn-mute" title="Mute" aria-label="Mute">🔊</button>
+        <button class="icon-btn" id="btn-pause" title="Pause" aria-label="Pause">⏸</button>
+        <button class="icon-btn" id="btn-restart" title="Restart" aria-label="Restart">↻</button>
+      </div>
+    </header>
+    <div id="heatbar"><i id="heatfill"></i></div>
+    <div id="clockbar"><i id="clockfill"></i></div>
+    <div id="stage">
+      <canvas id="view" width="360" height="640"></canvas>
+      <div id="banner" class="hidden"></div>
+      <div id="splash" class="overlay">
+        <img class="hero" src="assets/splash.jpg" alt="" />
+        <h1>BOBER FROST LODGE</h1>
+        <p class="tagline">Fan game by a holder.</p>
+        <p class="how">Survive 15 winter days. Assign Chopper, Fisher, Tender, Tapper, Miner. Build on eight pads. Whiteouts hit nights 3, 6, 9, 12. Night 15 is the boss storm — fire the Beacon or hold 40% heat.</p>
+        <p id="dam-tip" class="hidden">Dam reserves: +10 Sap this run.</p>
+        <button class="play" id="btn-hold" type="button">HOLD THE FIRE</button>
+        <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
+      </div>
+      <div id="paused" class="overlay hidden">
+        <div class="tip-card">
+          <h2>PAUSED</h2>
+          <p class="end-msg">The river can wait.</p>
+          <div class="end-actions">
+            <button class="play" id="btn-resume" type="button">RESUME</button>
+            <button class="play ghost" id="btn-pause-restart" type="button">RESTART</button>
+          </div>
+        </div>
+      </div>
+      <div id="endcard" class="overlay hidden">
+        <h2 id="end-title">THAW HOLDS</h2>
+        <p class="end-msg" id="end-msg"></p>
+        <div class="end-actions">
+          <button class="play" id="btn-new-winter" type="button">NEW WINTER</button>
+          <button class="play ghost" id="btn-end-history" type="button">HISTORY</button>
+          <button class="play ghost" id="btn-keep-warming" type="button" disabled>KEEP WARMING<small style="display:block;font-size:11px;letter-spacing:0.04em">Coming later</small></button>
+          <button class="play ghost" id="btn-end-restart" type="button">RETRY</button>
+        </div>
+      </div>
+      <div id="history" class="overlay hidden" role="dialog" aria-label="The Freeze">
+        <div class="hist-stage">
+          <img id="hist-img" alt="" />
+          <div class="hist-bar">
+            <p class="hist-sub" id="hist-sub">THE FREEZE · a fan game tale · not official</p>
+            <p class="hist-line" id="hist-line"></p>
+            <button type="button" id="hist-skip">tap to skip</button>
+          </div>
+        </div>
+      </div>
+      <div id="confirm" class="overlay hidden">
+        <div class="tip-card">
+          <h2>WIPE THE LODGE?</h2>
+          <p class="end-msg">This clears bober-frost-lodge-v1. Day, resources, heat, buildings, and jobs go with it.</p>
+          <div class="row-btns">
+            <button class="play" id="btn-wipe" type="button">WIPE</button>
+            <button class="play ghost" id="btn-keep" type="button">KEEP</button>
+          </div>
+        </div>
+      </div>
+      <div id="sheet" class="overlay hidden">
+        <div class="sheet-card">
+          <h3 id="sheet-title">Build on pad</h3>
+          <p class="end-msg" id="sheet-sub" style="margin-bottom:8px;text-align:center"></p>
+          <div id="sheet-list"></div>
+          <button class="play ghost" id="btn-sheet-close" type="button" style="width:100%">CLOSE</button>
+        </div>
+      </div>
+    </div>
+    <div id="dock">
+      <div id="phase-hint">DAWN — assign jobs</div>
+      <div id="job-board" class="hidden"></div>
+      <button id="btn-phase" type="button">START DAY<small id="phase-sub">assign jobs first</small></button>
+      <div id="night-row" class="hidden">
+        <button id="btn-stoke" type="button">
+          <strong>STOKE FIRE</strong>
+          <small id="stoke-pred">Heat after stoke → 83%</small>
+          <em id="stoke-warn" hidden>Tonight’s drain will kill the fire</em>
+        </button>
+        <button id="btn-syrup" type="button" hidden>
+          <strong>SYRUP</strong>
+          <small id="syrup-pred">+14 heat</small>
+        </button>
+        <button id="btn-beacon" type="button" hidden>
+          <strong>BEACON</strong>
+          <small>5W+3Sa → +25</small>
+        </button>
+      </div>
+    </div>
+    <footer>Part of the Boberverse · <a href="https://ccosma1.github.io/bober-yeet/">Yeet</a> · <a href="https://ccosma1.github.io/bober-dam-defense/">Dam Defense</a></footer>
+  </div>
+  <script>
+(function () {
+  "use strict";
+
+  var SAVE_KEY = "bober-frost-lodge-v1";
+  var SAVE_OLD = "bober-frost-lodge-v0";
+  var HIST_SEEN_KEY = "bober-history-v1";
+  var VERSE_KEY = "boberverse-v1";
+  var DAM_KEY = "bober-dam-campaign-v1";
+  var W = 360, H = 640, DAYS = 15;
+  var PHASE_DUR = { dawn: 5, day: 30, dusk: 4, night: 8 };
+  var STORM_DAYS = [3, 6, 9, 12, 15];
+  var CHOP_PER_DAY = 7, FISH_PER_DAY = 5, TAP_SLOW = 3, TAP_FAST = 5, MINE_PER_DAY = 4;
+  var WOODSHED_MUL = 1.25, WORKSHOP_MUL = 1.2, WALK = 130, SPRITE_H = 52, CAP = 99, PAD_R = 56;
+  var LODGE = { x: 180, y: 278 };
+  var PADS = [
+    { x: 58, y: 150 }, { x: 180, y: 128 }, { x: 302, y: 150 },
+    { x: 48, y: 268 }, { x: 312, y: 268 },
+    { x: 70, y: 392 }, { x: 180, y: 418 }, { x: 290, y: 392 }
+  ];
+  var SITE_CHOP = { x: 58, y: 528 };
+  var SITE_FISH = { x: 306, y: 536 };
+  var SITE_SAP = { x: 46, y: 448 };
+  var SITE_MINE = { x: 318, y: 448 };
+  var JOBS = ["chopper", "fisher", "tender", "tapper", "miner"];
+  var JOB_LBL = { chopper: "CHOP", fisher: "FISH", tender: "TEND", tapper: "TAP", miner: "MINE" };
+  var TRAITS = ["sturdy", "hungry", "lucky"];
+  var RECRUITS = [
+    { id: "twig", name: "TWIG" },
+    { id: "moss", name: "MOSS" }
+  ];
+  var CREW_SEED = [
+    { id: "bober", name: "BOBER", job: "chopper" },
+    { id: "nib", name: "NIB", job: "fisher" },
+    { id: "puddle", name: "PUDDLE", job: "tender" }
+  ];
+  var BUILDINGS = [
+    { id: "woodshed", name: "Woodshed", day: 1, wood: 10, fish: 0, sap: 0, stone: 0, max: 1, blurb: "Choppers work a little faster." },
+    { id: "smokehouse", name: "Smokehouse", day: 1, wood: 8, fish: 4, sap: 0, stone: 0, max: 1, blurb: "At night, fish become rations." },
+    { id: "sapboiler", name: "Sap Boiler", day: 2, wood: 12, fish: 0, sap: 6, stone: 0, max: 1, blurb: "Sap becomes syrup. 1 syrup → +14 heat." },
+    { id: "quarry", name: "Quarry Bench", day: 3, wood: 15, fish: 0, sap: 0, stone: 8, max: 1, blurb: "Unlocks Miner and stone crafts." },
+    { id: "bunk", name: "Bunk Hut", day: 3, wood: 20, fish: 0, sap: 5, stone: 0, max: 2, blurb: "+1 beaver bed (start 3, cap 5)." },
+    { id: "watch", name: "Watch Post", day: 5, wood: 18, fish: 0, sap: 0, stone: 10, max: 1, blurb: "Warns Whiteout a day early. −2 night drain." },
+    { id: "workshop", name: "Workshop", day: 6, wood: 25, fish: 0, sap: 8, stone: 12, max: 1, blurb: "All gather jobs work faster." },
+    { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5W+3Sa. Day 15 ritual." }
+  ];
+  var SPR_SRC = {
+    idle: "assets/sprites/bober-idle.png", hat: "assets/sprites/bober-hat.png",
+    walk: "assets/sprites/bober-walk.png", chop: "assets/sprites/bober-chop.png",
+    fish: "assets/sprites/bober-fish.png", tend: "assets/sprites/bober-tend.png"
+  };
+
+  var canvas = document.getElementById("view");
+  var ctx = canvas.getContext("2d");
+  var app = document.getElementById("app");
+  var playing = false, paused = false, lastTs = 0, clock = 0;
+  var selectedPad = -1, saveAcc = 0, shake = 0, flakesN = 48, dawnGoT = -1, beaconPulse = 0;
+  var snow = [], pops = [], embers = [], streaks = [];
+  var padPop = [0, 0, 0, 0, 0, 0, 0, 0];
+  var bannerQ = [], bannerTimer = 0, SPR = {};
+  var state = newState();
+
+  Object.keys(SPR_SRC).forEach(function (k) { var im = new Image(); im.src = SPR_SRC[k]; SPR[k] = im; });
+
+  try { localStorage.removeItem(SAVE_OLD); } catch (e) {}
+
+  var Sfx = {
+    ctx: null, muted: false, wind: null,
+    ensure: function () {
+      if (!this.ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); }
+      if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+    },
+    beep: function (freq, dur, type, gain, slide) {
+      if (this.muted || !this.ctx) return;
+      var t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type || "square"; o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, slide), t + dur);
+      g.gain.setValueAtTime(gain || 0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02);
+    },
+    noise: function (dur, gain, cutoff) {
+      if (this.muted || !this.ctx) return;
+      var n = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+      var d = n.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      var src = this.ctx.createBufferSource(); src.buffer = n;
+      var g = this.ctx.createGain(); g.gain.value = gain || 0.12;
+      var f = this.ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = cutoff || 900;
+      src.connect(f); f.connect(g); g.connect(this.ctx.destination); src.start();
+    },
+    assign: function () { this.beep(520, 0.05, "square", 0.05); this.beep(780, 0.07, "square", 0.04); },
+    place: function () { this.noise(0.14, 0.18, 800); this.beep(180, 0.08, "triangle", 0.08, 70); this.beep(420, 0.06, "square", 0.05); },
+    gather: function (kind) {
+      if (kind === "fish") this.beep(560, 0.05, "sine", 0.05, 300);
+      else if (kind === "sap") this.beep(440, 0.06, "triangle", 0.05, 220);
+      else if (kind === "stone") { this.noise(0.07, 0.12, 400); this.beep(110, 0.06, "square", 0.04); }
+      else { this.noise(0.05, 0.1, 550); this.beep(190, 0.05, "square", 0.045); }
+    },
+    stoke: function () { this.noise(0.12, 0.14, 480); this.beep(240, 0.1, "sawtooth", 0.06, 90); },
+    beacon: function () { this.beep(392, 0.12, "square", 0.07); this.beep(523, 0.18, "square", 0.07); this.beep(784, 0.22, "triangle", 0.06); },
+    warn: function () { this.beep(330, 0.1, "square", 0.05); var s = this; setTimeout(function () { s.beep(250, 0.14, "square", 0.04); }, 110); },
+    cheer: function () { [523, 659, 784].forEach(function (f, i) { setTimeout(function () { Sfx.beep(f, 0.12, "square", 0.06); }, i * 70); }); },
+    win: function () { [523, 659, 784, 1046].forEach(function (f, i) { setTimeout(function () { Sfx.beep(f, 0.16, "square", 0.07); }, i * 90); }); },
+    lose: function () { this.beep(300, 0.2, "sawtooth", 0.09, 120); var s = this; setTimeout(function () { s.beep(140, 0.45, "triangle", 0.08, 55); }, 160); },
+    startWind: function () {
+      this.ensure(); if (this.muted || !this.ctx || this.wind) return;
+      var c = this.ctx, buf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), d = buf.getChannelData(0), last = 0;
+      for (var i = 0; i < d.length; i++) { last = last * 0.97 + (Math.random() * 2 - 1) * 0.03; d[i] = last * 3.4; }
+      var src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+      var f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 380;
+      var g = c.createGain(); g.gain.value = 0.1;
+      src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+      this.wind = { src: src, g: g };
+    },
+    stopWind: function () { if (!this.wind) return; try { this.wind.src.stop(); } catch (e) {} this.wind = null; }
+  };
+
+  function newBeavers() {
+    return CREW_SEED.map(function (s, i) {
+      return { id: s.id, name: s.name, job: s.job, trait: null, status: "ok", hungry: 0, x: LODGE.x + (i - 1) * 36, y: LODGE.y + 44, facing: 1, acc: 0, moving: false };
+    });
+  }
+  function newState() {
+    return {
+      day: 1, phase: "dawn", phaseT: 0,
+      wood: 18, fish: 10, sap: 4, stone: 10, syrup: 0, rations: 0, heat: 80,
+      buildings: [null, null, null, null, null, null, null, null],
+      beavers: newBeavers(),
+      speed: 1, ended: null, nightDrain: 0, fedTonight: false, dawnHint: true,
+      beaconUsedNight: false, beaconJoke: false, damBonus: false
+    };
+  }
+
+  function damHasStars() {
+    try {
+      var raw = localStorage.getItem(DAM_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.stars) && s.stars.some(function (n) { return n > 0; })) return true;
+      }
+      var v = localStorage.getItem(VERSE_KEY);
+      if (v) {
+        var o = JSON.parse(v);
+        if (o && o.damDefense && (o.damDefense.stars || o.damDefense.cleared)) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function stubVerse() {
+    try {
+      if (!localStorage.getItem(VERSE_KEY)) {
+        localStorage.setItem(VERSE_KEY, JSON.stringify({
+          yeet: null, damDefense: null, frostLodge: { slice: "mvp15", bonuses: false }
+        }));
+      }
+    } catch (e) {}
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        day: state.day, phase: state.phase, phaseT: state.phaseT,
+        wood: state.wood, fish: state.fish, sap: state.sap, stone: state.stone,
+        syrup: state.syrup, rations: state.rations, heat: Math.round(state.heat * 10) / 10,
+        buildings: state.buildings.slice(),
+        jobs: state.beavers.map(function (b) { return b.job; }),
+        beavers: state.beavers.map(function (b) {
+          return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: b.status, hungry: b.hungry, x: b.x, y: b.y, facing: b.facing, acc: b.acc };
+        }),
+        muted: Sfx.muted, speed: state.speed, ended: state.ended,
+        nightDrain: state.nightDrain, fedTonight: state.fedTonight, dawnHint: state.dawnHint,
+        beaconUsedNight: state.beaconUsedNight, beaconJoke: state.beaconJoke, damBonus: state.damBonus
+      }));
+    } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (!d || typeof d.day !== "number") return false;
+      state = newState();
+      state.day = d.day; state.phase = d.phase || "dawn"; state.phaseT = d.phaseT || 0;
+      state.wood = clamp(d.wood, 0, CAP); state.fish = clamp(d.fish, 0, CAP);
+      state.sap = clamp(d.sap || 0, 0, CAP); state.stone = clamp(d.stone || 0, 0, CAP);
+      state.syrup = clamp(d.syrup || 0, 0, CAP); state.rations = clamp(d.rations || 0, 0, CAP);
+      state.heat = clamp(d.heat, 0, 100);
+      state.buildings = Array.isArray(d.buildings) ? d.buildings.slice(0, 8) : state.buildings;
+      while (state.buildings.length < 8) state.buildings.push(null);
+      state.speed = d.speed === 4 || d.speed === 2 ? d.speed : 1;
+      state.ended = d.ended || null; state.nightDrain = d.nightDrain || 0;
+      state.fedTonight = !!d.fedTonight; state.dawnHint = d.dawnHint !== false;
+      state.beaconUsedNight = !!d.beaconUsedNight; state.beaconJoke = !!d.beaconJoke;
+      state.damBonus = !!d.damBonus; Sfx.muted = !!d.muted;
+      if (Array.isArray(d.beavers) && d.beavers.length >= 3) {
+        state.beavers = d.beavers.map(function (s, i) {
+          return {
+            id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
+            trait: s.trait || null, status: s.status || "ok", hungry: s.hungry || 0,
+            x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 44,
+            facing: s.facing || 1, acc: s.acc || 0, moving: false
+          };
+        });
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+  function wipeSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+  function clamp(n, a, b) { n = +n || 0; return n < a ? a : n > b ? b : n; }
+  function countBuilding(kind) { return state.buildings.filter(function (b) { return b === kind; }).length; }
+  function hasBuilding(kind) { return countBuilding(kind) > 0; }
+  function bedCap() { return Math.min(5, 3 + countBuilding("bunk")); }
+  function tenderPresent() { return state.beavers.some(function (b) { return b.job === "tender" && b.status !== "down"; }); }
+  function heatPerWood() { return tenderPresent() ? 10 : 8; }
+  function isStormDay(d) { return STORM_DAYS.indexOf(d == null ? state.day : d) !== -1; }
+  function isBossDay() { return state.day === 15; }
+  function isWhiteoutNight() { return isStormDay() && state.phase === "night"; }
+  function whiteoutLook() { return isStormDay() && (state.phase === "dusk" || state.phase === "night"); }
+  function calcDrain() {
+    var d = 10 + state.day * 0.55;
+    if (isBossDay()) d *= 2.0;
+    else if (isStormDay()) d *= 1.6;
+    if (tenderPresent()) d *= 0.65;
+    if (hasBuilding("watch")) d -= 2;
+    return Math.max(4, d);
+  }
+  function foodCount() { return state.fish + state.rations; }
+  function jobsReady() { return state.beavers.every(function (b) { return b.status === "down" || !!b.job; }); }
+  function aliveCount() { return state.beavers.filter(function (b) { return b.status !== "down"; }).length; }
+  function drainLeft() {
+    var d = state.phase === "night" ? (state.nightDrain || calcDrain()) : calcDrain();
+    if (state.phase === "night") return d * Math.max(0, 1 - state.phaseT / PHASE_DUR.night);
+    return d;
+  }
+  function predictedHeat(extra) { return clamp(state.heat + (extra || 0) - drainLeft(), 0, 100); }
+
+  function offsetFor(b) {
+    var i = 0;
+    for (var n = 0; n < state.beavers.length; n++) if (state.beavers[n].id === b.id) i = n;
+    var nB = state.beavers.length;
+    return (i - (nB - 1) / 2) * 32;
+  }
+  function beaverTarget(b) {
+    if (state.phase === "dawn" || state.phase === "night" || state.phase === "dusk" || b.status === "down")
+      return { x: LODGE.x + offsetFor(b), y: LODGE.y + 48 };
+    if (b.job === "tender") return { x: LODGE.x + 26, y: LODGE.y + 28 };
+    if (b.job === "chopper") return { x: SITE_CHOP.x + 16, y: SITE_CHOP.y + 4 };
+    if (b.job === "fisher") return { x: SITE_FISH.x - 18, y: SITE_FISH.y + 2 };
+    if (b.job === "tapper") return { x: SITE_SAP.x + 14, y: SITE_SAP.y };
+    if (b.job === "miner") return { x: SITE_MINE.x - 14, y: SITE_MINE.y };
+    return { x: LODGE.x, y: LODGE.y + 48 };
+  }
+  function atSite(b, t) { return Math.hypot(b.x - t.x, b.y - t.y) < 18; }
+
+  function flashChip(id, gain) {
+    var el = document.getElementById(id); if (!el) return;
+    el.classList.remove("flash"); el.classList.remove("gain"); void el.offsetWidth;
+    el.classList.add(gain ? "gain" : "flash");
+    setTimeout(function () { el.classList.remove("flash"); el.classList.remove("gain"); }, 380);
+  }
+  function banner(text, ms, cls) {
+    bannerQ.push({ text: text, ms: ms || 2600, cls: cls || "" });
+    if (bannerQ.length === 1) showBanner();
+  }
+  function showBanner() {
+    if (!bannerQ.length) { document.getElementById("banner").classList.add("hidden"); return; }
+    var b = bannerQ[0], el = document.getElementById("banner");
+    el.textContent = b.text; el.className = b.cls || ""; el.classList.remove("hidden");
+    bannerTimer = clock + b.ms / 1000; Sfx.warn();
+  }
+  function hideBanner() { bannerQ.shift(); if (bannerQ.length) showBanner(); else document.getElementById("banner").classList.add("hidden"); }
+  function pop(x, y, text, color) { pops.push({ x: x, y: y, text: text, color: color || "#F5C400", life: 1.05 }); }
+
+  function addRes(key, n, chip, label, color) {
+    var before = state[key];
+    state[key] = clamp(state[key] + n, 0, CAP);
+    var got = state[key] - before;
+    if (got) { pop(arguments[5], arguments[6], "+" + got + " " + label, color); flashChip(chip, true); }
+    return got;
+  }
+
+  function eatOne() {
+    if (state.rations >= 1) { state.rations -= 1; return true; }
+    if (state.fish >= 1) { state.fish -= 1; return true; }
+    return false;
+  }
+  function supper() {
+    if (hasBuilding("smokehouse") && state.fish > 0) {
+      var n = state.fish; state.fish = 0; state.rations = clamp(state.rations + n, 0, CAP);
+    }
+    if (hasBuilding("sapboiler") && state.sap > 0) {
+      var keep = hasBuilding("beacon") && !state.beaconUsedNight ? 3 : 0;
+      var boil = Math.max(0, state.sap - keep);
+      state.sap -= boil; state.syrup = clamp(state.syrup + boil, 0, CAP);
+    }
+    state.beavers.forEach(function (b) {
+      var need = b.trait === "hungry" ? 2 : 1;
+      var ate = true;
+      for (var i = 0; i < need; i++) if (!eatOne()) ate = false;
+      if (ate) {
+        if (b.status === "down") b.status = "injured"; else b.status = "ok";
+        b.hungry = 0;
+      } else {
+        b.hungry = (b.hungry || 0) + 1;
+        b.status = b.hungry >= 2 ? "down" : "injured";
+      }
+    });
+  }
+
+  function addRecruit() {
+    if (state.beavers.length >= bedCap()) return null;
+    var used = {};
+    state.beavers.forEach(function (b) { used[b.id] = true; });
+    var spec = RECRUITS.filter(function (r) { return !used[r.id]; })[0];
+    if (!spec) spec = { id: "reed", name: "REED" };
+    var trait = TRAITS[Math.floor(Math.random() * TRAITS.length)];
+    var job = hasBuilding("quarry") ? "miner" : (hasBuilding("sapboiler") ? "tapper" : "chopper");
+    var b = { id: spec.id, name: spec.name, job: job, trait: trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 48, facing: 1, acc: 0, moving: false };
+    state.beavers.push(b);
+    return b;
+  }
+
+  function maybeRecruit() {
+    var joined = [];
+    while (state.beavers.length < bedCap() && state.beavers.length < 5) {
+      var r = addRecruit(); if (!r) break; joined.push(r);
+    }
+    if (joined.length) {
+      banner(joined.map(function (b) { return b.name + " joined (" + b.trait + ")"; }).join(" · "), 2800);
+    }
+  }
+
+  function enterPhase(p) {
+    state.phase = p; state.phaseT = 0;
+    if (p === "dusk") {
+      state.beaconUsedNight = false;
+      duskWarn();
+    }
+    if (p === "night") {
+      if (!state.fedTonight) { supper(); state.fedTonight = true; }
+      state.nightDrain = calcDrain();
+      if (isWhiteoutNight()) { Sfx.startWind(); shake = isBossDay() ? 1 : 0.7; }
+    } else {
+      state.fedTonight = false;
+      if (p !== "dusk") Sfx.stopWind();
+    }
+    if (p === "dawn") {
+      dawnGoT = jobsReady() ? 3 : -1;
+      maybeRecruit();
+      if (hasBuilding("watch") && isStormDay(state.day + 1)) banner("Whiteout tomorrow", 2800, "storm");
+      if (state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false; }
+    } else {
+      dawnGoT = -1;
+    }
+    syncDock(); hud(); save();
+  }
+
+  function duskWarn() {
+    if (isBossDay()) banner("BOSS WHITEOUT — fire the Beacon or hold 40%", 3400, "storm");
+    else if (isStormDay()) banner("WHITEOUT TONIGHT", 2600, "storm");
+    if (hasBuilding("beacon") && !isBossDay()) banner("Beacon ready", 2000);
+    var need = 0;
+    state.beavers.forEach(function (b) { need += b.trait === "hungry" ? 2 : 1; });
+    if (foodCount() < need) banner("Need " + need + " food", 2400, "danger");
+    else if (state.beavers.length >= 4 && foodCount() < need + 3) banner("Larder thin — " + Math.floor(foodCount()) + " food, " + need + " needed", 2200, "danger");
+    if (predictedHeat(0) <= 0) banner("Fire won’t last", 2600, "danger");
+    else if (state.heat < 30) banner("Fire is low — stoke", 2000, "danger");
+  }
+
+  function resolveNightEnd() {
+    if (state.ended) return;
+    if (state.heat <= 0.05) { state.heat = 0; lose("heat"); return; }
+    if (aliveCount() < 1) { lose("crew"); return; }
+    if (isBossDay()) {
+      if (state.beaconUsedNight || state.heat >= 40) {
+        state.day = 16;
+        win();
+        return;
+      }
+      lose("boss"); return;
+    }
+    Sfx.cheer();
+    if (isStormDay()) banner("The lodge held.", 1800);
+    state.day += 1;
+    state.beavers.forEach(function (b) { b.acc = 0; });
+    enterPhase("dawn");
+  }
+
+  function setEndButtons(isWin) {
+    document.getElementById("btn-new-winter").style.display = isWin ? "" : "none";
+    document.getElementById("btn-keep-warming").style.display = isWin ? "" : "none";
+    document.getElementById("btn-end-restart").style.display = isWin ? "none" : "";
+  }
+  function win() {
+    state.ended = "win";
+    Sfx.stopWind(); Sfx.win(); save();
+    document.getElementById("end-title").textContent = "THAW HOLDS";
+    document.getElementById("end-msg").textContent = "The lodge fire outlasted the freeze.";
+    setEndButtons(true);
+    document.getElementById("endcard").classList.remove("hidden");
+    paused = false; document.getElementById("paused").classList.add("hidden");
+  }
+  function lose(why) {
+    state.ended = "lose";
+    Sfx.stopWind(); Sfx.lose(); shake = 0.9; save();
+    var msg = "Night " + state.day + " swallowed the lodge.";
+    if (why === "crew") msg = "Every beaver is down. The fire has no one left.";
+    if (why === "boss") msg = "Boss whiteout won. Fire a Beacon or hold 40% heat.";
+    document.getElementById("end-title").textContent = "THE FIRE WENT OUT";
+    document.getElementById("end-msg").textContent = msg;
+    setEndButtons(false);
+    document.getElementById("endcard").classList.remove("hidden");
+    paused = false; document.getElementById("paused").classList.add("hidden");
+  }
+
+  function stokeWood() {
+    if (!canNightAct()) return;
+    if (state.wood < 1) { flashChip("chip-wood"); banner("No wood to burn.", 1400); return; }
+    state.wood -= 1;
+    var add = heatPerWood();
+    state.heat = clamp(state.heat + add, 0, 100);
+    Sfx.stoke(); pop(LODGE.x, LODGE.y - 42, "+" + add + " heat", "#F5C400");
+    for (var i = 0; i < 8; i++) spawnEmber(true);
+    hud(); save();
+  }
+  function stokeSyrup() {
+    if (!canNightAct()) return;
+    if (state.syrup < 1) { banner("No syrup.", 1200); return; }
+    state.syrup -= 1;
+    state.heat = clamp(state.heat + 14, 0, 100);
+    Sfx.stoke(); pop(LODGE.x, LODGE.y - 42, "+14 syrup", "#e8b060");
+    for (var i = 0; i < 10; i++) spawnEmber(true);
+    hud(); save();
+  }
+  function fireBeacon() {
+    if (state.ended || !playing) return;
+    if (state.phase !== "night") { banner("Fire the Beacon at night.", 1600); return; }
+    if (!hasBuilding("beacon")) { banner("Build a Beacon Tower first.", 1600); return; }
+    if (state.beaconUsedNight) { banner("Beacon already fired.", 1400); return; }
+    if (state.wood < 5 || state.sap < 3) {
+      if (state.wood < 5) flashChip("chip-wood");
+      if (state.sap < 3) flashChip("chip-sap");
+      banner("Need 5W+3Sa", 1600);
+      return;
+    }
+    state.wood -= 5; state.sap -= 3;
+    state.heat = clamp(state.heat + 25, 0, 100);
+    state.beaconUsedNight = true;
+    beaconPulse = 1;
+    Sfx.beacon();
+    pop(LODGE.x, LODGE.y - 56, "+25 BEACON", "#F5C400");
+    if (!state.beaconJoke) { state.beaconJoke = true; banner("Even Elon would call this a heat pump.", 2800); }
+    for (var i = 0; i < 16; i++) spawnEmber(true);
+    hud(); save();
+  }
+  function canNightAct() {
+    if (state.ended || !playing) return false;
+    if (state.phase !== "dusk" && state.phase !== "night") { banner("Stoke at dusk and night.", 1400); return false; }
+    return true;
+  }
+
+  function assignJob(id, job) {
+    if (state.phase !== "dawn" || state.ended) return;
+    var b = state.beavers.find(function (x) { return x.id === id; });
+    if (!b || b.status === "down") return;
+    if (job === "miner" && !hasBuilding("quarry")) { banner("Miner needs a Quarry Bench.", 1600); return; }
+    b.job = job; Sfx.assign();
+    dawnGoT = jobsReady() ? 3 : -1;
+    syncDock(); save();
+  }
+
+  function costLine(bd) {
+    var p = [];
+    if (bd.wood) p.push(bd.wood + "W");
+    if (bd.fish) p.push(bd.fish + "F");
+    if (bd.sap) p.push(bd.sap + "Sa");
+    if (bd.stone) p.push(bd.stone + "St");
+    return p.join(" ");
+  }
+  function canAfford(bd) {
+    return state.wood >= bd.wood && state.fish >= bd.fish && state.sap >= bd.sap && state.stone >= bd.stone;
+  }
+  function shortage(bd) {
+    var bits = [];
+    if (state.wood < bd.wood) bits.push((bd.wood - Math.floor(state.wood)) + " more wood");
+    if (state.fish < bd.fish) bits.push((bd.fish - Math.floor(state.fish)) + " more fish");
+    if (state.sap < bd.sap) bits.push((bd.sap - Math.floor(state.sap)) + " more sap");
+    if (state.stone < bd.stone) bits.push((bd.stone - Math.floor(state.stone)) + " more stone");
+    return bits;
+  }
+  function buildBlock(bd) {
+    if (state.phase !== "dawn" && state.phase !== "day") return "Dawn or Day only";
+    if (state.day < bd.day) return "Unlocks Day " + bd.day;
+    if (countBuilding(bd.id) >= bd.max) return "Already built";
+    var s = shortage(bd);
+    if (s.length) return "Need " + s[0];
+    return null;
+  }
+  function tryBuild(kind) {
+    if (state.phase !== "dawn" && state.phase !== "day") { banner("Dawn or Day only", 1600); return; }
+    if (selectedPad < 0) { banner("tap a glowing pad", 1600); return; }
+    if (state.buildings[selectedPad]) { banner("Pad already built.", 1400); return; }
+    var bd = BUILDINGS.filter(function (b) { return b.id === kind; })[0];
+    if (!bd) return;
+    var why = buildBlock(bd);
+    if (why) {
+      banner(why, 1600);
+      if (why.indexOf("wood") !== -1) flashChip("chip-wood");
+      if (why.indexOf("fish") !== -1) flashChip("chip-fish");
+      if (why.indexOf("sap") !== -1) flashChip("chip-sap");
+      if (why.indexOf("stone") !== -1) flashChip("chip-stone");
+      return;
+    }
+    var pad = selectedPad;
+    state.wood -= bd.wood; state.fish -= bd.fish; state.sap -= bd.sap; state.stone -= bd.stone;
+    state.buildings[pad] = kind;
+    padPop[pad] = 1;
+    Sfx.place();
+    pop(PADS[pad].x, PADS[pad].y - 28, bd.name + "!", "#F4E6C3");
+    closeSheet(); hud(); save();
+  }
+
+  function openSheet(i) {
+    selectedPad = i;
+    var built = state.buildings[i];
+    var title = document.getElementById("sheet-title");
+    var sub = document.getElementById("sheet-sub");
+    var list = document.getElementById("sheet-list");
+    list.innerHTML = "";
+    if (built) {
+      var info = BUILDINGS.filter(function (b) { return b.id === built; })[0];
+      title.textContent = (info ? info.name : built).toUpperCase();
+      sub.textContent = info ? info.blurb : "";
+    } else {
+      title.textContent = "Build on pad " + (i + 1);
+      sub.textContent = "Places on this pad only. One of each (Bunk Hut up to 2).";
+      BUILDINGS.forEach(function (bd) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        var why = buildBlock(bd);
+        btn.className = "build-btn" + (why ? " locked" : "");
+        var left = document.createElement("span");
+        left.innerHTML = bd.name + (why ? "<span class='why'>" + why + "</span>" : "<span class='why'>" + bd.blurb + "</span>");
+        var right = document.createElement("span"); right.className = "cost"; right.textContent = costLine(bd);
+        btn.appendChild(left); btn.appendChild(right);
+        btn.addEventListener("click", function () { tryBuild(bd.id); });
+        list.appendChild(btn);
+      });
+    }
+    document.getElementById("sheet").classList.remove("hidden");
+  }
+  function closeSheet() { document.getElementById("sheet").classList.add("hidden"); selectedPad = -1; }
+
+  function skipDawn() {
+    if (state.phase !== "dawn" || state.ended) return;
+    if (!jobsReady()) { banner("Give every beaver a job.", 1800); return; }
+    enterPhase("day");
+  }
+
+  function hardReset() {
+    var muted = Sfx.muted;
+    Sfx.stopWind(); wipeSave(); state = newState(); applyDamBonus(); Sfx.muted = muted;
+    paused = false; playing = true; bannerQ = []; hideBanner();
+    document.getElementById("endcard").classList.add("hidden");
+    document.getElementById("paused").classList.add("hidden");
+    document.getElementById("confirm").classList.add("hidden");
+    closeSheet(); enterPhase("dawn"); hud();
+  }
+  function newWinter() { hardReset(); }
+  function applyDamBonus() {
+    if (damHasStars()) {
+      state.sap = clamp(state.sap + 10, 0, CAP);
+      state.damBonus = true;
+      banner("Dam reserves: +10 Sap", 2400);
+    }
+  }
+
+  function startPlay(fromSave) {
+    stubVerse(); Sfx.ensure();
+    app.classList.remove("booting");
+    document.getElementById("splash").classList.add("hidden");
+    playing = true; paused = false;
+    if (!fromSave) { state = newState(); Sfx.muted = false; applyDamBonus(); enterPhase("dawn"); }
+    else {
+      if (state.ended === "win") win();
+      else if (state.ended === "lose") lose("heat");
+      else {
+        if (isWhiteoutNight()) Sfx.startWind();
+        if (state.phase === "dawn" && state.day === 1 && state.dawnHint) {
+          banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false;
+        }
+      }
+      syncDock(); hud();
+    }
+  }
+
+  function hud() {
+    document.getElementById("chip-day").textContent = "DAY " + Math.min(state.day, DAYS) + "/" + DAYS;
+    document.getElementById("chip-wood").textContent = "W " + Math.floor(state.wood);
+    var fishTxt = "F " + Math.floor(state.fish);
+    if (state.rations > 0) fishTxt += " · R " + Math.floor(state.rations);
+    document.getElementById("chip-fish").textContent = fishTxt;
+    var sapTxt = "SA " + Math.floor(state.sap);
+    if (state.syrup > 0) sapTxt += " · SY " + Math.floor(state.syrup);
+    document.getElementById("chip-sap").textContent = sapTxt;
+    document.getElementById("chip-stone").textContent = "ST " + Math.floor(state.stone);
+    var h = Math.round(state.heat);
+    var heatEl = document.getElementById("chip-heat");
+    heatEl.textContent = "H " + h + "%";
+    var bar = document.getElementById("heatbar");
+    document.getElementById("heatfill").style.width = clamp(state.heat, 0, 100) + "%";
+    bar.classList.toggle("mid", state.heat < 55 && state.heat >= 30);
+    bar.classList.toggle("low", state.heat < 30);
+    heatEl.classList.toggle("low", state.heat < 30);
+    document.getElementById("btn-speed").textContent = "×" + state.speed;
+    document.getElementById("btn-speed").classList.toggle("on", state.speed > 1);
+    document.getElementById("btn-mute").textContent = Sfx.muted ? "🔇" : "🔊";
+    document.getElementById("btn-mute").classList.toggle("on", Sfx.muted);
+    var dur = PHASE_DUR[state.phase] || 8;
+    if (state.phase === "dawn") {
+      document.getElementById("clockfill").style.width = "100%";
+    } else {
+      document.getElementById("clockfill").style.width = (Math.max(0, dur - state.phaseT) / dur) * 100 + "%";
+    }
+    document.getElementById("clockfill").style.background = state.phase === "night" ? "#E85D4C" : (state.phase === "dawn" ? "#A8C4E8" : "#F5C400");
+    var after = Math.round(predictedHeat(heatPerWood()));
+    document.getElementById("stoke-pred").textContent = "Heat after stoke → " + after + "%  (+" + heatPerWood() + ")";
+    var wont = predictedHeat(0) <= 0;
+    document.getElementById("stoke-warn").hidden = !wont;
+    document.getElementById("btn-stoke").classList.toggle("danger", wont);
+    var night = (state.phase === "dusk" || state.phase === "night") && playing && !state.ended;
+    document.getElementById("btn-syrup").hidden = !(night && state.syrup > 0);
+    document.getElementById("btn-beacon").hidden = !(state.phase === "night" && playing && !state.ended && hasBuilding("beacon") && !state.beaconUsedNight);
+    document.getElementById("syrup-pred").textContent = state.syrup + " left · +14";
+  }
+
+  function crewFilter(b) {
+    if (b.id === "nib") return "brightness(0.72) saturate(1.15)";
+    if (b.id === "puddle") return "brightness(1.12) saturate(0.9)";
+    if (b.id === "twig") return "hue-rotate(-16deg) saturate(1.1)";
+    if (b.id === "moss") return "hue-rotate(20deg) brightness(0.92)";
+    return "";
+  }
+  function crewLine() {
+    return state.beavers.map(function (b) {
+      if (b.status === "down") return b.name + " down";
+      return b.name + " " + (JOB_LBL[b.job] || b.job).toLowerCase();
+    }).join(" · ");
+  }
+  function syncDock() {
+    var dawn = state.phase === "dawn" && playing && !state.ended;
+    var night = (state.phase === "dusk" || state.phase === "night") && playing && !state.ended;
+    document.getElementById("job-board").classList.toggle("hidden", !dawn);
+    document.getElementById("btn-phase").classList.toggle("hidden", !dawn);
+    document.getElementById("btn-phase").classList.toggle("ready", dawn && jobsReady());
+    var sub = document.getElementById("phase-sub");
+    if (sub) {
+      if (!jobsReady()) sub.textContent = "Give every beaver a job";
+      else sub.textContent = "tap START DAY — dawn waits";
+    }
+    document.getElementById("night-row").classList.toggle("hidden", !night);
+    var hint = {
+      dawn: jobsReady() ? "DAWN — START DAY when ready" : "DAWN — give every beaver a job",
+      day: "DAY — " + crewLine(),
+      dusk: "DUSK — back to the lodge",
+      night: isWhiteoutNight() ? (isBossDay() ? "BOSS WHITEOUT — hold the fire" : "WHITEOUT — hold the fire") : "NIGHT — eat, burn, rest"
+    }[state.phase] || "";
+    document.getElementById("phase-hint").textContent = hint;
+    var board = document.getElementById("job-board");
+    board.innerHTML = "";
+    if (!dawn) return;
+    state.beavers.forEach(function (b) {
+      var card = document.createElement("div");
+      card.className = "crew-card" + (b.status !== "down" ? " sel" : "");
+      var img = document.createElement("img");
+      img.src = b.id === "bober" ? SPR_SRC.hat : SPR_SRC.idle;
+      img.alt = b.name; img.style.filter = crewFilter(b);
+      var nm = document.createElement("div"); nm.className = "nm"; nm.textContent = b.name;
+      var st = document.createElement("div");
+      st.className = "st" + (b.status !== "ok" ? " hurt" : "");
+      st.textContent = b.status === "down" ? "DOWN" : (b.status === "injured" ? "INJURED" : (JOB_LBL[b.job] || ""));
+      card.appendChild(img); card.appendChild(nm); card.appendChild(st);
+      if (b.trait) { var tr = document.createElement("div"); tr.className = "tr"; tr.textContent = b.trait.toUpperCase(); card.appendChild(tr); }
+      var jobs = document.createElement("div"); jobs.className = "jobs";
+      JOBS.forEach(function (j) {
+        var btn = document.createElement("button");
+        btn.type = "button"; btn.textContent = JOB_LBL[j];
+        if (b.job === j) btn.classList.add("on");
+        btn.disabled = b.status === "down" || (j === "miner" && !hasBuilding("quarry"));
+        btn.addEventListener("click", function () { assignJob(b.id, j); });
+        jobs.appendChild(btn);
+      });
+      card.appendChild(jobs); board.appendChild(card);
+    });
+  }
+
+  function moveBeavers(dt) {
+    if (state.phase === "dawn") return;
+    state.beavers.forEach(function (b) {
+      var t = beaverTarget(b), dx = t.x - b.x, dy = t.y - b.y, dist = Math.hypot(dx, dy);
+      var spd = WALK;
+      if (b.status === "injured") spd *= (b.trait === "sturdy" ? 0.7 : 0.5);
+      if (b.status === "down") spd *= 0.3;
+      if (dist < 3) { b.x = t.x; b.y = t.y; b.moving = false; return; }
+      b.moving = true; b.facing = dx >= 0 ? 1 : -1;
+      var step = Math.min(dist, spd * dt);
+      b.x += (dx / dist) * step; b.y += (dy / dist) * step;
+    });
+  }
+
+  function gather(dt) {
+    if (state.phase !== "day") return;
+    var shed = hasBuilding("woodshed") ? WOODSHED_MUL : 1;
+    var shop = hasBuilding("workshop") ? WORKSHOP_MUL : 1;
+    var tapR = hasBuilding("sapboiler") ? TAP_FAST : TAP_SLOW;
+    state.beavers.forEach(function (b) {
+      if (b.status === "down") return;
+      var t = beaverTarget(b);
+      if (!atSite(b, t)) return;
+      if (b.job === "tender") return;
+      if (b.job === "miner" && !hasBuilding("quarry")) return;
+      var rate = 0;
+      if (b.job === "chopper") rate = (CHOP_PER_DAY / PHASE_DUR.day) * shed * shop;
+      else if (b.job === "fisher") rate = (FISH_PER_DAY / PHASE_DUR.day) * shop;
+      else if (b.job === "tapper") rate = (tapR / PHASE_DUR.day) * shop;
+      else if (b.job === "miner") rate = (MINE_PER_DAY / PHASE_DUR.day) * shop;
+      if (b.status === "injured") rate *= (b.trait === "sturdy" ? 0.7 : 0.5);
+      if (b.trait === "lucky") rate *= 1.15;
+      b.acc += rate * dt;
+      while (b.acc >= 1) {
+        b.acc -= 1;
+        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) Sfx.gather("wood"); }
+        else if (b.job === "fisher") { if (addRes("fish", 1, "chip-fish", "fish", "#A8C4E8", b.x, b.y - 28)) Sfx.gather("fish"); }
+        else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) Sfx.gather("sap"); }
+        else if (b.job === "miner") { if (addRes("stone", 1, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone"); }
+      }
+    });
+  }
+
+  function tickHeat(dt) {
+    if (state.phase !== "night" || state.ended) return;
+    var drain = state.nightDrain || calcDrain();
+    state.heat = clamp(state.heat - (drain / PHASE_DUR.night) * dt, 0, 100);
+  }
+  function tickPhase(dt) {
+    if (state.ended) return;
+    if (state.phase === "dawn") {
+      if (!jobsReady()) { dawnGoT = -1; return; }
+      if (dawnGoT < 0) dawnGoT = 3;
+      dawnGoT = Math.max(0, dawnGoT - dt);
+      return;
+    }
+    state.phaseT += dt;
+    var dur = PHASE_DUR[state.phase];
+    if (state.phaseT >= dur) {
+      if (state.phase === "day") enterPhase("dusk");
+      else if (state.phase === "dusk") enterPhase("night");
+      else if (state.phase === "night") resolveNightEnd();
+    }
+  }
+
+  function initSnow() {
+    snow = [];
+    for (var i = 0; i < 180; i++) snow.push({ x: Math.random() * W, y: Math.random() * H, s: 1.1 + Math.random() * 2.6, v: 22 + Math.random() * 44, drift: (Math.random() - 0.5) * 28 });
+    streaks = [];
+    for (var j = 0; j < 18; j++) streaks.push({ x: Math.random() * W, y: Math.random() * H, len: 18 + Math.random() * 28, v: 90 + Math.random() * 70 });
+  }
+  function spawnEmber(hot) {
+    embers.push({ x: LODGE.x + (Math.random() - 0.5) * 16, y: LODGE.y + 4, vx: (Math.random() - 0.5) * (hot ? 28 : 12), vy: -20 - Math.random() * (hot ? 50 : 28), life: 0.5 + Math.random() * 0.5 });
+  }
+  function tickSnow(dt) {
+    var storm = whiteoutLook(), n = storm ? 180 : flakesN;
+    for (var i = 0; i < n; i++) {
+      var f = snow[i];
+      f.y += f.v * dt * (storm ? 1.85 : 1);
+      f.x += f.drift * dt * (storm ? 2.6 : 1) + (storm ? 18 * dt : 0);
+      if (f.y > H) { f.y = -4; f.x = Math.random() * W; }
+      if (f.x < -8) f.x = W + 4; if (f.x > W + 8) f.x = -4;
+    }
+    if (storm) streaks.forEach(function (s) { s.x += s.v * dt * 0.6; s.y += s.v * dt; if (s.y > H || s.x > W) { s.x = Math.random() * W; s.y = -10; } });
+    if (state.heat > 1 && Math.random() < dt * (storm ? 6 : 10)) spawnEmber(false);
+    for (var e = embers.length - 1; e >= 0; e--) {
+      embers[e].life -= dt; embers[e].x += embers[e].vx * dt; embers[e].y += embers[e].vy * dt; embers[e].vy += 18 * dt;
+      if (embers[e].life <= 0) embers.splice(e, 1);
+    }
+    for (var p = 0; p < 8; p++) padPop[p] = Math.max(0, padPop[p] - dt * 2.4);
+    shake = Math.max(0, shake - dt * 1.6);
+    beaconPulse = Math.max(0, beaconPulse - dt * 0.7);
+  }
+  function tickPops(dt) {
+    for (var i = pops.length - 1; i >= 0; i--) { pops[i].life -= dt; pops[i].y -= 26 * dt; if (pops[i].life <= 0) pops.splice(i, 1); }
+  }
+
+  function skyColors() {
+    if (isBossDay() && whiteoutLook()) return ["#140818", "#3a2048"];
+    if (isWhiteoutNight()) return ["#1c2844", "#3d4e6a"];
+    if (state.phase === "night") return ["#120a1c", "#2a1c4e"];
+    if (state.phase === "dusk") return ["#4a2458", "#c45a32"];
+    if (state.phase === "dawn") return ["#5a3a78", "#e8a878"];
+    return ["#3A2A6A", "#7a96c4"];
+  }
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+
+  function drawPines(c) {
+    function pine(x, y, h, w) {
+      c.fillStyle = "rgba(26,16,40,0.35)"; c.beginPath(); c.ellipse(x, y + 8, w * 0.7, 6, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#5C3A1A"; c.fillRect(x - 4, y, 8, 16);
+      c.fillStyle = "#1e3a2c"; c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + w, y + 4); c.lineTo(x - w, y + 4); c.closePath(); c.fill();
+      c.fillStyle = "#2d5a3e"; c.beginPath(); c.moveTo(x, y - h + 12); c.lineTo(x + w * 0.75, y - 4); c.lineTo(x - w * 0.75, y - 4); c.closePath(); c.fill();
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + 8, y - h + 14); c.lineTo(x - 8, y - h + 14); c.closePath(); c.fill();
+    }
+    pine(26, 118, 58, 18); pine(54, 138, 40, 14);
+    pine(334, 116, 62, 20); pine(306, 140, 38, 14);
+  }
+  function drawGround(c) {
+    c.fillStyle = "#c4b496";
+    c.beginPath(); c.moveTo(0, 142); c.quadraticCurveTo(180, 118, 360, 142); c.lineTo(360, H); c.lineTo(0, H); c.closePath(); c.fill();
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.moveTo(0, 158); c.quadraticCurveTo(180, 138, 360, 158); c.lineTo(360, H); c.lineTo(0, H); c.closePath(); c.fill();
+    c.fillStyle = "#6a8eb0";
+    c.beginPath(); c.moveTo(20, 608); c.quadraticCurveTo(210, 552, 360, 578); c.lineTo(360, H); c.lineTo(0, H); c.closePath(); c.fill();
+    c.fillStyle = "#cfe0f4";
+    c.beginPath(); c.moveTo(70, 614); c.quadraticCurveTo(230, 568, 360, 590); c.lineTo(360, 632); c.quadraticCurveTo(200, 604, 50, 632); c.closePath(); c.fill();
+  }
+  function drawChopSite(c) {
+    var x = SITE_CHOP.x, y = SITE_CHOP.y;
+    [[-8, 0, 22], [10, 4, 28], [26, -2, 18]].forEach(function (t) {
+      c.fillStyle = "#5C3A1A"; c.fillRect(x + t[0], y - t[2] + t[1], 9, t[2]);
+      c.fillStyle = "#8B5A2B"; c.fillRect(x + t[0] + 2, y - t[2] + t[1], 3, t[2]);
+      c.fillStyle = "#2d5a3e"; c.beginPath(); c.ellipse(x + t[0] + 4, y - t[2] + t[1] - 8, 14, 11, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(x + t[0] + 4, y - t[2] + t[1] - 14, 9, 4, 0, 0, Math.PI * 2); c.fill();
+    });
+  }
+  function drawFishSite(c) {
+    var x = SITE_FISH.x, y = SITE_FISH.y;
+    c.fillStyle = "#d8e8f8"; c.beginPath(); c.ellipse(x, y, 36, 16, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#2a3a68"; c.beginPath(); c.ellipse(x, y, 16, 8, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#F4E6C3"; c.lineWidth = 3; c.beginPath(); c.ellipse(x, y, 16, 8, 0, 0, Math.PI * 2); c.stroke();
+  }
+  function drawSapSite(c) {
+    var x = SITE_SAP.x, y = SITE_SAP.y;
+    c.fillStyle = "#5C3A1A"; c.fillRect(x - 4, y - 18, 8, 26);
+    c.fillStyle = "#8B5A2B"; c.beginPath(); c.ellipse(x, y - 28, 16, 14, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#e8b060"; c.fillRect(x + 6, y - 6, 4, 10);
+    c.beginPath(); c.ellipse(x + 8, y + 6, 3, 4, 0, 0, Math.PI * 2); c.fill();
+  }
+  function drawMineSite(c) {
+    var x = SITE_MINE.x, y = SITE_MINE.y;
+    c.fillStyle = "#6a6560";
+    c.beginPath(); c.moveTo(x - 18, y + 8); c.lineTo(x - 8, y - 14); c.lineTo(x + 6, y + 8); c.closePath(); c.fill();
+    c.fillStyle = "#8a8480";
+    c.beginPath(); c.moveTo(x - 4, y + 8); c.lineTo(x + 10, y - 10); c.lineTo(x + 20, y + 8); c.closePath(); c.fill();
+    c.fillStyle = "#F4E6C3"; c.fillRect(x - 6, y - 2, 5, 4);
+  }
+
+  function inkFill(c, fill) {
+    c.fillStyle = fill; c.fill();
+    c.strokeStyle = "#1A1028"; c.lineWidth = 3.2; c.lineJoin = "round"; c.lineCap = "round"; c.stroke();
+  }
+  function drawPad(c, i) {
+    var p = PADS[i], kind = state.buildings[i];
+    var canBuild = state.phase === "dawn" || state.phase === "day";
+    var squash = padPop[i] > 0 ? 1 + padPop[i] * 0.22 : 1;
+    var squashY = padPop[i] > 0.4 ? 1 - (padPop[i] - 0.4) * 0.35 : squash;
+    c.save(); c.translate(p.x, p.y); c.scale(squash, squashY);
+    c.fillStyle = "rgba(26,16,40,0.32)";
+    c.beginPath(); c.ellipse(2, 22, 40, 12, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#d8cbb0";
+    c.beginPath(); c.ellipse(0, 14, 44, 16, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(0, 10, 42, 15, 0, 0, Math.PI * 2); inkFill(c, "#F4E6C3");
+    if (!kind) {
+      if (canBuild) {
+        var aura = 0.45 + Math.sin(clock * 4.2) * 0.28;
+        c.strokeStyle = "rgba(245,196,0," + aura + ")"; c.lineWidth = 5;
+        c.beginPath(); c.ellipse(0, 8, 40, 18, 0, 0, Math.PI * 2); c.stroke();
+      }
+      if (selectedPad === i) {
+        c.strokeStyle = "#F5C400"; c.lineWidth = 6;
+        c.beginPath(); c.ellipse(0, 8, 46, 21, 0, 0, Math.PI * 2); c.stroke();
+        c.strokeStyle = "#1A1028"; c.lineWidth = 2;
+        c.beginPath(); c.ellipse(0, 8, 46, 21, 0, 0, Math.PI * 2); c.stroke();
+      }
+    } else if (kind === "woodshed") {
+      c.fillStyle = "#3a2410"; c.fillRect(-26, 4, 54, 12);
+      for (var k = 0; k < 4; k++) {
+        var yy = -4 + k * 7;
+        c.beginPath(); roundRect(c, -24, yy, 48, 7, 3.5); inkFill(c, k % 2 ? "#8B5A2B" : "#6B4423");
+        c.fillStyle = "#C4894A"; c.beginPath(); c.arc(-24, yy + 3.5, 3.2, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(24, yy + 3.5, 3.2, 0, Math.PI * 2); c.fill();
+      }
+      c.beginPath(); c.moveTo(-30, -2); c.lineTo(0, -26); c.lineTo(30, -2); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-22, -6); c.lineTo(0, -24); c.lineTo(22, -6); c.closePath(); inkFill(c, "#F4E6C3");
+    } else if (kind === "smokehouse") {
+      c.beginPath(); roundRect(c, -24, -8, 48, 28, 6); inkFill(c, "#8B5A2B");
+      c.fillStyle = "#5C3A1A"; c.fillRect(-8, 2, 16, 18);
+      c.beginPath(); c.moveTo(-28, -6); c.lineTo(0, -28); c.lineTo(28, -6); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-18, -10); c.lineTo(0, -26); c.lineTo(18, -10); c.closePath(); inkFill(c, "#F4E6C3");
+      c.fillStyle = "#E86A2A"; c.fillRect(-18, 4, 7, 10); c.fillRect(12, 4, 7, 10);
+      c.fillStyle = "rgba(210,210,220," + (0.45 + Math.sin(clock * 2) * 0.2) + ")";
+      c.beginPath(); c.ellipse(8, -34 - Math.sin(clock * 1.5) * 3, 8, 12, 0.2, 0, Math.PI * 2); c.fill();
+    } else if (kind === "sapboiler") {
+      c.beginPath(); roundRect(c, -20, 2, 40, 14, 4); inkFill(c, "#5C3A1A");
+      c.beginPath(); c.ellipse(0, -2, 18, 14, 0, 0, Math.PI * 2); inkFill(c, "#6a6a70");
+      c.beginPath(); c.ellipse(0, -4, 11, 7, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
+      c.fillStyle = "rgba(244,230,195,0.55)"; c.beginPath(); c.ellipse(6, -22, 8, 10, 0.15, 0, Math.PI * 2); c.fill();
+    } else if (kind === "quarry") {
+      c.beginPath(); roundRect(c, -22, 0, 44, 16, 4); inkFill(c, "#8a8480");
+      c.beginPath(); c.moveTo(-18, 2); c.lineTo(-10, -16); c.lineTo(2, 2); c.closePath(); inkFill(c, "#6a6560");
+      c.beginPath(); c.moveTo(-2, 2); c.lineTo(10, -14); c.lineTo(20, 2); c.closePath(); inkFill(c, "#9a948e");
+      c.beginPath(); roundRect(c, 12, -18, 6, 22, 2); inkFill(c, "#8B5A2B");
+    } else if (kind === "bunk") {
+      c.beginPath(); roundRect(c, -24, -6, 48, 24, 5); inkFill(c, "#8B5A2B");
+      c.beginPath(); c.moveTo(-26, -6); c.lineTo(0, -26); c.lineTo(26, -6); c.closePath(); inkFill(c, "#3A2A6A");
+      c.beginPath(); c.moveTo(-16, -8); c.lineTo(0, -24); c.lineTo(16, -8); c.closePath(); inkFill(c, "#F4E6C3");
+      c.beginPath(); roundRect(c, -7, 2, 14, 16, 3); inkFill(c, "#5C3A1A");
+      c.fillStyle = "#F5C400"; c.fillRect(-3, 8, 6, 4);
+    } else if (kind === "watch") {
+      c.beginPath(); roundRect(c, -8, -6, 16, 26, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); roundRect(c, -16, -24, 32, 18, 4); inkFill(c, "#8B5A2B");
+      c.beginPath(); c.moveTo(-18, -22); c.lineTo(0, -38); c.lineTo(18, -22); c.closePath(); inkFill(c, "#3A2A6A");
+      c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -16, 4, 0, Math.PI * 2); c.fill();
+    } else if (kind === "workshop") {
+      c.beginPath(); roundRect(c, -26, -8, 52, 26, 5); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -20, -2, 40, 8, 2); inkFill(c, "#5C3A1A");
+      c.beginPath(); roundRect(c, -10, -14, 10, 10, 2); inkFill(c, "#F5C400");
+    } else if (kind === "beacon") {
+      var lit = state.beaconUsedNight && (state.phase === "night" || state.phase === "dusk");
+      c.beginPath(); roundRect(c, -12, 8, 24, 10, 3); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -6, -10, 12, 22, 3); inkFill(c, "#5C3A1A");
+      c.beginPath(); c.moveTo(-10, -8); c.lineTo(0, -32); c.lineTo(10, -8); c.closePath(); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
+      if (lit) {
+        c.beginPath(); c.moveTo(-5, -20); c.lineTo(0, -40); c.lineTo(5, -20); c.closePath(); inkFill(c, "#E86A2A");
+      }
+    }
+    c.restore();
+  }
+
+  function drawLodge(c) {
+    var heat = state.heat / 100, storm = isWhiteoutNight();
+    var lean = storm ? Math.sin(clock * 9) * 5 : 0;
+    var flick = storm ? 0.55 + Math.sin(clock * 22) * 0.28 : 0.82 + Math.sin(clock * 11) * 0.12;
+    c.save(); c.translate(LODGE.x, LODGE.y);
+    c.fillStyle = "rgba(26,16,40,0.32)"; c.beginPath(); c.ellipse(0, 40, 62, 14, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#5C3A1A"; c.beginPath(); c.ellipse(0, 12, 62, 40, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#8B5A2B"; c.beginPath(); c.ellipse(0, 6, 56, 36, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(0, -12, 50, 20, 0, Math.PI, Math.PI * 2); c.fill();
+    c.fillStyle = "#1A1028"; roundRect(c, -18, 0, 36, 32, 7); c.fill();
+    var fh = (16 + heat * 44) * flick; if (storm) fh *= 0.72;
+    if (heat > 0.01) {
+      var halo = c.createRadialGradient(0, 10, 4, 0, 10, 62 + heat * 34);
+      halo.addColorStop(0, "rgba(245,196,0," + (0.62 + heat * 0.28) + ")");
+      halo.addColorStop(0.45, "rgba(232,106,42," + (0.22 + heat * 0.16) + ")");
+      halo.addColorStop(1, "rgba(245,196,0,0)");
+      c.fillStyle = halo; c.beginPath(); c.ellipse(lean * 0.3, 8, 42 + heat * 26, 28 + heat * 16, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-11 + lean, 22); c.quadraticCurveTo(lean, 22 - fh, 11 + lean, 22); c.closePath(); c.fill();
+      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-7 + lean * 0.6, 22); c.quadraticCurveTo(lean * 0.6, 22 - fh * 0.72, 7 + lean * 0.6, 22); c.closePath(); c.fill();
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.moveTo(-3.5, 22); c.lineTo(lean * 0.3, 22 - fh * 0.42); c.lineTo(3.5, 22); c.closePath(); c.fill();
+    } else { c.fillStyle = "#3a3030"; c.fillRect(-7, 14, 14, 8); }
+    c.restore();
+    embers.forEach(function (e) { c.globalAlpha = Math.max(0, e.life); c.fillStyle = "#F5C400"; c.beginPath(); c.arc(e.x, e.y, 2.2, 0, Math.PI * 2); c.fill(); });
+    c.globalAlpha = 1;
+  }
+
+  function poseFor(b) {
+    if (b.status === "down") return b.id === "bober" ? "hat" : "idle";
+    if (b.moving) return "walk";
+    if (state.phase === "day" && (b.job === "chopper" || b.job === "miner" || b.job === "tapper")) return "chop";
+    if (state.phase === "day" && b.job === "fisher") return "fish";
+    if (b.job === "tender" && state.phase !== "dawn") return "tend";
+    return b.id === "bober" ? "hat" : "idle";
+  }
+  function drawBeaver(c, b) {
+    var img = SPR[poseFor(b)] || SPR.idle;
+    var working = !b.moving && state.phase === "day";
+    var bob = b.moving ? Math.abs(Math.sin(clock * 11)) * 3.2 : (working ? Math.sin(clock * 8) * 2.2 : 0);
+    c.save(); c.translate(b.x, b.y + bob);
+    if (b.status === "down") c.rotate(1.15);
+    c.fillStyle = "rgba(26,16,40,0.28)"; c.beginPath(); c.ellipse(0, 8, 16, 5, 0, 0, Math.PI * 2); c.fill();
+    if (img && img.complete && img.naturalWidth) {
+      var h = SPRITE_H, w = h * (img.naturalWidth / img.naturalHeight);
+      c.save(); c.scale(b.facing || 1, 1); c.filter = crewFilter(b) || "none";
+      c.drawImage(img, -w / 2, -h + 8, w, h); c.filter = "none"; c.restore();
+    }
+    c.restore();
+    if (b.status === "down") return;
+    c.save(); c.translate(b.x, b.y - SPRITE_H + 6 + bob);
+    c.font = "800 9px Trebuchet MS, sans-serif"; c.textAlign = "center";
+    c.lineWidth = 3; c.strokeStyle = "#1A1028"; c.fillStyle = "#F4E6C3";
+    var job = b.status === "injured" ? "HURT" : (JOB_LBL[b.job] || "");
+    c.strokeText(b.name + "  " + job, 0, 0); c.fillText(b.name + "  " + job, 0, 0);
+    c.restore();
+  }
+  function drawSnow(c) {
+    var storm = whiteoutLook(), n = storm ? 180 : flakesN;
+    c.fillStyle = "#F4E6C3";
+    for (var i = 0; i < n; i++) { c.globalAlpha = storm ? 0.92 : 0.7; c.beginPath(); c.arc(snow[i].x, snow[i].y, snow[i].s, 0, Math.PI * 2); c.fill(); }
+    if (storm) {
+      c.strokeStyle = "rgba(244,230,195,0.45)"; c.lineWidth = 1.4;
+      streaks.forEach(function (s) { c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(s.x - s.len * 0.5, s.y - s.len); c.stroke(); });
+      c.fillStyle = "rgba(190,210,230," + (isBossDay() ? 0.32 : (state.phase === "night" ? 0.26 : 0.14)) + ")"; c.fillRect(0, 0, W, H);
+    }
+    c.globalAlpha = 1;
+    if (state.phase === "night" && !storm) { c.fillStyle = "rgba(18,10,28,0.18)"; c.fillRect(0, 0, W, H); }
+  }
+  function drawPops(c) {
+    c.font = "900 13px Trebuchet MS, sans-serif"; c.textAlign = "center";
+    pops.forEach(function (p) { c.globalAlpha = Math.max(0, p.life); c.lineWidth = 3; c.strokeStyle = "#1A1028"; c.fillStyle = p.color; c.strokeText(p.text, p.x, p.y); c.fillText(p.text, p.x, p.y); });
+    c.globalAlpha = 1;
+  }
+  function draw() {
+    if (shake > 0.02) { ctx.save(); ctx.translate((Math.random() - 0.5) * 8 * shake, (Math.random() - 0.5) * 6 * shake); }
+    var sky = skyColors(), g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    drawGround(ctx); drawPines(ctx); drawChopSite(ctx); drawFishSite(ctx); drawSapSite(ctx); drawMineSite(ctx);
+    for (var i = 0; i < 8; i++) drawPad(ctx, i);
+    drawLodge(ctx);
+    if (beaconPulse > 0.02) {
+      var bx = LODGE.x, by = LODGE.y - 10;
+      for (var bi = 0; bi < 8; bi++) {
+        if (state.buildings[bi] === "beacon") { bx = PADS[bi].x; by = PADS[bi].y - 20; break; }
+      }
+      var pr = (1 - beaconPulse) * 70 + 12;
+      ctx.strokeStyle = "rgba(245,196,0," + (beaconPulse * 0.85) + ")";
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(bx, by, pr, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "rgba(232,106,42," + (beaconPulse * 0.5) + ")";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(bx, by, pr * 0.62, 0, Math.PI * 2); ctx.stroke();
+    }
+    state.beavers.slice().sort(function (a, b) { return a.y - b.y; }).forEach(function (b) { drawBeaver(ctx, b); });
+    drawSnow(ctx); drawPops(ctx);
+    ctx.fillStyle = "#F5C400"; ctx.font = "800 13px Trebuchet MS, sans-serif"; ctx.textAlign = "center";
+    ctx.shadowColor = "#1A1028"; ctx.shadowBlur = 5;
+    var label = isWhiteoutNight() ? (isBossDay() ? "BOSS WHITEOUT" : "WHITEOUT") : state.phase.toUpperCase();
+    var sec;
+    if (state.phase === "dawn") {
+      ctx.fillText(label + "  " + (!jobsReady() ? "SET JOBS" : "TAP START"), W / 2, 22);
+    } else {
+      sec = Math.max(0, Math.ceil((PHASE_DUR[state.phase] || 1) - state.phaseT));
+      ctx.fillText(label + "  " + sec + "s", W / 2, 22);
+    }
+    ctx.shadowBlur = 0;
+    if (shake > 0.02) ctx.restore();
+  }
+
+  function resize() {
+    var r = document.getElementById("stage").getBoundingClientRect();
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var scale = Math.min(r.width / W, r.height / H);
+    canvas.style.width = Math.max(1, W * scale) + "px"; canvas.style.height = Math.max(1, H * scale) + "px";
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = true;
+  }
+  function canvasPos(ev) {
+    var rect = canvas.getBoundingClientRect();
+    var t = (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || ev;
+    return { x: ((t.clientX - rect.left) / rect.width) * W, y: ((t.clientY - rect.top) / rect.height) * H };
+  }
+  function onCanvasTap(ev) {
+    if (!playing || paused || state.ended) return;
+    Sfx.ensure();
+    var p = canvasPos(ev);
+    var hit = -1;
+    for (var i = 0; i < 8; i++) {
+      if (Math.hypot(p.x - PADS[i].x, p.y - PADS[i].y) < PAD_R) { hit = i; break; }
+    }
+    if (hit >= 0) {
+      if (!state.buildings[hit] && state.phase !== "dawn" && state.phase !== "day") {
+        pop(p.x, p.y - 10, "wait for dawn", "#F4E6C3");
+        return;
+      }
+      openSheet(hit);
+      return;
+    }
+    if (state.phase === "dawn") { skipDawn(); return; }
+    if (state.phase === "day") { pop(p.x, p.y - 8, "tap a glowing pad", "#F4E6C3"); return; }
+    if (Math.hypot(p.x - LODGE.x, p.y - LODGE.y) < 52) stokeWood();
+  }
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    if (!lastTs) lastTs = ts;
+    var dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
+    if (playing && !paused && !state.ended) {
+      var step = dt * state.speed; clock += step;
+      tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step);
+      if (bannerTimer && clock > bannerTimer) hideBanner();
+      saveAcc += step; if (saveAcc >= 4) { saveAcc = 0; save(); }
+      hud();
+    } else { clock += dt; tickSnow(dt * 0.45); }
+    draw();
+  }
+
+  var HIST_BEATS = [
+    { src: "assets/history/f0.jpg", line: "After the dam, winter came looking for a hearth.", t: 0 },
+    { src: "assets/history/f1.jpg", line: "Frost Lodge kept one flame. That was the deal.", t: 5.5 },
+    { src: "assets/history/f2.jpg", line: "Whiteouts ate the map. Beavers stayed.", t: 11 },
+    { src: "assets/history/f3.jpg", line: "Logs in. Cold out. Yeet optional.", t: 16.5 },
+    { src: "assets/history/f4.jpg", line: "Then the freeze learned the door.", t: 22 },
+    { src: "assets/history/f5.jpg", line: "HOLD THE FIRE.", t: 27.5 }
+  ];
+  var HIST_END = 33;
+  var histEl = document.getElementById("history");
+  var histImg = document.getElementById("hist-img");
+  var histLine = document.getElementById("hist-line");
+  var histSkipBtn = document.getElementById("hist-skip");
+  var histRaf = 0, histTimer = 0, histI = -1, histAfter = null, histT0 = 0, histStopping = false, histSkipArmed = 0;
+
+  function historyOpen() { return !!(histEl && !histEl.classList.contains("hidden")); }
+  function markHistorySeen() {
+    try { localStorage.setItem(HIST_SEEN_KEY, JSON.stringify({ freeze: true })); } catch (e) {}
+  }
+  function haltHistory() {
+    if (histRaf) { cancelAnimationFrame(histRaf); histRaf = 0; }
+    if (histTimer) { clearTimeout(histTimer); histTimer = 0; }
+  }
+  function stopHistory() {
+    if (histStopping) return;
+    histStopping = true;
+    haltHistory();
+    if (histEl) histEl.classList.add("hidden");
+    markHistorySeen();
+    var cb = histAfter; histAfter = null; histStopping = false;
+    if (cb) cb();
+  }
+  function applyHistBeat(i) {
+    if (i < 0 || i >= HIST_BEATS.length) return;
+    histI = i;
+    histImg.src = HIST_BEATS[i].src;
+    histLine.textContent = HIST_BEATS[i].line;
+  }
+  function histFrameAt(t) {
+    var i = 0;
+    for (var k = 0; k < HIST_BEATS.length; k++) if (t >= HIST_BEATS[k].t) i = k;
+    return i;
+  }
+  function histTick() {
+    if (!historyOpen()) { haltHistory(); return; }
+    var t = (performance.now() - histT0) / 1000;
+    var i = histFrameAt(t);
+    if (i !== histI) applyHistBeat(i);
+    if (t >= HIST_END - 0.05) { stopHistory(); return; }
+    histRaf = requestAnimationFrame(histTick);
+  }
+  function playHistory(after) {
+    histAfter = after || null;
+    histStopping = false;
+    histSkipArmed = Date.now() + 450;
+    if (histSkipBtn) histSkipBtn.disabled = true;
+    if (histTimer) clearTimeout(histTimer);
+    histTimer = setTimeout(function () { histTimer = 0; if (histSkipBtn) histSkipBtn.disabled = false; }, 450);
+    histEl.classList.remove("hidden");
+    Sfx.ensure();
+    applyHistBeat(0);
+    histT0 = performance.now();
+    if (histRaf) cancelAnimationFrame(histRaf);
+    histRaf = requestAnimationFrame(histTick);
+  }
+  function historyFromSplash() {
+    document.getElementById("splash").classList.add("hidden");
+    playHistory(function () { document.getElementById("splash").classList.remove("hidden"); });
+  }
+  function historyFromEnd() {
+    document.getElementById("endcard").classList.add("hidden");
+    playHistory(function () { document.getElementById("endcard").classList.remove("hidden"); });
+  }
+
+  function askRestart() { document.getElementById("confirm").classList.remove("hidden"); document.getElementById("paused").classList.add("hidden"); }
+
+  if (damHasStars()) document.getElementById("dam-tip").classList.remove("hidden");
+
+  document.getElementById("btn-hold").addEventListener("click", function () {
+    Sfx.ensure();
+    var had = load();
+    if (had && !state.ended) startPlay(true);
+    else { wipeSave(); startPlay(false); }
+  });
+  document.getElementById("btn-phase").addEventListener("click", skipDawn);
+  document.getElementById("btn-stoke").addEventListener("click", stokeWood);
+  document.getElementById("btn-syrup").addEventListener("click", stokeSyrup);
+  document.getElementById("btn-beacon").addEventListener("click", fireBeacon);
+  document.getElementById("btn-speed").addEventListener("click", function () {
+    state.speed = state.speed === 1 ? 2 : (state.speed === 2 ? 4 : 1); hud(); save();
+  });
+  document.getElementById("btn-mute").addEventListener("click", function () {
+    Sfx.muted = !Sfx.muted;
+    if (Sfx.muted) Sfx.stopWind(); else if (playing && isWhiteoutNight()) Sfx.startWind();
+    hud(); save();
+  });
+  document.getElementById("btn-pause").addEventListener("click", function () {
+    if (!playing || state.ended) return; paused = !paused;
+    document.getElementById("paused").classList.toggle("hidden", !paused);
+  });
+  document.getElementById("btn-resume").addEventListener("click", function () { paused = false; document.getElementById("paused").classList.add("hidden"); });
+  document.getElementById("btn-restart").addEventListener("click", askRestart);
+  document.getElementById("btn-pause-restart").addEventListener("click", askRestart);
+  document.getElementById("btn-end-restart").addEventListener("click", function () {
+    document.getElementById("confirm").classList.add("hidden");
+    newWinter();
+  });
+  document.getElementById("btn-new-winter").addEventListener("click", newWinter);
+  document.getElementById("btn-splash-history").addEventListener("click", historyFromSplash);
+  document.getElementById("btn-end-history").addEventListener("click", historyFromEnd);
+  document.getElementById("history").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (!historyOpen()) return;
+    if (Date.now() < histSkipArmed) return;
+    stopHistory();
+  });
+  document.getElementById("btn-wipe").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); hardReset(); });
+  document.getElementById("btn-keep").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); });
+  document.getElementById("btn-sheet-close").addEventListener("click", closeSheet);
+  canvas.addEventListener("pointerdown", onCanvasTap);
+  window.addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) save(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "m" || e.key === "M") document.getElementById("btn-mute").click();
+    if (e.key === "p" || e.key === "P" || e.key === " ") { e.preventDefault(); document.getElementById("btn-pause").click(); }
+    if (e.key === "2" || e.key === "4") document.getElementById("btn-speed").click();
+  });
+
+  initSnow(); resize(); hud(); syncDock();
+  requestAnimationFrame(loop);
+})();
+  </script>
+</body>
+</html>
