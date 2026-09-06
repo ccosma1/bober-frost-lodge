@@ -1508,13 +1508,17 @@
       else if (b.job === "miner") rate = (MINE_PER_DAY / PHASE_DUR.day) * shop;
       if (b.status === "injured") rate *= (b.trait === "sturdy" ? 0.7 : 0.5);
       if (b.trait === "lucky") rate *= 1.15;
+      var clearing = !isEndless() && state.fork18 === "expand" && state.day >= 18 && state.day <= 25;
+      if (clearing && (b.job === "chopper" || b.job === "tapper")) rate *= 1.15;
       b.acc += rate * dt;
       while (b.acc >= 1) {
         b.acc -= 1;
-        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) Sfx.gather("wood"); }
+        var got = false;
+        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
         else if (b.job === "fisher") { if (addRes("fish", 1, "chip-fish", "fish", "#A8C4E8", b.x, b.y - 28)) Sfx.gather("fish"); }
-        else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) Sfx.gather("sap"); }
+        else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) { Sfx.gather("sap"); got = true; } }
         else if (b.job === "miner") { if (addRes("stone", 1, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone"); }
+        if (got && clearing && Math.random() < 0.16) pop(b.x, b.y - 46, "+clearing", "#F4E6C3");
       }
     });
   }

@@ -87,6 +87,7 @@ def main() -> int:
         "PAD_EXPAND",
         "Brace the lodge",
         "Push the snow back",
+        "+clearing",
     ]
     for s in needed:
         if s not in text:
