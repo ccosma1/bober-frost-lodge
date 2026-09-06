@@ -112,10 +112,17 @@
       animation: pulse 0.48s ease infinite;
     }
     #pred-read, #night-pred { font-size: 16px; }
-    #pred-read.hidden, #dam-read.hidden, #night-panel.hidden { display: none; }
-    #stage { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; z-index: 1; background: var(--sky); display: flex; align-items: center; justify-content: center; }
+    #pred-read.hidden, #dam-read.hidden, #night-panel.hidden, #status-row[hidden] { display: none !important; }
+    #stage {
+      flex: 1 1 auto; min-height: 0; min-width: 0; width: 100%;
+      position: relative; z-index: 1; background: var(--sky);
+      display: flex; align-items: center; justify-content: center;
+    }
     #app.act3, #app.act3 #stage { background: #241848; }
-    canvas { display: block; width: 100%; height: 100%; cursor: pointer; touch-action: none; }
+    canvas {
+      display: block; margin: 0 auto; width: 100%; height: 100%;
+      cursor: pointer; touch-action: none;
+    }
     #banner {
       position: absolute; left: 10px; right: 10px; top: 10px; z-index: 6;
       background: var(--cream); color: var(--ink); border: 3px solid var(--yellow);
@@ -139,11 +146,15 @@
       padding: 8px 8px 8px; z-index: 20; position: relative;
       display: flex; flex-direction: column; gap: 8px; pointer-events: auto;
     }
-    #job-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 26vh; overflow-y: auto; }
+    #job-board {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+      width: 100%; max-height: 26vh; overflow-y: auto; justify-items: stretch;
+    }
     #job-board.hidden { display: none; }
     .crew-card {
       background: #3A2A6A; border: 3px solid #5C3A1A; border-radius: 12px;
       padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      min-width: 0; width: 100%;
     }
     .crew-card.sel { border-color: var(--yellow); box-shadow: 0 0 0 2px #F5C40055; }
     .crew-card img { width: 48px; height: 40px; object-fit: contain; pointer-events: none; }
@@ -210,10 +221,15 @@
     .play:disabled { opacity: 0.42; cursor: default; box-shadow: none; filter: grayscale(0.2); }
     .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .end-msg { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 6px #000; }
-    #sheet { justify-content: flex-end; background: #1a102866; padding: 12px; }
-    #sheet .sheet-card { width: 100%; background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px; padding: 14px 12px 12px; box-shadow: 0 10px 28px #0008; text-align: left; }
-    #sheet h3 { margin: 0 0 8px; color: var(--yellow); font-size: 16px; text-align: center; }
-    #sheet-list { max-height: 46vh; overflow-y: auto; }
+    #sheet { justify-content: flex-end; background: #1a102866; padding: 16px 12px 12px; }
+    #sheet .sheet-card {
+      width: 100%; background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px;
+      padding: 12px 12px 12px; box-shadow: 0 10px 28px #0008; text-align: left;
+      display: flex; flex-direction: column; max-height: 100%; min-height: 0;
+    }
+    #sheet h3 { margin: 0 0 8px; color: var(--yellow); font-size: 16px; text-align: center; flex: 0 0 auto; }
+    #sheet-list { padding-top: 8px; max-height: 46vh; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+    #sheet-list .build-btn:first-child { margin-top: 0; }
     .build-btn {
       width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
       min-height: 56px; margin: 0 0 8px; padding: 10px 12px; border: 3px solid var(--fur-dark);
@@ -452,6 +468,7 @@
   var canvas = document.getElementById("view");
   var ctx = canvas.getContext("2d");
   var app = document.getElementById("app");
+  var viewScale = 1, viewOx = 0, viewOy = 0;
   var playing = false, paused = false, lastTs = 0, clock = 0;
   var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
   var snow = [], pops = [], embers = [], streaks = [], sparkles = [];
@@ -1027,8 +1044,13 @@
       });
     }
     document.getElementById("sheet").classList.remove("hidden");
+    document.getElementById("status-row").hidden = true;
   }
-  function closeSheet() { document.getElementById("sheet").classList.add("hidden"); selectedPad = -1; hoverBuild = null; }
+  function closeSheet() {
+    document.getElementById("sheet").classList.add("hidden");
+    document.getElementById("status-row").hidden = false;
+    selectedPad = -1; hoverBuild = null;
+  }
 
   function skipDawn() {
     if (state.phase !== "dawn" || state.ended) return;
@@ -1183,6 +1205,7 @@
     document.getElementById("night-panel").classList.toggle("hidden", !night);
     var board = document.getElementById("job-board");
     board.innerHTML = "";
+    board.style.gridTemplateColumns = "repeat(" + Math.min(3, Math.max(1, state.beavers.length)) + ", 1fr)";
     if (!dawn) return;
     state.beavers.forEach(function (b) {
       var card = document.createElement("div");
@@ -1730,6 +1753,12 @@
     c.globalAlpha = 1;
   }
   function draw() {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var sky = skyColors();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = sky[0];
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr * viewScale, 0, 0, dpr * viewScale, dpr * viewOx, dpr * viewOy);
     var wind = whiteoutLook() ? (isBossDay() ? 2.6 : 1.8) : 0;
     if (shake > 0.02 || wind) {
       ctx.save();
@@ -1738,7 +1767,7 @@
         (Math.random() - 0.5) * 6 * shake + Math.cos(clock * 9) * wind * 0.22
       );
     }
-    var sky = skyColors(), g = ctx.createLinearGradient(0, 0, 0, H);
+    var g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     drawMoon(ctx);
     drawFarPines(ctx);
@@ -1769,15 +1798,21 @@
   function resize() {
     var r = document.getElementById("stage").getBoundingClientRect();
     var dpr = Math.min(2, window.devicePixelRatio || 1);
-    var scale = Math.min(r.width / W, r.height / H);
-    canvas.style.width = Math.max(1, W * scale) + "px"; canvas.style.height = Math.max(1, H * scale) + "px";
-    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = true;
+    var cssW = Math.max(1, r.width), cssH = Math.max(1, r.height);
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    viewScale = cssW / W;
+    viewOx = 0;
+    viewOy = (cssH - H * viewScale) / 2;
+    ctx.imageSmoothingEnabled = true;
   }
   function canvasPos(ev) {
     var rect = canvas.getBoundingClientRect();
     var t = (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || ev;
-    return { x: ((t.clientX - rect.left) / rect.width) * W, y: ((t.clientY - rect.top) / rect.height) * H };
+    var x = t.clientX - rect.left, y = t.clientY - rect.top;
+    return { x: (x - viewOx) / viewScale, y: (y - viewOy) / viewScale };
   }
   function onCanvasTap(ev) {
     if (!playing || paused || state.ended) return;
