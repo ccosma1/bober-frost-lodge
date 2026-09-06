@@ -88,6 +88,8 @@ def main() -> int:
         "Brace the lodge",
         "Push the snow back",
         "+clearing",
+        "drawFrozenDam",
+        "#3D5C9A",
     ]
     for s in needed:
         if s not in text:

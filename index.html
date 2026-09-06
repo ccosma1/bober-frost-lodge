@@ -1628,6 +1628,61 @@
     c.fillStyle = "#F4E6C3";
     c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + w * 0.28, y - h + h * 0.22); c.lineTo(x - w * 0.28, y - h + h * 0.22); c.closePath(); c.fill();
   }
+  function drawFrozenDam(c) {
+    var night = state.phase === "night" || state.phase === "dusk" || isActIII() || whiteoutLook();
+    var splashOn = false;
+    try { splashOn = !document.getElementById("splash").classList.contains("hidden"); } catch (e) {}
+    var wash = splashOn ? 0.8 : (night ? 0.34 : 0.5);
+    var y0 = HORIZON - 18, y1 = HORIZON + 24;
+    c.save();
+    c.globalAlpha = wash;
+    var ig = c.createLinearGradient(0, y0, 0, y1);
+    ig.addColorStop(0, night ? "#2a3860" : "#3D5C9A");
+    ig.addColorStop(0.55, night ? "#31466e" : "#4a6a9c");
+    ig.addColorStop(1, night ? "#241848" : "#5a6e90");
+    c.fillStyle = ig;
+    c.beginPath();
+    c.moveTo(0, y0 + 10);
+    c.quadraticCurveTo(110, y0 - 4, 180, y0 + 6);
+    c.quadraticCurveTo(270, y0 + 16, 360, y0 + 4);
+    c.lineTo(360, y1);
+    c.quadraticCurveTo(200, y1 + 6, 0, y1 - 2);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "rgba(244,230,195,0.14)";
+    c.fill();
+    c.globalAlpha = wash * 0.42;
+    c.strokeStyle = "#F4E6C3";
+    c.lineWidth = 1.05;
+    c.lineCap = "round";
+    c.beginPath(); c.moveTo(22, HORIZON); c.lineTo(78, HORIZON + 7); c.lineTo(112, HORIZON + 1); c.stroke();
+    c.beginPath(); c.moveTo(148, HORIZON + 11); c.lineTo(198, HORIZON + 5); c.lineTo(246, HORIZON + 12); c.stroke();
+    c.beginPath(); c.moveTo(272, HORIZON + 3); c.lineTo(314, HORIZON + 9); c.lineTo(348, HORIZON + 1); c.stroke();
+    c.globalAlpha = wash * 0.86;
+    [
+      [96, HORIZON + 2, 52, 6, -0.16],
+      [140, HORIZON - 2, 60, 7, 0.07],
+      [190, HORIZON + 3, 56, 6, -0.11],
+      [122, HORIZON + 8, 46, 5, 0.18],
+      [168, HORIZON + 10, 68, 6, -0.05],
+      [224, HORIZON + 6, 42, 5, 0.13],
+      [152, HORIZON - 8, 34, 5, 0.26]
+    ].forEach(function (lg, i) {
+      c.save();
+      c.translate(lg[0], lg[1]);
+      c.rotate(lg[4]);
+      c.fillStyle = i % 2 ? "#5C3A1A" : "#6B4423";
+      roundRect(c, 0, 0, lg[2], lg[3], 2);
+      c.fill();
+      c.restore();
+    });
+    c.fillStyle = "#3a2410";
+    c.beginPath();
+    c.moveTo(158, HORIZON - 2); c.lineTo(164, HORIZON - 8); c.lineTo(170, HORIZON - 2);
+    c.closePath();
+    c.fill();
+    c.restore();
+  }
   function drawFarPines(c) {
     var ox = para(0);
     c.save(); c.translate(ox * 0.4, 0);
@@ -2028,6 +2083,7 @@
     var g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     drawMoon(ctx);
+    drawFrozenDam(ctx);
     drawFarPines(ctx);
     drawMidTrees(ctx);
     drawGround(ctx);
