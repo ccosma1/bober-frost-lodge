@@ -199,8 +199,8 @@
     #btn-beacon { border-color: var(--yellow); }
     #btn-stoke strong { font-size: 16px; letter-spacing: 0.04em; }
     #btn-stoke em { font-style: normal; color: var(--yellow); font-size: 11px; font-weight: 800; line-height: 1.1; }
-    footer { flex: 0 0 auto; text-align: center; font-size: 10px; font-weight: 700; color: #cbbda0; padding: 2px 8px max(4px, env(safe-area-inset-bottom)); background: #1A1028; z-index: 20; position: relative; }
-    footer a { color: var(--cream); text-decoration: underline; }
+    .hub-link { flex: 0 0 auto; text-align: center; margin: 8px 0 0; font-size: 13px; font-weight: 800; padding: 2px 8px max(4px, env(safe-area-inset-bottom)); background: #1A1028; z-index: 20; position: relative; }
+    .hub-link a { color: var(--yellow); }
     .overlay {
       position: absolute; inset: 0; z-index: 12; display: flex; flex-direction: column;
       align-items: center; justify-content: flex-end; padding: 18px 18px 24px;
@@ -448,7 +448,7 @@
         </div>
       </div>
     </div>
-    <footer>Also play · <a href="https://ccosma1.github.io/bober-yeet/">Yeet</a> · <a href="https://ccosma1.github.io/bober-dam-defense/">Dam Defense</a></footer>
+    <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
     <div id="cameo" class="overlay hidden" role="dialog" aria-label="Cameo">
       <div class="cameo-stage">
         <img id="cameo-img" class="hero" alt="" />
@@ -2165,7 +2165,7 @@
   function layoutChrome() {
     var h = app.clientHeight || 640;
     var hud = document.getElementById("hud");
-    var foot = document.querySelector("footer");
+    var foot = document.querySelector(".hub-link");
     var stage = document.getElementById("stage");
     var dock = document.getElementById("dock");
     var remain = h - (hud ? hud.offsetHeight : 0) - (foot ? foot.offsetHeight : 0);
