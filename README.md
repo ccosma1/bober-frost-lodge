@@ -17,8 +17,8 @@ Run `START.bat` or open `index.html` in a browser.
 Survive **Days 1–25**. Night 25 is the boss Whiteout. Win is **THAW HOLDS** at **dawn of Day 26** if the lodge is standing and at least one beaver is up — and you either **fired the Beacon** that night or hold **≥40% heat**.
 
 1. Tap **HOLD THE FIRE**.
-2. **Dawn** waits until every living beaver has a job, then **START DAY** (or tap the snow). Jobs: **Chop**, **Fish**, **Tend**, **Tap**, **Mine**. ×2 / ×4 if you want it faster.
-3. **Drag** the snow to pan the camp (touch or mouse). Desktop can edge-scroll. The world is a scrollable winter camp, not one screen.
+2. **Dawn** waits until every living beaver has a job, then **START DAY** (or tap the snow). Jobs: **Chop**, **Fish**, **Tend**, **Tap**, **Mine**. ×2 / ×4 if you want it faster. Day 1 shows a one-time tip: jobs send Bobers to Woodlots, River, Sap Forest, and Stone Trail.
+3. **Drag** the snow to pan the camp (touch or mouse). Desktop can edge-scroll. The world is a scrollable winter camp, not one screen. Arrival callouts fire when a Bober reaches a workplace.
 4. On **START DAY**, Bobers **walk to their workplaces**:
    - **CHOP** → Woodlots / Chop Belt (west)
    - **FISH** → River (south) — river fish, ice holes, dock

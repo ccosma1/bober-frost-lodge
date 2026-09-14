@@ -162,6 +162,15 @@ def main() -> int:
         "drawFrozenDam",
         "#3D5C9A",
         "drag to pan",
+        "JOBS SEND BOBERS OUT",
+        "GOT IT",
+        "bober-frost-onboard-v1",
+        "buildNeedLine",
+        "reached the",
+        "drawCrumbs",
+        "Woodlots west",
+        "Sap Forest north",
+        "Stone Trail east",
     ]
     for s in needed:
         if s not in text:

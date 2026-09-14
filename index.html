@@ -245,24 +245,43 @@
     .play:disabled { opacity: 0.42; cursor: default; box-shadow: none; filter: grayscale(0.2); }
     .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .end-msg { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 6px #000; }
-    #sheet { justify-content: center; align-items: center; background: #1a1028aa; padding: 20px 16px; }
+    #sheet {
+      z-index: 24; justify-content: flex-start; align-items: stretch;
+      background: #1a1028e8; padding: 10px 10px max(12px, env(safe-area-inset-bottom));
+    }
     #sheet .sheet-card {
-      width: min(340px, 100%); background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px;
-      padding: 12px; box-shadow: 0 10px 28px #0008; text-align: left;
-      display: flex; flex-direction: column; max-height: min(70%, 420px); min-height: 0;
+      width: min(420px, 100%); margin: 0 auto; background: #2a1c4e; border: 3px solid var(--yellow); border-radius: 16px;
+      padding: 12px 12px 10px; box-shadow: 0 10px 28px #0008; text-align: left;
+      display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; max-height: 100%; height: 100%;
     }
-    #sheet h3 { margin: 0 0 6px; color: var(--yellow); font-size: 16px; text-align: center; flex: 0 0 auto; }
-    #sheet-list { padding-top: 8px; max-height: none; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+    #sheet h3 { margin: 4px 0 6px; color: var(--yellow); font-size: 16px; text-align: center; flex: 0 0 auto; }
+    #sheet-sub { flex: 0 0 auto; margin: 0 0 8px; text-align: center; }
+    #sheet-list {
+      padding: 4px 2px 8px; overflow-y: auto; overflow-x: hidden; min-height: 0; flex: 1 1 auto;
+      -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y;
+    }
     #sheet-list .build-btn:first-child { margin-top: 0; }
+    #sheet-list .build-btn:last-child { margin-bottom: 4px; }
+    #btn-sheet-close { flex: 0 0 auto; width: 100%; margin-top: 4px; }
     .build-btn {
-      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      min-height: 56px; margin: 0 0 8px; padding: 10px 12px; border: 3px solid var(--fur-dark);
+      width: 100%; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+      min-height: 64px; margin: 0 0 8px; padding: 10px 12px; border: 3px solid var(--fur-dark);
       background: var(--fur); color: var(--cream); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px;
+      flex-shrink: 0; text-align: left;
     }
-    .build-btn .cost { color: var(--yellow); font-size: 12px; text-align: right; line-height: 1.25; }
-    .build-btn .why { display: block; font-size: 11px; color: var(--ice); font-weight: 700; margin-top: 2px; }
-    .build-btn.locked { opacity: 0.55; filter: grayscale(0.25); background: #4a3420; }
-    #confirm .tip-card, #paused .tip-card {
+    .build-btn > span:first-child { min-width: 0; flex: 1 1 auto; }
+    .build-btn .cost { color: var(--yellow); font-size: 12px; text-align: right; line-height: 1.25; flex: 0 0 auto; max-width: 42%; }
+    .build-btn .why { display: block; font-size: 13px; color: var(--ice); font-weight: 700; margin-top: 4px; line-height: 1.3; }
+    .build-btn.locked {
+      opacity: 1; filter: none; background: #322418; border-color: #A8C4E8; cursor: pointer;
+    }
+    .build-btn.locked .why { color: var(--yellow); }
+    #onboard {
+      z-index: 25; justify-content: center; align-items: center; background: #1a1028e8;
+    }
+    #onboard .tip-card { max-width: 22em; }
+    #onboard .end-msg { text-align: left; font-size: 15px; line-height: 1.45; }
+    #confirm .tip-card, #paused .tip-card, #onboard .tip-card {
       background: #3A2A6Aee; border: 3px solid var(--yellow); border-radius: 16px;
       padding: 22px 20px 16px; max-width: 20em; box-shadow: 0 8px 28px #0008;
     }
@@ -538,14 +557,6 @@
           </div>
         </div>
       </div>
-      <div id="sheet" class="overlay hidden">
-        <div class="sheet-card">
-          <h3 id="sheet-title">Build on pad</h3>
-          <p class="end-msg" id="sheet-sub" style="margin-bottom:8px;text-align:center"></p>
-          <div id="sheet-list"></div>
-          <button class="play ghost" id="btn-sheet-close" type="button" style="width:100%">CLOSE</button>
-        </div>
-      </div>
     </div>
     <div id="dock">
       <div id="job-board" class="hidden"></div>
@@ -568,6 +579,21 @@
       </div>
     </div>
     <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
+    <div id="sheet" class="overlay hidden">
+      <div class="sheet-card">
+        <h3 id="sheet-title">Build on pad</h3>
+        <p class="end-msg" id="sheet-sub"></p>
+        <div id="sheet-list"></div>
+        <button class="play ghost" id="btn-sheet-close" type="button">CLOSE</button>
+      </div>
+    </div>
+    <div id="onboard" class="overlay hidden" role="dialog" aria-label="Jobs send Bobers out">
+      <div class="tip-card">
+        <h2>JOBS SEND BOBERS OUT</h2>
+        <p class="end-msg">CHOP → Woodlots west.<br />FISH → River south.<br />TAP → Sap Forest north.<br />MINE → Stone Trail east.<br />TEND stays at the hearth.<br /><br />Drag to pan the camp. Tap a glowing plot to build.</p>
+        <button class="play" id="btn-onboard" type="button">GOT IT</button>
+      </div>
+    </div>
     <div id="museum" class="overlay hidden" role="dialog" aria-label="Museum">
       <div class="museum-panel">
         <h2>MUSEUM</h2>
@@ -613,6 +639,7 @@
   var ENDLESS_KEY = "bober-frost-endless-v1";
   var CLEARED_KEY = "bober-frost-cleared-v1";
   var HIST_SEEN_KEY = "bober-history-v1";
+  var ONBOARD_KEY = "bober-frost-onboard-v1";
   var VERSE_KEY = "boberverse-v1";
   var DAM_KEY = "bober-dam-campaign-v1";
   var W = 420, H = 480, DAYS = 25;
@@ -681,6 +708,7 @@
   var camX = 0, camY = 0;
   var panDrag = null, mouseView = { x: -1, y: -1, over: false, mouse: false };
   var fishSchools = [], sapSpirits = [];
+  var zoneOnce = {};
   var playing = false, paused = false, lastTs = 0, clock = 0;
   var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
   var cameoLock = false, cameoTimer = 0, cameoDone = null, cameoSkipArmed = 0;
@@ -1170,12 +1198,16 @@
         banner("The thaw was a lie. Hold forever.", 2800);
         state.endlessIntro = true;
       }
-      if (!isEndless() && state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Drag the snow to pan. FISH is the river, TAP the grove, MINE the sled road.", 3800); state.dawnHint = false; }
+      if (!isEndless() && state.day === 1) maybeOnboard();
       if (forkPending()) showFork("pick");
       if (fork18Pending()) showFork18();
       maybeEndlessCameo();
     } else {
       dawnGoT = -1;
+    }
+    if (p === "day") {
+      zoneOnce = {};
+      state.beavers.forEach(function (b) { b.leftHub = 0; });
     }
     syncDock(); hud(); save();
   }
@@ -1456,6 +1488,15 @@
     if (s.length) return "Need " + s[0];
     return null;
   }
+  function buildNeedLine(bd) {
+    if (countBuilding(bd.id) >= bd.max) return "Already built";
+    var bits = [];
+    if (state.day < bd.day) bits.push("Unlocks Day " + bd.day);
+    var s = shortage(bd);
+    if (s.length) bits.push("Need " + s.join(" · "));
+    if (state.phase !== "dawn" && state.phase !== "day") bits.push("Dawn or Day only");
+    return bits.length ? bits.join(" · ") : null;
+  }
   function tryBuild(kind) {
     if (state.phase !== "dawn" && state.phase !== "day") { banner("Dawn or Day only", 1600); return; }
     if (selectedPad < 0) { banner("tap a glowing pad", 1600); return; }
@@ -1508,11 +1549,12 @@
       BUILDINGS.forEach(function (bd) {
         var btn = document.createElement("button");
         btn.type = "button";
-        var why = buildBlock(bd);
+        var why = buildNeedLine(bd);
         btn.className = "build-btn" + (why ? " locked" : "");
         var left = document.createElement("span");
-        left.innerHTML = bd.name + (why ? "<span class='why'>" + why + "</span>" : "<span class='why'>" + bd.blurb + "</span>");
-        var right = document.createElement("span"); right.className = "cost"; right.textContent = costLine(bd);
+        left.innerHTML = bd.name + "<span class='why'>" + (why || bd.blurb) + "</span>";
+        var right = document.createElement("span"); right.className = "cost";
+        right.textContent = (state.day < bd.day ? ("Day " + bd.day + " · ") : "") + costLine(bd);
         btn.appendChild(left); btn.appendChild(right);
         btn.addEventListener("pointerenter", function () { hoverBuild = bd.id; });
         btn.addEventListener("pointerleave", function () { if (hoverBuild === bd.id) hoverBuild = null; });
@@ -1522,6 +1564,7 @@
     }
     document.getElementById("sheet").classList.remove("hidden");
     document.getElementById("status-row").hidden = true;
+    list.scrollTop = 0;
   }
   function closeSheet() {
     document.getElementById("sheet").classList.add("hidden");
@@ -1530,7 +1573,7 @@
   }
 
   function skipDawn() {
-    if (cameoLock || historyOpen()) return;
+    if (cameoLock || historyOpen() || onboardOpen()) return;
     if (state.phase !== "dawn" || state.ended) return;
     if (forkPending()) { showFork("pick"); return; }
     if (fork18Pending()) { showFork18(); return; }
@@ -1571,9 +1614,7 @@
       else if (state.ended === "lose") lose("heat");
       else {
         if (isWhiteoutNight()) Sfx.startWind();
-        if (state.phase === "dawn" && state.day === 1 && state.dawnHint) {
-          banner("Assign jobs, then START DAY. Drag the snow to pan. FISH is the river, TAP the grove, MINE the sled road.", 3800); state.dawnHint = false;
-        }
+        if (state.phase === "dawn" && state.day === 1) maybeOnboard();
         if (forkPending()) showFork("pick");
         if (fork18Pending()) showFork18();
       }
@@ -1725,6 +1766,23 @@
     layoutChrome();
   }
 
+  function zoneForJob(b) {
+    if (b.job === "chopper") return { id: "chop", label: "Woodlots" };
+    if (b.job === "fisher") return { id: "fish", label: "River" };
+    if (b.job === "tapper") return { id: "tap", label: "Sap Forest" };
+    if (b.job === "miner") return b.haul ? { id: "stock", label: "Stockpile" } : { id: "mine", label: "Stone Trail" };
+    return null;
+  }
+  function noteArrival(b) {
+    var z = zoneForJob(b);
+    if (!z) return;
+    if (z.id === "stock") { pop(b.x, b.y - 36, "haul in", "#d4cdc0"); return; }
+    pop(b.x, b.y - 36, b.name + " · " + z.label, "#F4E6C3");
+    if (!zoneOnce[z.id]) {
+      zoneOnce[z.id] = 1;
+      banner(b.name + " reached the " + z.label + ".", 1700);
+    }
+  }
   function moveBeavers(dt) {
     if (state.phase === "dawn") return;
     state.beavers.forEach(function (b) {
@@ -1732,8 +1790,20 @@
       var spd = WALK;
       if (b.status === "injured") spd *= (b.trait === "sturdy" ? 0.7 : 0.5);
       if (b.status === "down") spd *= 0.3;
-      if (dist < 3) { b.x = t.x; b.y = t.y; b.moving = false; return; }
+      var wasMoving = b.moving;
+      if (dist < 3) {
+        b.x = t.x; b.y = t.y; b.moving = false;
+        if (wasMoving && state.phase === "day") noteArrival(b);
+        return;
+      }
       b.moving = true; b.facing = dx >= 0 ? 1 : -1;
+      if (!wasMoving && state.phase === "day" && !b.leftHub) {
+        var z = zoneForJob(b);
+        if (z && z.id !== "stock") {
+          b.leftHub = 1;
+          pop(b.x, b.y - 28, "→ " + z.label, "#F4E6C3");
+        }
+      }
       var step = Math.min(dist, spd * dt);
       b.x += (dx / dist) * step; b.y += (dy / dist) * step;
     });
@@ -2089,6 +2159,22 @@
     CHOP_STUMPS.forEach(function (s) { addPropAt("stump", s.x - 18, s.y + 8, { r: 11, clear: 12 }); });
     addPropAt("woodpile", SITE_STOCK.x - 36, SITE_STOCK.y + 18, { clear: 8 });
     CAMP_PROPS.push({ kind: "dock", x: 690, y: 1264 });
+    for (i = 0; i < 30; i++) {
+      addPropAt("pine", 16 + srnd(i + 500) * 56, 48 + i * 51, { h: 22 + srnd(i + 3) * 14, w: 8 + srnd(i + 6) * 4, cool: i > 20 });
+      addPropAt("pine", WORLD_W - 22 - srnd(i + 530) * 54, 40 + i * 52, { h: 22 + srnd(i + 8) * 14, w: 8 + srnd(i + 2) * 4, cool: i > 20 });
+    }
+    for (i = 0; i < 22; i++) {
+      addPropAt("pine", 40 + i * 52, 42 + srnd(i + 560) * 48, { h: 24 + srnd(i) * 12, w: 9, cool: true });
+      addPropAt("drift", 70 + i * 50, 36 + srnd(i + 580) * 30, { rx: 28 + srnd(i) * 18, ry: 12, clear: 8 });
+    }
+    for (i = 0; i < 16; i++) {
+      addPropAt("pine", 30 + i * 72, WORLD_H - 70 - srnd(i + 600) * 36, { h: 20 + srnd(i + 4) * 10, w: 8, cool: true });
+      addPropAt("drift", 80 + i * 68, WORLD_H - 48, { rx: 36 + srnd(i + 9) * 20, ry: 16, clear: 8 });
+    }
+    for (i = 0; i < 14; i++) {
+      addPropAt("pine", 48 + srnd(i + 640) * 280, 80 + srnd(i + 660) * 360, { h: 20 + srnd(i) * 12, w: 8, cool: true });
+      addPropAt("rock", 40 + srnd(i + 680) * 80, 200 + srnd(i + 700) * 900, { r: 7 + srnd(i) * 6 });
+    }
     fishSchools = [];
     for (i = 0; i < 22; i++) {
       fishSchools.push({
@@ -2165,6 +2251,34 @@
     for (i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
     c.stroke();
   }
+  function routeActive(job) {
+    return state.phase === "day" && state.beavers.some(function (b) { return b.job === job && b.status !== "down"; });
+  }
+  function drawCrumbs(c, pts, active) {
+    if (!pts || pts.length < 2) return;
+    var total = 0, segs = [], i, d, t, acc, k, x, y, a;
+    for (i = 1; i < pts.length; i++) {
+      d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      segs.push(d); total += d;
+    }
+    a = active ? (0.55 + Math.sin(clock * 4.2) * 0.22) : 0.22;
+    c.fillStyle = "rgba(244,230,195," + a + ")";
+    for (k = 1; k <= 6; k++) {
+      t = (k / 7) * total; acc = 0;
+      for (i = 0; i < segs.length; i++) {
+        if (acc + segs[i] >= t) {
+          var u = segs[i] ? (t - acc) / segs[i] : 0;
+          x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u;
+          y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
+          c.beginPath();
+          c.moveTo(x, y - 5); c.lineTo(x + 4, y); c.lineTo(x, y + 5); c.lineTo(x - 4, y);
+          c.closePath(); c.fill();
+          break;
+        }
+        acc += segs[i];
+      }
+    }
+  }
   function drawGround(c) {
     c.fillStyle = "#c5d2e4";
     c.fillRect(0, 40, WORLD_W, WORLD_H - 40);
@@ -2174,6 +2288,11 @@
     ng.addColorStop(1, "#e4ebf4");
     c.fillStyle = ng;
     c.fillRect(0, 40, WORLD_W, WORLD_H - 40);
+    c.fillStyle = "rgba(30, 48, 44, 0.22)";
+    c.fillRect(0, 0, WORLD_W, 88);
+    c.fillRect(0, 0, 72, WORLD_H);
+    c.fillRect(WORLD_W - 72, 0, 72, WORLD_H);
+    c.fillRect(0, WORLD_H - 110, WORLD_W, 110);
     c.strokeStyle = "rgba(168,196,232,0.16)"; c.lineWidth = 1;
     var tw = 56, th = 28, gx, gy;
     for (gy = 40; gy < WORLD_H; gy += th) {
@@ -2200,6 +2319,10 @@
     strokePath(c, [[LODGE.x + 20, LODGE.y - 40], [680, 560], [760, 360], [SITE_SAP.x, SITE_SAP.y + 20]], "rgba(196,137,74,0.4)", 14);
     strokePath(c, [[SITE_STOCK.x, SITE_STOCK.y], [820, 840], [940, 780], [SITE_MINE.x - 20, SITE_MINE.y]], "rgba(92,58,26,0.38)", 10);
     strokePath(c, [[SITE_STOCK.x, SITE_STOCK.y + 7], [820, 847], [940, 787], [SITE_MINE.x - 20, SITE_MINE.y + 7]], "rgba(92,58,26,0.28)", 4);
+    drawCrumbs(c, [[LODGE.x - 40, LODGE.y], [320, 780], [220, 820], [SITE_CHOP.x, SITE_CHOP.y]], routeActive("chopper"));
+    drawCrumbs(c, [[LODGE.x, LODGE.y + 40], [640, 980], [700, 1140], [SITE_FISH.x, SITE_FISH.y - 40]], routeActive("fisher"));
+    drawCrumbs(c, [[LODGE.x + 20, LODGE.y - 40], [680, 560], [760, 360], [SITE_SAP.x, SITE_SAP.y + 20]], routeActive("tapper"));
+    drawCrumbs(c, [[SITE_STOCK.x, SITE_STOCK.y], [820, 840], [940, 780], [SITE_MINE.x - 20, SITE_MINE.y]], routeActive("miner"));
     c.fillStyle = "#2a3a68";
     c.beginPath();
     c.moveTo(180, 1220);
@@ -2686,8 +2809,29 @@
     var vx = (x - viewOx) / viewScale, vy = (y - viewOy) / viewScale;
     return { x: vx + camX, y: vy + camY, vx: vx, vy: vy };
   }
+  function onboardSeen() {
+    try { return localStorage.getItem(ONBOARD_KEY) === "1"; } catch (e) { return false; }
+  }
+  function onboardOpen() {
+    var el = document.getElementById("onboard");
+    return !!(el && !el.classList.contains("hidden"));
+  }
+  function maybeOnboard() {
+    if (isEndless() || onboardSeen() || onboardOpen()) return;
+    var el = document.getElementById("onboard");
+    if (el) el.classList.remove("hidden");
+    state.dawnHint = false;
+  }
+  function hideOnboard() {
+    var el = document.getElementById("onboard");
+    if (el) el.classList.add("hidden");
+    try { localStorage.setItem(ONBOARD_KEY, "1"); } catch (e) {}
+    state.dawnHint = false;
+    save();
+    banner("Assign jobs, then START DAY.", 2200);
+  }
   function overlaysBlock() {
-    return !playing || paused || state.ended || cameoLock || historyOpen() || museumOpen();
+    return !playing || paused || state.ended || cameoLock || historyOpen() || museumOpen() || onboardOpen();
   }
   function onCanvasDown(ev) {
     if (overlaysBlock()) return;
@@ -2760,7 +2904,7 @@
     requestAnimationFrame(loop);
     if (!lastTs) lastTs = ts;
     var dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
-    if (playing && !paused && !state.ended && !cameoLock && !historyOpen() && !museumOpen()) {
+    if (playing && !paused && !state.ended && !cameoLock && !historyOpen() && !museumOpen() && !onboardOpen()) {
       var step = dt * state.speed; clock += step;
       tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step); tickWorldFx(step);
       tickEdgeScroll(step);
@@ -3230,6 +3374,7 @@
   document.getElementById("btn-wipe").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); hardReset(); });
   document.getElementById("btn-keep").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); });
   document.getElementById("btn-sheet-close").addEventListener("click", closeSheet);
+  document.getElementById("btn-onboard").addEventListener("click", hideOnboard);
   document.getElementById("sheet-list").addEventListener("pointerleave", function () { hoverBuild = null; });
   canvas.addEventListener("pointerdown", onCanvasDown);
   canvas.addEventListener("pointermove", onCanvasMove);
