@@ -51,7 +51,7 @@
       border-radius: 999px; padding: 4px 10px; font-weight: 800; font-size: 14px;
       line-height: 1.25; letter-spacing: 0.02em; white-space: nowrap; flex: 0 0 auto;
     }
-    .chip.wood { color: var(--yellow); }
+    .chip.wood { color: var(--yellow); letter-spacing: 0; }
     .chip.fish { color: var(--ice); }
     .chip.sap { color: #e8b060; }
     .chip.stone { color: #d4cdc0; }
@@ -212,8 +212,15 @@
     .overlay img.hero { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
     .overlay h1 { margin: 0 0 6px; font-size: clamp(26px, 8vw, 40px); line-height: 0.95; color: var(--yellow); text-shadow: 0 3px 0 #1A1028, 0 6px 16px #000; }
     .overlay h2 { margin: 0 0 8px; font-size: 28px; color: var(--yellow); text-shadow: 0 3px 0 #1A1028; }
-    .tagline { margin: 0 0 10px; font-size: 16px; font-weight: 700; color: var(--cream); text-shadow: 0 2px 8px #000; }
-    .how { margin: 0 0 12px; max-width: 24em; font-size: 13px; line-height: 1.4; color: var(--cream); text-shadow: 0 1px 6px #000; }
+    .tagline { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: var(--cream); text-shadow: 0 2px 8px #000; }
+    .how { margin: 0 0 8px; max-width: 24em; font-size: 14px; line-height: 1.35; color: var(--cream); text-shadow: 0 1px 6px #000; }
+    .disclaimer { margin: 0; font-size: 12px; font-weight: 700; color: var(--ice); text-shadow: 0 1px 6px #000; }
+    .splash-copy {
+      background: rgba(26, 16, 40, 0.78); border: 2px solid #F5C40055; border-radius: 14px;
+      padding: 10px 12px; margin: 0 4px 12px; max-width: 24em;
+    }
+    .splash-copy .tagline { margin: 0 0 6px; }
+    .splash-copy .how { margin: 0 0 6px; }
     #dam-tip { margin: 0 0 12px; font-size: 12px; font-weight: 800; color: var(--yellow); text-shadow: 0 2px 6px #000; }
     #dam-tip.hidden { display: none; }
     .play {
@@ -322,7 +329,7 @@
       <div class="chips">
         <div class="chip" id="chip-day">Day 1/25</div>
         <div class="chip fork" id="chip-fork" hidden>STOCK</div>
-        <div class="chip wood" id="chip-wood">W 0</div>
+        <div class="chip wood" id="chip-wood">$BOBER 0</div>
         <div class="chip fish" id="chip-fish">F 0</div>
         <div class="chip sap" id="chip-sap">SA 0</div>
         <div class="chip stone" id="chip-stone">ST 0</div>
@@ -350,8 +357,11 @@
       <div id="splash" class="overlay">
         <img class="hero" src="assets/splash.jpg" alt="" />
         <h1>BOBER FROST LODGE</h1>
-        <p class="tagline">Fan game by a holder.</p>
-        <p class="how">Survive 25 winter days. Assign Chopper, Fisher, Tender, Tapper, Miner. Build on pads — the lodge grows as you do. Whiteouts hit nights 4, 8, 12, 18, 22. Night 25 is the boss storm — fire the Beacon or hold 40% heat. Day 12, the ice road splits. Day 18, brace or expand.</p>
+        <div class="splash-copy">
+          <p class="tagline">Hold the lodge fire through 25 winter days.</p>
+          <p class="how">Assign beavers, build the lodge, survive whiteouts — a winter story, not a grind wallet.</p>
+          <p class="disclaimer">Fan game by a holder.</p>
+        </div>
         <p id="dam-tip" class="hidden">Dam reserves: +10 Sap this run.</p>
         <button class="play" id="btn-hold" type="button">HOLD THE FIRE</button>
         <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
@@ -392,7 +402,7 @@
           <h2>DAY 12</h2>
           <p class="end-msg" id="fork-copy">The ice road splits. Pick one.</p>
           <div id="fork-choices">
-            <button class="play" id="fork-stock" type="button">STOCKPILE<small>Bank the fire · +8 Wood +4 Sap · Night 12–18 drain +10%</small></button>
+            <button class="play" id="fork-stock" type="button">STOCKPILE<small>Bank the fire · +8 $BOBER +4 Sap · Night 12–18 drain +10%</small></button>
             <button class="play ghost" id="fork-scout" type="button">SCOUT THE ICE<small>Push farther · extra beaver Days 12–16 · Night 12–18 drain −10%</small></button>
           </div>
           <div id="fork-jobs" class="hidden">
@@ -443,7 +453,7 @@
             SYRUP <small id="syrup-pred">+14</small>
           </button>
           <button id="btn-beacon" type="button" hidden>
-            BEACON <small>5W+3Sa → +25</small>
+            BEACON <small>5 $BOBER + 3Sa → +25</small>
           </button>
         </div>
       </div>
@@ -508,7 +518,7 @@
     { id: "bunk", name: "Bunk Hut", day: 3, wood: 20, fish: 0, sap: 5, stone: 0, max: 2, blurb: "+1 beaver bed (start 3, cap 5)." },
     { id: "watch", name: "Watch Post", day: 5, wood: 18, fish: 0, sap: 0, stone: 10, max: 1, blurb: "Warns Whiteout a day early. −2 night drain." },
     { id: "workshop", name: "Workshop", day: 6, wood: 25, fish: 0, sap: 8, stone: 12, max: 1, blurb: "All gather jobs work faster." },
-    { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5W+3Sa. Day 25 ritual." }
+    { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5 $BOBER + 3Sa. Day 25 ritual." }
   ];
   var SPR_SRC = {
     idle: "assets/sprites/bober-idle.png", hat: "assets/sprites/bober-hat.png",
@@ -939,7 +949,7 @@
     state.wood = clamp(state.wood + 8, 0, CAP);
     state.sap = clamp(state.sap + 4, 0, CAP);
     hideFork();
-    banner("Banked +8 Wood +4 Sap. Storms 12–18 hit harder.", 2400);
+    banner("Banked +8 $BOBER +4 Sap. Storms 12–18 hit harder.", 2400);
     flashChip("chip-wood", true); flashChip("chip-sap", true);
     syncDock(); hud(); save();
   }
@@ -1178,7 +1188,7 @@
 
   function stokeWood() {
     if (!canNightAct()) return;
-    if (state.wood < 1) { flashChip("chip-wood"); banner("No wood to burn.", 1400); return; }
+    if (state.wood < 1) { flashChip("chip-wood"); banner("No $BOBER to burn.", 1400); return; }
     state.wood -= 1;
     var add = heatPerWood();
     state.heat = clamp(state.heat + add, 0, 100);
@@ -1204,7 +1214,7 @@
     if (state.wood < 5 || state.sap < 3) {
       if (state.wood < 5) flashChip("chip-wood");
       if (state.sap < 3) flashChip("chip-sap");
-      banner("Need 5W+3Sa", 1600);
+      banner("Need 5 $BOBER + 3Sa", 1600);
       return;
     }
     state.wood -= 5; state.sap -= 3;
@@ -1237,7 +1247,7 @@
 
   function costLine(bd) {
     var p = [];
-    if (bd.wood) p.push(bd.wood + "W");
+    if (bd.wood) p.push(bd.wood + " $BOBER");
     if (bd.fish) p.push(bd.fish + "F");
     if (bd.sap) p.push(bd.sap + "Sa");
     if (bd.stone) p.push(bd.stone + "St");
@@ -1248,7 +1258,7 @@
   }
   function shortage(bd) {
     var bits = [];
-    if (state.wood < bd.wood) bits.push((bd.wood - Math.floor(state.wood)) + " more wood");
+    if (state.wood < bd.wood) bits.push((bd.wood - Math.floor(state.wood)) + " more $BOBER");
     if (state.fish < bd.fish) bits.push((bd.fish - Math.floor(state.fish)) + " more fish");
     if (state.sap < bd.sap) bits.push((bd.sap - Math.floor(state.sap)) + " more sap");
     if (state.stone < bd.stone) bits.push((bd.stone - Math.floor(state.stone)) + " more stone");
@@ -1271,7 +1281,7 @@
     var why = buildBlock(bd);
     if (why) {
       banner(why, 1600);
-      if (why.indexOf("wood") !== -1) flashChip("chip-wood");
+      if (why.indexOf("$BOBER") !== -1) flashChip("chip-wood");
       if (why.indexOf("fish") !== -1) flashChip("chip-fish");
       if (why.indexOf("sap") !== -1) flashChip("chip-sap");
       if (why.indexOf("stone") !== -1) flashChip("chip-stone");
@@ -1290,7 +1300,7 @@
       if (isEndless()) {
         addEndlessPad(true);
         state.wood = clamp(state.wood + 5, 0, CAP);
-        pop(LODGE.x, LODGE.y - 36, "+5 wood", "#F5C400");
+        pop(LODGE.x, LODGE.y - 36, "+5 $BOBER", "#F5C400");
       }
     }
     closeSheet(); hud(); save();
@@ -1396,7 +1406,7 @@
     if (f18Tag) forkChip.textContent = state.fork18 === "expand" ? "EXPAND" : "BRACE";
     else if (forkTag) forkChip.textContent = state.fork === "scout" ? "SCOUT" : "STOCK";
     app.classList.toggle("act3", playing && isActIII());
-    document.getElementById("chip-wood").textContent = "W " + Math.floor(state.wood);
+    document.getElementById("chip-wood").textContent = "$BOBER " + Math.floor(state.wood);
     var fishTxt = "F " + Math.floor(state.fish);
     if (state.rations > 0) fishTxt += " · R " + Math.floor(state.rations);
     document.getElementById("chip-fish").textContent = fishTxt;
@@ -1567,7 +1577,7 @@
       while (b.acc >= 1) {
         b.acc -= 1;
         var got = false;
-        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
+        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "$BOBER", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
         else if (b.job === "fisher") { if (addRes("fish", 1, "chip-fish", "fish", "#A8C4E8", b.x, b.y - 28)) Sfx.gather("fish"); }
         else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) { Sfx.gather("sap"); got = true; } }
         else if (b.job === "miner") { if (addRes("stone", 1, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone"); }
@@ -1678,8 +1688,14 @@
     c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + w, y + 4); c.lineTo(x - w, y + 4); c.closePath(); c.fill();
     c.fillStyle = cool ? "#2a4868" : "#2d5a3e";
     c.beginPath(); c.moveTo(x, y - h + h * 0.22); c.lineTo(x + w * 0.72, y - 4); c.lineTo(x - w * 0.72, y - 4); c.closePath(); c.fill();
+    c.fillStyle = cool ? "#3a5a78" : "#3d6a4e";
+    c.beginPath(); c.moveTo(x, y - h + h * 0.42); c.lineTo(x + w * 0.5, y - h * 0.18); c.lineTo(x - w * 0.5, y - h * 0.18); c.closePath(); c.fill();
     c.fillStyle = "#F4E6C3";
-    c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + w * 0.28, y - h + h * 0.22); c.lineTo(x - w * 0.28, y - h + h * 0.22); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + w * 0.32, y - h + h * 0.2); c.lineTo(x - w * 0.32, y - h + h * 0.2); c.closePath(); c.fill();
+    c.fillStyle = "rgba(244,230,195,0.92)";
+    c.beginPath(); c.ellipse(x - w * 0.28, y - h * 0.38, w * 0.28, 3.2, -0.35, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(x + w * 0.22, y - h * 0.22, w * 0.34, 3.6, 0.28, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(x - w * 0.12, y - 2, w * 0.42, 3.4, -0.08, 0, Math.PI * 2); c.fill();
   }
   function drawFrozenDam(c) {
     var night = state.phase === "night" || state.phase === "dusk" || isActIII() || whiteoutLook();
@@ -1758,15 +1774,33 @@
   }
   function drawNearBanks(c) {}
   function drawGround(c) {
-    c.fillStyle = "#d8c8b0";
+    c.fillStyle = "#c5d2e4";
     c.beginPath(); c.moveTo(0, HORIZON + 8); c.lineTo(W, HORIZON + 8); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
+    var ng = c.createLinearGradient(0, HORIZON + 8, 0, H);
+    ng.addColorStop(0, "#d4deec");
+    ng.addColorStop(0.45, "#e8eef6");
+    ng.addColorStop(1, "#f2f4f8");
+    c.fillStyle = ng;
+    c.fillRect(0, HORIZON + 8, W, H - HORIZON - 8);
+    c.fillStyle = "#e4ecf6";
+    c.beginPath(); c.ellipse(18, 612, 88, 26, 0.08, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(342, 616, 92, 28, -0.1, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(40, 250, 48, 14, 0.2, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(328, 248, 52, 14, -0.18, 0, Math.PI * 2); c.fill();
     var ring = lodgeLevel() >= 4 ? 182 : 158;
+    var heat = state.heat / 100;
     c.fillStyle = "#eadcc4";
     c.beginPath(); c.ellipse(180, 330, ring + 20, ring + 10, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#F4E6C3";
+    c.fillStyle = heat > 0.2 ? "#F4E6C3" : "#e8e4d8";
     c.beginPath(); c.ellipse(180, 324, ring, ring - 10, 0, 0, Math.PI * 2); c.fill();
+    if (heat > 0.05) {
+      c.fillStyle = "rgba(245,196,0," + (0.06 + heat * 0.1) + ")";
+      c.beginPath(); c.ellipse(180, 328, 54, 28, 0, 0, Math.PI * 2); c.fill();
+    }
     c.strokeStyle = "rgba(26,16,40,0.14)"; c.lineWidth = 2;
     c.beginPath(); c.ellipse(180, 324, ring, ring - 10, 0, 0, Math.PI * 2); c.stroke();
+    c.strokeStyle = "rgba(168,196,232,0.35)"; c.lineWidth = 1.4;
+    c.beginPath(); c.ellipse(180, 324, ring - 10, ring - 18, 0, 0, Math.PI * 2); c.stroke();
     sparkles.forEach(function (s) {
       var a = 0.12 + (Math.sin(clock * 3.2 + s.p) * 0.5 + 0.5) * 0.55;
       c.globalAlpha = a;
@@ -1779,11 +1813,13 @@
     var x = SITE_CHOP.x, y = SITE_CHOP.y, ds = depthScale(y);
     c.save(); c.translate(x, y); c.scale(ds, ds); x = 0; y = 0;
     ovalShadow(c, x + 10, y + 10, 28, 9, 0.3);
+    c.fillStyle = "#e8eef6";
+    c.beginPath(); c.ellipse(x + 8, y + 10, 26, 8, 0, 0, Math.PI * 2); c.fill();
     [[-8, 0, 22], [10, 4, 28], [26, -2, 18]].forEach(function (t) {
       c.fillStyle = "#5C3A1A"; c.fillRect(x + t[0], y - t[2] + t[1], 9, t[2]);
       c.fillStyle = "#8B5A2B"; c.fillRect(x + t[0] + 2, y - t[2] + t[1], 3, t[2]);
       c.fillStyle = "#2d5a3e"; c.beginPath(); c.ellipse(x + t[0] + 4, y - t[2] + t[1] - 8, 14, 11, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(x + t[0] + 4, y - t[2] + t[1] - 14, 9, 4, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(x + t[0] + 4, y - t[2] + t[1] - 14, 10, 4.5, 0, 0, Math.PI * 2); c.fill();
     });
     c.restore();
   }
@@ -1792,8 +1828,11 @@
     c.save(); c.translate(x, y); c.scale(ds, ds); x = 0; y = 0;
     ovalShadow(c, x, y + 8, 30, 8, 0.28);
     c.fillStyle = "#d8e8f8"; c.beginPath(); c.ellipse(x, y, 36, 16, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#eef4fc"; c.beginPath(); c.ellipse(x, y - 2, 30, 10, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = "#2a3a68"; c.beginPath(); c.ellipse(x, y, 16, 8, 0, 0, Math.PI * 2); c.fill();
     c.strokeStyle = "#F4E6C3"; c.lineWidth = 3; c.beginPath(); c.ellipse(x, y, 16, 8, 0, 0, Math.PI * 2); c.stroke();
+    c.strokeStyle = "rgba(168,196,232,0.7)"; c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(x - 22, y + 2); c.lineTo(x - 8, y + 6); c.stroke();
     c.restore();
   }
   function drawSapSite(c) {
@@ -1901,6 +1940,22 @@
         c.beginPath(); c.arc(0, -36, 18 + Math.sin(clock * 8) * 3, 0, Math.PI * 2); c.fill();
       }
     }
+    if (!ghost) {
+      c.fillStyle = "#F4E6C3";
+      if (kind === "woodshed") {
+        c.beginPath(); c.ellipse(0, -16, 22, 5, 0, Math.PI, Math.PI * 2); c.fill();
+      } else if (kind === "smokehouse") {
+        c.beginPath(); c.ellipse(-4, -16, 16, 4.2, 0, Math.PI, Math.PI * 2); c.fill();
+      } else if (kind === "bunk") {
+        c.beginPath(); c.ellipse(0, -18, 18, 4.5, 0, Math.PI, Math.PI * 2); c.fill();
+      } else if (kind === "watch") {
+        c.beginPath(); c.ellipse(0, -34, 12, 3.4, 0, Math.PI, Math.PI * 2); c.fill();
+      } else if (kind === "workshop") {
+        c.beginPath(); c.ellipse(0, -10, 20, 4, 0, Math.PI, Math.PI * 2); c.fill();
+      } else if (kind === "beacon") {
+        c.beginPath(); c.ellipse(0, -48, 10, 3, 0, Math.PI, Math.PI * 2); c.fill();
+      }
+    }
   }
   function drawPad(c, i) {
     var p = allPads()[i], kind = state.buildings[i];
@@ -1949,37 +2004,65 @@
       : 0.68 + Math.sin(clock * 17) * 0.24 + Math.sin(clock * 31) * 0.12;
     c.save(); c.translate(LODGE.x, LODGE.y);
     c.scale(LODGE_SCALE, LODGE_SCALE);
-    ovalShadow(c, 4, 28, 58, 22, 0.38);
-    c.beginPath(); roundRect(c, -36, 8, 72, 22, 6); inkFill(c, "#8B5A2B");
-    c.strokeStyle = "rgba(26,16,40,0.2)"; c.lineWidth = 1.1;
-    for (var wx = -28; wx < 32; wx += 7) {
-      c.beginPath(); c.moveTo(wx, 10); c.lineTo(wx, 28); c.stroke();
+    ovalShadow(c, 4, 30, 60, 22, 0.4);
+    c.fillStyle = "#e8eef6";
+    c.beginPath(); c.ellipse(0, 30, 62, 16, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); roundRect(c, -38, 4, 76, 26, 6); inkFill(c, "#6B4423");
+    for (var lg = 0; lg < 4; lg++) {
+      var ly = 6 + lg * 6;
+      c.beginPath(); roundRect(c, -36, ly, 72, 6, 2.5); inkFill(c, lg % 2 ? "#8B5A2B" : "#6B4423");
+      c.fillStyle = "#C4894A";
+      c.beginPath(); c.arc(-36, ly + 3, 2.6, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(36, ly + 3, 2.6, 0, Math.PI * 2); c.fill();
     }
     c.beginPath();
-    c.moveTo(-48, 10); c.lineTo(0, -46); c.lineTo(48, 10); c.lineTo(28, 18); c.lineTo(0, -28); c.lineTo(-28, 18);
+    c.moveTo(-48, 8); c.quadraticCurveTo(-22, -36, 0, -46); c.quadraticCurveTo(22, -36, 48, 8);
+    c.lineTo(30, 16); c.quadraticCurveTo(14, -20, 0, -28); c.quadraticCurveTo(-14, -20, -30, 16);
     c.closePath(); inkFill(c, "#3A2A6A");
     c.beginPath();
-    c.moveTo(-38, 8); c.lineTo(0, -38); c.lineTo(38, 8); c.lineTo(22, 14); c.lineTo(0, -22); c.lineTo(-22, 14);
+    c.moveTo(-40, 6); c.quadraticCurveTo(-18, -32, 0, -40); c.quadraticCurveTo(18, -32, 40, 6);
+    c.lineTo(24, 12); c.quadraticCurveTo(10, -18, 0, -24); c.quadraticCurveTo(-10, -18, -24, 12);
     c.closePath(); inkFill(c, "#F4E6C3");
-    c.strokeStyle = "rgba(168,196,232,0.55)"; c.lineWidth = 2.2;
-    c.beginPath(); c.moveTo(-38, 8); c.lineTo(0, -38); c.lineTo(38, 8); c.stroke();
-    c.beginPath(); roundRect(c, 10, -40, 10, 18, 2); inkFill(c, "#5C3A1A");
-    c.beginPath(); roundRect(c, 6, -46, 18, 8, 2); inkFill(c, "#8B5A2B");
+    c.fillStyle = "rgba(232, 240, 250, 0.7)";
+    c.beginPath(); c.ellipse(0, -18, 22, 10, 0, Math.PI, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(168,196,232,0.7)"; c.lineWidth = 2.2;
+    c.beginPath(); c.moveTo(-40, 6); c.quadraticCurveTo(-18, -32, 0, -40); c.quadraticCurveTo(18, -32, 40, 6); c.stroke();
+    [[-28, 8, 9], [-10, 10, 12], [8, 10, 11], [26, 8, 9]].forEach(function (ic) {
+      c.beginPath();
+      c.moveTo(ic[0] - 2.6, ic[1]); c.lineTo(ic[0], ic[1] + ic[2]); c.lineTo(ic[0] + 2.6, ic[1]);
+      c.closePath(); inkFill(c, "#A8C4E8");
+    });
+    c.beginPath(); roundRect(c, 12, -38, 11, 20, 2); inkFill(c, "#5C3A1A");
+    c.beginPath(); roundRect(c, 8, -44, 19, 8, 3); inkFill(c, "#8B5A2B");
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(17.5, -44, 10, 3.4, 0, Math.PI, Math.PI * 2); c.fill();
+    var smokeA = 0.28 + Math.sin(clock * 1.6) * 0.1;
+    c.fillStyle = "rgba(210,210,220," + smokeA + ")";
+    c.beginPath(); c.ellipse(18 + Math.sin(clock * 1.2) * 2, -50 - Math.sin(clock * 1.4) * 2, 6, 8, 0.2, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "rgba(210,210,220," + (smokeA * 0.65) + ")";
+    c.beginPath(); c.ellipse(20 + Math.sin(clock * 0.9) * 3, -58 - Math.sin(clock * 1.1) * 2, 7, 8, 0.15, 0, Math.PI * 2); c.fill();
+    c.beginPath(); roundRect(c, -28, 6, 10, 8, 2); inkFill(c, heat > 0.15 ? "#F5C400" : "#3A2A6A");
+    if (heat > 0.15) {
+      c.fillStyle = "rgba(245,196,0," + (0.35 + flick * 0.25) + ")";
+      c.fillRect(-26, 8, 6, 4);
+    }
     if (isActIII()) {
-      [[-30, 10, 10], [-12, 12, 13], [8, 12, 12], [26, 10, 11]].forEach(function (ic) {
-        c.beginPath();
-        c.moveTo(ic[0] - 3, ic[1]); c.lineTo(ic[0], ic[1] + ic[2]); c.lineTo(ic[0] + 3, ic[1]);
-        c.closePath(); inkFill(c, "#A8C4E8");
-      });
+      c.strokeStyle = "#A8C4E8"; c.lineWidth = 2.4;
+      c.beginPath(); c.moveTo(-36, 4); c.lineTo(-36, 28); c.stroke();
+      c.beginPath(); c.moveTo(36, 4); c.lineTo(36, 28); c.stroke();
     }
     var lv = lodgeLevel();
     if (lv >= 2) {
       c.beginPath(); roundRect(c, -58, 6, 22, 20, 4); inkFill(c, "#6B4423");
       c.beginPath(); c.moveTo(-60, 6); c.lineTo(-47, -8); c.lineTo(-34, 6); c.closePath(); inkFill(c, "#F4E6C3");
+      c.fillStyle = "#F4E6C3";
+      c.beginPath(); c.ellipse(-47, -6, 10, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
     }
     if (lv >= 3) {
       c.beginPath(); roundRect(c, 38, 4, 24, 22, 4); inkFill(c, "#8B5A2B");
       c.beginPath(); roundRect(c, 46, -18, 8, 24, 2); inkFill(c, "#5C3A1A");
+      c.fillStyle = "#F4E6C3";
+      c.beginPath(); c.ellipse(50, -18, 7, 2.6, 0, Math.PI, Math.PI * 2); c.fill();
       c.fillStyle = "rgba(210,210,220,0.45)";
       c.beginPath(); c.ellipse(50, -24, 6, 8, 0.2, 0, Math.PI * 2); c.fill();
     }
@@ -1998,32 +2081,45 @@
       c.beginPath(); c.moveTo(-44, 30); c.lineTo(-36, 8); c.lineTo(-28, 30); c.stroke();
       c.beginPath(); c.moveTo(28, 30); c.lineTo(36, 8); c.lineTo(44, 30); c.stroke();
     }
-    c.beginPath(); roundRect(c, -10, 12, 20, 18, 5); inkFill(c, "#1A1028");
-    var fh = (10 + heat * 22) * flick; if (storm) fh *= 0.72;
+    [[-16, 28], [-6, 30], [6, 30], [16, 28], [-12, 32], [12, 32]].forEach(function (st, si) {
+      c.beginPath(); c.ellipse(st[0], st[1], si < 4 ? 5.2 : 4.2, 3.2, 0, 0, Math.PI * 2); inkFill(c, si % 2 ? "#8a8480" : "#6a6560");
+    });
+    c.beginPath(); roundRect(c, -11, 10, 22, 18, 5); inkFill(c, "#1A1028");
+    var fh = (12 + heat * 24) * flick; if (storm) fh *= 0.72;
     if (heat > 0.01) {
-      var bloom = c.createRadialGradient(0, 20, 2, 0, 18, 36 + heat * 16);
-      bloom.addColorStop(0, "rgba(255,230,140," + (0.72 + flick * 0.18) + ")");
-      bloom.addColorStop(0.45, "rgba(245,196,0," + (0.4 + heat * 0.2) + ")");
+      var bloom = c.createRadialGradient(0, 20, 2, 0, 16, 40 + heat * 18);
+      bloom.addColorStop(0, "rgba(255,236,160," + (0.8 + flick * 0.18) + ")");
+      bloom.addColorStop(0.35, "rgba(245,196,0," + (0.5 + heat * 0.22) + ")");
+      bloom.addColorStop(0.7, "rgba(232,106,42," + (0.18 * heat) + ")");
       bloom.addColorStop(1, "rgba(245,196,0,0)");
-      c.fillStyle = bloom; c.beginPath(); c.ellipse(lean * 0.2, 18, 22 + heat * 10, 16 + heat * 6, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-5 + lean, 28); c.quadraticCurveTo(lean, 28 - fh, 5 + lean, 28); c.closePath(); c.fill();
+      c.fillStyle = bloom; c.beginPath(); c.ellipse(lean * 0.2, 16, 24 + heat * 10, 18 + heat * 7, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#E85D4C"; c.beginPath(); c.moveTo(-6 + lean, 28); c.quadraticCurveTo(lean * 0.4, 28 - fh * 1.05, 6 + lean, 28); c.closePath(); c.fill();
       var lean2 = lean + Math.sin(clock * 23) * 2.2;
-      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-3 + lean2 * 0.5, 28); c.quadraticCurveTo(lean2 * 0.5, 28 - fh * 0.78, 3 + lean2 * 0.5, 28); c.closePath(); c.fill();
+      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-5 + lean2 * 0.4, 28); c.quadraticCurveTo(lean2 * 0.4, 28 - fh, 5 + lean2 * 0.4, 28); c.closePath(); c.fill();
+      var lean3 = lean + Math.sin(clock * 31) * 1.6;
+      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-3 + lean3 * 0.5, 28); c.quadraticCurveTo(lean3 * 0.5, 28 - fh * 0.78, 3 + lean3 * 0.5, 28); c.closePath(); c.fill();
+      c.fillStyle = "#fff6d0"; c.beginPath(); c.moveTo(-1.6 + lean3 * 0.3, 26); c.quadraticCurveTo(lean3 * 0.3, 26 - fh * 0.42, 1.6 + lean3 * 0.3, 26); c.closePath(); c.fill();
     } else { c.fillStyle = "#3a3030"; c.fillRect(-6, 18, 12, 8); }
     c.restore();
-    embers.forEach(function (e) { c.globalAlpha = Math.max(0, e.life); c.fillStyle = "#F5C400"; c.beginPath(); c.arc(e.x, e.y, 2.4, 0, Math.PI * 2); c.fill(); });
+    embers.forEach(function (e) {
+      c.globalAlpha = Math.max(0, e.life);
+      c.fillStyle = e.life > 0.35 ? "#F5C400" : "#E86A2A";
+      c.beginPath(); c.arc(e.x, e.y, 2.6, 0, Math.PI * 2); c.fill();
+    });
     c.globalAlpha = 1;
   }
   function drawFireLight(c) {
     if (state.heat < 1) return;
     var heat = state.heat / 100;
+    var flick = 0.85 + Math.sin(clock * 15) * 0.15;
     c.save();
     c.globalCompositeOperation = "lighter";
-    var glow = c.createRadialGradient(LODGE.x, LODGE.y + 6, 6, LODGE.x, LODGE.y + 6, 70 + heat * 28);
-    glow.addColorStop(0, "rgba(255,210,90," + (0.4 + heat * 0.2) + ")");
-    glow.addColorStop(0.45, "rgba(245,160,40," + (0.14 * heat) + ")");
+    var glow = c.createRadialGradient(LODGE.x, LODGE.y + 6, 5, LODGE.x, LODGE.y + 6, 78 + heat * 30);
+    glow.addColorStop(0, "rgba(255,230,140," + ((0.48 + heat * 0.22) * flick) + ")");
+    glow.addColorStop(0.28, "rgba(245,180,50," + (0.22 * heat * flick) + ")");
+    glow.addColorStop(0.62, "rgba(232,106,42," + (0.1 * heat) + ")");
     glow.addColorStop(1, "rgba(245,160,40,0)");
-    c.fillStyle = glow; c.beginPath(); c.arc(LODGE.x, LODGE.y + 6, 70 + heat * 28, 0, Math.PI * 2); c.fill();
+    c.fillStyle = glow; c.beginPath(); c.arc(LODGE.x, LODGE.y + 6, 78 + heat * 30, 0, Math.PI * 2); c.fill();
     c.restore();
   }
 
@@ -2049,28 +2145,53 @@
     c.scale(ds, ds);
     c.translate(0, bob);
     if (b.status === "down") c.rotate(1.15);
+    var nearHearth = Math.hypot(b.x - LODGE.x, b.y - LODGE.y) < 88 && state.heat > 8;
+    if (nearHearth) {
+      c.fillStyle = "rgba(245,196,0,0.16)";
+      c.beginPath(); c.ellipse(0, -18, 20, 24, 0, 0, Math.PI * 2); c.fill();
+    }
+    var h = SPRITE_H, w = h;
     if (img && img.complete && img.naturalWidth) {
-      var h = SPRITE_H, w = h * (img.naturalWidth / img.naturalHeight);
+      w = h * (img.naturalWidth / img.naturalHeight);
       c.save(); c.scale(b.facing || 1, 1); c.filter = crewFilter(b) || "none";
-      c.drawImage(img, -w / 2, -h + 8, w, h); c.filter = "none"; c.restore();
+      c.drawImage(img, -w / 2, -h + 8, w, h); c.filter = "none";
+      if (b.status !== "down") {
+        c.fillStyle = "#F4E6C3";
+        c.globalAlpha = 0.88;
+        c.beginPath(); c.ellipse(2, -h + 18, 11, 3.6, -0.28, Math.PI * 1.05, Math.PI * 1.95); c.fill();
+        c.beginPath(); c.ellipse(-6, -h + 30, 5, 2.2, 0.4, 0, Math.PI * 2); c.fill();
+        c.globalAlpha = 1;
+      }
+      c.restore();
     }
     c.restore();
-    if (b.status === "down" || !isActIII()) return;
-    var phase = (clock * 0.9 + (b.id.charCodeAt(0) % 7) * 0.31) % 1.7;
+    if (b.status === "down") return;
+    var phase = (clock * 0.9 + (b.id.charCodeAt(0) % 7) * 0.31) % (isActIII() ? 1.5 : 2.1);
     if (phase > 0.9) return;
     var t = phase / 0.9, face = b.facing || 1;
     var fx = b.x + face * 11 * ds, fy = b.y - (SPRITE_H - 20) * ds + bob;
+    var ba = isActIII() ? 0.62 : 0.42;
     c.fillStyle = "#F4E6C3";
-    c.globalAlpha = (1 - t) * 0.58;
+    c.globalAlpha = (1 - t) * ba;
     c.beginPath(); c.ellipse(fx + face * t * 11, fy - t * 16, (4.2 + t * 5) * ds, (2.5 + t * 2.2) * ds, 0, 0, Math.PI * 2); c.fill();
-    c.globalAlpha = (1 - t) * 0.32;
+    c.globalAlpha = (1 - t) * (ba * 0.55);
     c.beginPath(); c.ellipse(fx + face * t * 18, fy - t * 26, (3.2 + t * 4) * ds, (2 + t * 2) * ds, 0, 0, Math.PI * 2); c.fill();
     c.globalAlpha = 1;
   }
   function drawSnow(c) {
     var storm = whiteoutLook(), n = storm ? snow.length : flakesN;
-    c.fillStyle = "#F4E6C3";
-    for (var i = 0; i < n; i++) { c.globalAlpha = storm ? 0.94 : 0.7; c.beginPath(); c.arc(snow[i].x, snow[i].y, snow[i].s * (storm ? 1.12 : 1), 0, Math.PI * 2); c.fill(); }
+    for (var i = 0; i < n; i++) {
+      var f = snow[i], r = f.s * (storm ? 1.12 : 1);
+      c.globalAlpha = storm ? 0.94 : (0.5 + Math.min(0.4, r * 0.12));
+      c.fillStyle = i % 4 === 0 ? "#e8f0fa" : "#F4E6C3";
+      c.beginPath(); c.arc(f.x, f.y, r, 0, Math.PI * 2); c.fill();
+      if (r > 2.7) {
+        c.globalAlpha *= 0.55;
+        c.strokeStyle = "#F4E6C3"; c.lineWidth = 0.85;
+        c.beginPath(); c.moveTo(f.x - r, f.y); c.lineTo(f.x + r, f.y);
+        c.moveTo(f.x, f.y - r); c.lineTo(f.x, f.y + r); c.stroke();
+      }
+    }
     if (storm) {
       c.strokeStyle = "rgba(244,230,195,0.55)"; c.lineWidth = 1.6;
       streaks.forEach(function (s) { c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(s.x - s.len * 0.62, s.y - s.len); c.stroke(); });
@@ -2169,9 +2290,9 @@
     var stage = document.getElementById("stage");
     var dock = document.getElementById("dock");
     var remain = h - (hud ? hud.offsetHeight : 0) - (foot ? foot.offsetHeight : 0);
-    var minStage = Math.floor(h * 0.5);
+    var minStage = Math.max(Math.floor(h * 0.5), Math.floor(remain * 0.72));
     var maxDock = Math.floor(h * 0.32);
-    if (remain - maxDock < minStage) maxDock = Math.max(96, remain - minStage);
+    if (remain - maxDock < minStage) maxDock = Math.max(220, remain - minStage);
     dock.style.maxHeight = maxDock + "px";
     stage.style.minHeight = Math.max(120, remain - maxDock) + "px";
   }
