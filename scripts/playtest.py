@@ -35,8 +35,10 @@ def main() -> int:
 
     needed = [
         "BOBER FROST LODGE",
-        "Hold the lodge fire through 25 winter days.",
-        "Assign beavers, build the lodge, survive whiteouts — a winter story, not a grind wallet.",
+        "Hold the fire.",
+        "25 days. One lodge.",
+        "Keep the Lodge Fire. Assign Bobers. Outlast the whiteout.",
+        "a winter story, not a grind wallet.",
         "Fan game by a holder.",
         "WOOD 0",
         '"WOOD " + Math.floor(state.wood)',
@@ -61,7 +63,7 @@ def main() -> int:
         "Give every beaver a job.",
         "Assign jobs · build · then START DAY",
         "Stoke · feed · hold heat",
-        "Need Quarry Bench",
+        "Need Stone Hut",
         "Day 1/25",
         "Watch Post:",
         "STOCKPILE",
@@ -78,16 +80,24 @@ def main() -> int:
         "THE FREEZE",
         "NEW WINTER",
         "HISTORY",
-        "ENDLESS WINTER",
+        "LONG WINTER",
         "bober-frost-endless-v1",
         "The thaw was a lie. Hold forever.",
         "E-Day ",
         "RETRY ENDLESS",
         "PADS_MORE",
         "The lodge fire outlasted the freeze.",
-        "After the dam, winter came looking for a hearth.",
-        "HOLD THE FIRE.",
+        "After the Dam — Wood held the river. Winter wanted the rest.",
+        "Lodge Raised — One fire. Four Bobers. Snow already counting.",
+        "River Still Runs — Fish under ice. Hunger doesn’t wait for thaw.",
+        "Sap-Spirit Wood — The trees bleed warmth if you ask kindly.",
+        "Stone Hauls — Rock for walls. Walls for heat.",
+        "Whiteout Nights — Assign wrong, wake colder.",
+        "Fire Holds — Dawn. Crew up. Day again.",
+        "Toward Nightfall — Survive this winter; the keep still waits.",
         "assets/history/f0.jpg",
+        "assets/history/f6.jpg",
+        "assets/history/f7.jpg",
         "assets/history/a0.jpg",
         "assets/cameos/e50.jpg",
         "assets/cameos/e75-check.jpg",
@@ -108,7 +118,26 @@ def main() -> int:
         "MUSEUM",
         "bober-frost-museum-v1",
         "var W = 420, H = 480",
-        "roundRect(c, -20, -18, 40, 34, 4)",
+        "WORLD_W = 1200",
+        "WORLD_H = 1600",
+        "camX",
+        "onCanvasMove",
+        "tickEdgeScroll",
+        "b.haul",
+        "SITE_STOCK",
+        "Dripkin",
+        "Amberkin",
+        "Heartwood Whisper",
+        "Thaw-Sibling",
+        "If this dies, the chapter dies.",
+        "Chop Belt",
+        "Fish Hole",
+        "Sap-Spirit Stand",
+        "Stone Field",
+        "Deep Drift",
+        "Woodcache",
+        "Smoke Kiln",
+        "Ice Cellar",
         "mus-tab-jobs",
         "Heat 80%",
         "afterFreezeUnlock",
@@ -132,6 +161,7 @@ def main() -> int:
         "+clearing",
         "drawFrozenDam",
         "#3D5C9A",
+        "drag to pan",
     ]
     for s in needed:
         if s not in text:
@@ -161,6 +191,13 @@ def main() -> int:
         errors.append("spendable wood still labeled $BOBER")
     if "c.ellipse(0, 6, 32, 20" in text or "c.ellipse(0, 10, 34, 22" in text:
         errors.append("circular sticker pads still live")
+    if "roundRect(c, -20, -18, 40, 34, 4)" in text:
+        errors.append("crate-ring pads still live")
+    if "WORLD_W = 1200" in text and "WORLD_H = 1600" in text:
+        if 1200 / 420 < 2.2 or 1600 / 480 < 2.2:
+            errors.append("world smaller than 2.2x viewport")
+    else:
+        errors.append("scrollable world size missing")
     if 'textContent = "W "' in text or ">W 0<" in text:
         errors.append("wood HUD still uses W shorthand")
     if '"F " + Math.floor(state.fish)' not in text:
@@ -195,7 +232,25 @@ def main() -> int:
     if "var PADS_MORE" in text:
         extra += xy_list(text.split("var PADS_MORE")[1].split("];")[0])
     lodge_m = re.search(r"var LODGE = \{ x: (\d+), y: (\d+) \}", text)
-    lodge = (int(lodge_m.group(1)), int(lodge_m.group(2))) if lodge_m else (180, 318)
+    lodge = (int(lodge_m.group(1)), int(lodge_m.group(2))) if lodge_m else (600, 800)
+
+    def site_xy(name: str) -> tuple[int, int] | None:
+        m = re.search(rf"var {name} = \{{ x: (\d+), y: (\d+) \}}", text)
+        return (int(m.group(1)), int(m.group(2))) if m else None
+
+    chop, fish, sap, mine = site_xy("SITE_CHOP"), site_xy("SITE_FISH"), site_xy("SITE_SAP"), site_xy("SITE_MINE")
+    if not chop or chop[0] > lodge[0] - 200:
+        errors.append(f"CHOP site is not in the west woodlots: {chop}")
+    if not fish or fish[1] < lodge[1] + 200:
+        errors.append(f"FISH site is not at the south river: {fish}")
+    if not sap or sap[1] > lodge[1] - 200:
+        errors.append(f"TAP site is not in the north sap forest: {sap}")
+    if not mine or mine[0] < lodge[0] + 200:
+        errors.append(f"MINE site is not on the east stone trail: {mine}")
+    if "b.haul" not in text:
+        errors.append("miner haul loop missing")
+    if "b.job === \"miner\"" in text and "SITE_STOCK" not in text:
+        errors.append("miners do not haul to stockpile")
 
     def dist(a: tuple[int, int], b: tuple[int, int]) -> float:
         return math.hypot(a[0] - b[0], a[1] - b[1])
@@ -237,7 +292,7 @@ def main() -> int:
     if start_st - quarry + mined < 12:
         errors.append("beacon stone unreachable on a normal miner")
 
-    for name in ("graph.jpg", "f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg", "a0.jpg", "a1.jpg", "a2.jpg", "a3.jpg"):
+    for name in ("graph.jpg", "f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg", "f6.jpg", "f7.jpg", "a0.jpg", "a1.jpg", "a2.jpg", "a3.jpg"):
         if not (ROOT / "assets" / "history" / name).exists():
             errors.append(f"missing history still {name}")
     for name in ("e50.jpg", "e75-check.jpg", "e75-drill.jpg", "e100.jpg"):

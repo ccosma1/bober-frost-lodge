@@ -133,8 +133,9 @@
     #app.act3, #app.act3 #stage { background: #241848; }
     canvas {
       display: block; margin: 0 auto; width: 100%; height: 100%;
-      cursor: pointer; touch-action: none;
+      cursor: grab; touch-action: none;
     }
+    canvas.panning { cursor: grabbing; }
     #banner {
       position: absolute; left: 10px; right: 10px; top: 10px; z-index: 6;
       background: var(--cream); color: var(--ink); border: 3px solid var(--yellow);
@@ -460,8 +461,9 @@
         <img class="hero" src="assets/splash.jpg" alt="" />
         <h1>BOBER FROST LODGE</h1>
         <div class="splash-copy">
-          <p class="tagline">Hold the lodge fire through 25 winter days.</p>
-          <p class="how">Assign beavers, build the lodge, survive whiteouts — a winter story, not a grind wallet.</p>
+          <p class="tagline">Hold the fire.</p>
+          <p class="how">25 days. One lodge. Don’t freeze.</p>
+          <p class="how">Keep the Lodge Fire. Assign Bobers. Outlast the whiteout. — a winter story, not a grind wallet.</p>
           <p class="disclaimer">Fan game by a holder.</p>
         </div>
         <p id="dam-tip" class="hidden">Dam reserves: +10 Sap this run.</p>
@@ -470,7 +472,7 @@
           <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
           <button class="play ghost" id="btn-splash-museum" type="button">MUSEUM</button>
         </div>
-        <button class="play ghost" id="btn-splash-endless" type="button" hidden>ENDLESS WINTER</button>
+        <button class="play ghost" id="btn-splash-endless" type="button" hidden>LONG WINTER</button>
       </div>
       <div id="paused" class="overlay hidden">
         <div class="tip-card">
@@ -490,7 +492,7 @@
           <button class="play" id="btn-new-winter" type="button">NEW WINTER</button>
           <button class="play ghost" id="btn-end-history" type="button">HISTORY</button>
           <button class="play ghost" id="btn-end-museum" type="button">MUSEUM</button>
-          <button class="play ghost" id="btn-keep-warming" type="button">ENDLESS WINTER</button>
+          <button class="play ghost" id="btn-keep-warming" type="button">LONG WINTER</button>
           <button class="play ghost" id="btn-end-restart" type="button">RETRY</button>
         </div>
       </div>
@@ -574,7 +576,7 @@
           <button type="button" id="mus-tab-crew" class="on">Bober</button>
           <button type="button" id="mus-tab-jobs">Jobs</button>
           <button type="button" id="mus-tab-build">Build</button>
-          <button type="button" id="mus-tab-fire">Fire</button>
+          <button type="button" id="mus-tab-fire">Camp</button>
         </div>
         <div id="museum-grid"></div>
         <button class="play ghost" id="btn-museum-back" type="button">Back</button>
@@ -614,37 +616,36 @@
   var VERSE_KEY = "boberverse-v1";
   var DAM_KEY = "bober-dam-campaign-v1";
   var W = 420, H = 480, DAYS = 25;
+  var WORLD_W = 1200, WORLD_H = 1600;
   var PHASE_DUR = { dawn: 5, day: 30, dusk: 4, night: 8 };
   var STORM_DAYS = [4, 8, 12, 18, 22, 25];
   var ACTS = { 1: "Act I · Embers", 9: "Act II · Deepening", 17: "Act III · White Heart" };
   var CHOP_PER_DAY = 7, FISH_PER_DAY = 5, TAP_SLOW = 3, TAP_FAST = 5, MINE_PER_DAY = 4;
-  var WOODSHED_MUL = 1.25, WORKSHOP_MUL = 1.2, WALK = 145, SPRITE_H = 46, CAP = 99, PAD_R = 56;
-  var HORIZON = 52, LODGE_SCALE = 1.06;
-  var LODGE = { x: 210, y: 236 };
+  var WOODSHED_MUL = 1.25, WORKSHOP_MUL = 1.2, WALK = 168, SPRITE_H = 46, CAP = 99, PAD_R = 56;
+  var HORIZON = 52, LODGE_SCALE = 1.12;
+  var LODGE = { x: 600, y: 800 };
   var PADS = [
-    { x: 210, y: 88 }, { x: 315, y: 131 }, { x: 358, y: 236 }, { x: 315, y: 341 },
-    { x: 210, y: 384 }, { x: 105, y: 341 }, { x: 62, y: 236 }, { x: 105, y: 131 }
+    { x: 600, y: 650 }, { x: 720, y: 680 }, { x: 470, y: 700 }, { x: 750, y: 800 },
+    { x: 450, y: 820 }, { x: 730, y: 920 }, { x: 470, y: 930 }, { x: 600, y: 960 }
   ];
-  var PAD_EXPAND = { x: 210, y: 456 };
-  var PADS_MORE = [{ x: 128, y: 458 }, { x: 292, y: 458 }, { x: 390, y: 318 }];
-  var SITE_CHOP = { x: 48, y: 455 };
-  var SITE_FISH = { x: 372, y: 455 };
-  var SITE_SAP = { x: 40, y: 360 };
-  var SITE_MINE = { x: 380, y: 360 };
-  var CAMP_PROPS = [
-    { kind: "pine", x: 24, y: 78, r: 16 },
-    { kind: "pine", x: 396, y: 76, r: 18 },
-    { kind: "pine", x: 16, y: 176, r: 15 },
-    { kind: "pine", x: 404, y: 178, r: 17 },
-    { kind: "pine", x: 20, y: 308, r: 16 },
-    { kind: "pine", x: 400, y: 312, r: 15 },
-    { kind: "pine", x: 78, y: 48, r: 13 },
-    { kind: "pine", x: 342, y: 46, r: 14 },
-    { kind: "rock", x: 168, y: 52, r: 8 },
-    { kind: "rock", x: 252, y: 52, r: 9 },
-    { kind: "rock", x: 32, y: 400, r: 10 },
-    { kind: "woodpile", x: 152, y: 198 }
+  var PAD_EXPAND = { x: 600, y: 1080 };
+  var PADS_MORE = [{ x: 480, y: 1060 }, { x: 720, y: 1060 }, { x: 840, y: 740 }];
+  var SITE_CHOP = { x: 180, y: 840 };
+  var SITE_FISH = { x: 780, y: 1320 };
+  var SITE_SAP = { x: 860, y: 240 };
+  var SITE_MINE = { x: 1080, y: 740 };
+  var SITE_STOCK = { x: 700, y: 860 };
+  var CHOP_STUMPS = [
+    { x: 160, y: 800 }, { x: 210, y: 860 }, { x: 120, y: 900 }, { x: 230, y: 760 }, { x: 90, y: 820 }
   ];
+  var FISH_HOLES = [
+    { x: 720, y: 1300 }, { x: 820, y: 1340 }, { x: 900, y: 1288 }, { x: 780, y: 1400 }
+  ];
+  var TAP_TREES = [
+    { x: 840, y: 220 }, { x: 920, y: 270 }, { x: 780, y: 280 }, { x: 880, y: 170 }, { x: 1000, y: 230 }
+  ];
+  var SAP_NAMES = ["Dripkin", "Amberkin", "Heartwood Whisper", "Thaw-Sibling"];
+  var CAMP_PROPS = [];
   var JOBS = ["chopper", "fisher", "tender", "tapper", "miner"];
   var JOB_LBL = { chopper: "CHOP", fisher: "FISH", tender: "TEND", tapper: "TAP", miner: "MINE" };
   var TRAITS = ["sturdy", "hungry", "lucky"];
@@ -658,13 +659,13 @@
     { id: "puddle", name: "PUDDLE", job: "tender" }
   ];
   var BUILDINGS = [
-    { id: "woodshed", name: "Woodshed", day: 1, wood: 10, fish: 0, sap: 0, stone: 0, max: 1, blurb: "Choppers work a little faster." },
-    { id: "smokehouse", name: "Smokehouse", day: 1, wood: 8, fish: 4, sap: 0, stone: 0, max: 1, blurb: "At night, fish become rations." },
-    { id: "sapboiler", name: "Sap Boiler", day: 2, wood: 12, fish: 0, sap: 6, stone: 0, max: 1, blurb: "Sap becomes syrup. 1 syrup → +14 heat." },
-    { id: "quarry", name: "Quarry Bench", day: 3, wood: 15, fish: 0, sap: 0, stone: 8, max: 1, blurb: "Unlocks Miner and stone crafts." },
-    { id: "bunk", name: "Bunk Hut", day: 3, wood: 20, fish: 0, sap: 5, stone: 0, max: 2, blurb: "+1 beaver bed (start 3, cap 5)." },
+    { id: "woodshed", name: "Woodcache", day: 1, wood: 10, fish: 0, sap: 0, stone: 0, max: 1, blurb: "Logs in. Heat later. Choppers work a little faster." },
+    { id: "smokehouse", name: "Smoke Kiln", day: 1, wood: 8, fish: 4, sap: 0, stone: 0, max: 1, blurb: "Fish in. Rations out." },
+    { id: "sapboiler", name: "Ice Cellar", day: 2, wood: 12, fish: 0, sap: 6, stone: 0, max: 1, blurb: "Cold keeps the sweet. Sap → syrup (1 syrup → +14 heat)." },
+    { id: "quarry", name: "Stone Hut", day: 3, wood: 15, fish: 0, sap: 0, stone: 8, max: 1, blurb: "Rock for walls. Walls for heat. Unlocks Miner." },
+    { id: "bunk", name: "Tent Row", day: 3, wood: 20, fish: 0, sap: 5, stone: 0, max: 2, blurb: "+1 beaver bed (start 3, cap 5)." },
     { id: "watch", name: "Watch Post", day: 5, wood: 18, fish: 0, sap: 0, stone: 10, max: 1, blurb: "Warns Whiteout a day early. −2 night drain." },
-    { id: "workshop", name: "Workshop", day: 6, wood: 25, fish: 0, sap: 8, stone: 12, max: 1, blurb: "All gather jobs work faster." },
+    { id: "workshop", name: "Stockpile", day: 6, wood: 25, fish: 0, sap: 8, stone: 12, max: 1, blurb: "Bank the haul. All gather jobs work faster." },
     { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5 wood + 3Sa. Day 25 ritual." }
   ];
   var SPR_SRC = {
@@ -677,6 +678,9 @@
   var ctx = canvas.getContext("2d");
   var app = document.getElementById("app");
   var viewScale = 1, viewOx = 0, viewOy = 0;
+  var camX = 0, camY = 0;
+  var panDrag = null, mouseView = { x: -1, y: -1, over: false, mouse: false };
+  var fishSchools = [], sapSpirits = [];
   var playing = false, paused = false, lastTs = 0, clock = 0;
   var selectedPad = -1, hoverBuild = null, saveAcc = 0, shake = 0, flakesN = 64, dawnGoT = -1, beaconPulse = 0;
   var cameoLock = false, cameoTimer = 0, cameoDone = null, cameoSkipArmed = 0;
@@ -742,8 +746,21 @@
 
   function newBeavers() {
     return CREW_SEED.map(function (s, i) {
-      return { id: s.id, name: s.name, job: s.job, trait: null, status: "ok", hungry: 0, x: LODGE.x + (i - 1) * 40, y: LODGE.y + 50, facing: 1, acc: 0, moving: false };
+      return { id: s.id, name: s.name, job: s.job, trait: null, status: "ok", hungry: 0, x: LODGE.x + (i - 1) * 40, y: LODGE.y + 56, facing: 1, acc: 0, moving: false, haul: 0, workT: 0 };
     });
+  }
+  function remapOldCamp(x, y, i) {
+    if (typeof x !== "number" || typeof y !== "number") return { x: LODGE.x + (i - 1) * 40, y: LODGE.y + 56 };
+    if (x < 450 && y < 520) return { x: LODGE.x + (i - 1) * 40, y: LODGE.y + 56 };
+    return { x: x, y: y };
+  }
+  function camMaxX() { return Math.max(0, WORLD_W - W); }
+  function camMaxY() { return Math.max(0, WORLD_H - H); }
+  function clampCam() { camX = clamp(camX, 0, camMaxX()); camY = clamp(camY, 0, camMaxY()); }
+  function centerCamOnLodge() {
+    camX = LODGE.x - W / 2;
+    camY = LODGE.y - H / 2;
+    clampCam();
   }
   function newState() {
     return {
@@ -834,11 +851,12 @@
       state.lodgeLevel = lodgeLevel();
       if (Array.isArray(d.beavers) && d.beavers.length >= 3) {
         state.beavers = d.beavers.map(function (s, i) {
+          var xy = remapOldCamp(s.x, s.y, i);
           return {
             id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
             trait: s.trait || null, status: s.status || "ok", hungry: s.hungry || 0,
-            x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 50,
-            facing: s.facing || 1, acc: s.acc || 0, moving: false
+            x: xy.x, y: xy.y,
+            facing: s.facing || 1, acc: s.acc || 0, moving: false, haul: s.haul ? 1 : 0, workT: 0
           };
         });
       }
@@ -933,17 +951,30 @@
     var nB = state.beavers.length;
     return (i - (nB - 1) / 2) * 46;
   }
+  function crewIndex(b) {
+    var i = 0, n;
+    for (n = 0; n < state.beavers.length; n++) if (state.beavers[n].id === b.id) i = n;
+    return i;
+  }
+  function pickSpot(b, spots, dx, dy) {
+    var i = crewIndex(b);
+    var s = spots[i % spots.length];
+    return { x: s.x + (dx || 0) + (i % 2 ? 8 : -8), y: s.y + (dy || 0) };
+  }
   function beaverTarget(b) {
     if (state.phase === "dawn" || state.phase === "night" || state.phase === "dusk" || b.status === "down")
-      return { x: LODGE.x + offsetFor(b), y: LODGE.y + 50 };
-    if (b.job === "tender") return { x: LODGE.x + 40, y: LODGE.y + 38 };
-    if (b.job === "chopper") return { x: SITE_CHOP.x + 16, y: SITE_CHOP.y + 4 };
-    if (b.job === "fisher") return { x: SITE_FISH.x - 18, y: SITE_FISH.y + 2 };
-    if (b.job === "tapper") return { x: SITE_SAP.x + 14, y: SITE_SAP.y };
-    if (b.job === "miner") return { x: SITE_MINE.x - 14, y: SITE_MINE.y };
-    return { x: LODGE.x, y: LODGE.y + 50 };
+      return { x: LODGE.x + offsetFor(b), y: LODGE.y + 56 };
+    if (b.job === "tender") return { x: LODGE.x + 36, y: LODGE.y + 42 };
+    if (b.job === "chopper") return pickSpot(b, CHOP_STUMPS, 12, 4);
+    if (b.job === "fisher") return pickSpot(b, FISH_HOLES, -10, 2);
+    if (b.job === "tapper") return pickSpot(b, TAP_TREES, 14, 6);
+    if (b.job === "miner") {
+      if (b.haul) return { x: SITE_STOCK.x, y: SITE_STOCK.y };
+      return { x: SITE_MINE.x, y: SITE_MINE.y };
+    }
+    return { x: LODGE.x, y: LODGE.y + 56 };
   }
-  function atSite(b, t) { return Math.hypot(b.x - t.x, b.y - t.y) < 18; }
+  function atSite(b, t) { return Math.hypot(b.x - t.x, b.y - t.y) < 22; }
 
   function flashChip(id, gain) {
     var el = document.getElementById(id); if (!el) return;
@@ -1008,7 +1039,7 @@
     if (!spec) spec = { id: "reed", name: "REED" };
     var trait = TRAITS[Math.floor(Math.random() * TRAITS.length)];
     var job = hasBuilding("quarry") ? "miner" : (hasBuilding("sapboiler") ? "tapper" : "chopper");
-    var b = { id: spec.id, name: spec.name, job: job, trait: trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 50, facing: 1, acc: 0, moving: false };
+    var b = { id: spec.id, name: spec.name, job: job, trait: trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 56, facing: 1, acc: 0, moving: false, haul: 0, workT: 0 };
     state.beavers.push(b);
     return b;
   }
@@ -1104,7 +1135,7 @@
     state.fork = "scout";
     var scout = {
       id: "scout", name: "SCOUT", job: job, trait: null, status: "ok", hungry: 0,
-      x: LODGE.x + 48, y: LODGE.y + 50, facing: 1, acc: 0, moving: false
+      x: LODGE.x + 48, y: LODGE.y + 56, facing: 1, acc: 0, moving: false, haul: 0, workT: 0
     };
     state.beavers.push(scout);
     hideFork();
@@ -1130,6 +1161,7 @@
     }
     if (p === "dawn") {
       dawnGoT = jobsReady() ? 3 : -1;
+      state.beavers.forEach(function (b) { b.haul = 0; b.workT = 0; });
       maybeScoutLeave();
       maybeRecruit();
       maybeActBanner();
@@ -1138,7 +1170,7 @@
         banner("The thaw was a lie. Hold forever.", 2800);
         state.endlessIntro = true;
       }
-      if (!isEndless() && state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false; }
+      if (!isEndless() && state.day === 1 && state.dawnHint) { banner("Assign jobs, then START DAY. Drag the snow to pan. FISH is the river, TAP the grove, MINE the sled road.", 3800); state.dawnHint = false; }
       if (forkPending()) showFork("pick");
       if (fork18Pending()) showFork18();
       maybeEndlessCameo();
@@ -1251,8 +1283,8 @@
         return {
           id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
           trait: s.trait || null, status: s.status === "down" ? "injured" : (s.status || "ok"),
-          hungry: 0, x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 50,
-          facing: s.facing || 1, acc: 0, moving: false
+          hungry: 0, x: remapOldCamp(s.x, s.y, i).x, y: remapOldCamp(s.x, s.y, i).y,
+          facing: s.facing || 1, acc: 0, moving: false, haul: 0, workT: 0
         };
       });
     }
@@ -1280,6 +1312,7 @@
     document.getElementById("splash").classList.add("hidden");
     app.classList.remove("booting");
     hideFork(); closeSheet(); hideBanner(); bannerQ = [];
+    centerCamOnLodge();
     enterPhase("dawn");
   }
   function retryEndless() {
@@ -1287,7 +1320,7 @@
     var padsN = padCount();
     var fork = state.fork, fork18 = state.fork18;
     var crew = state.beavers.map(function (b) {
-      return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 50, facing: 1, acc: 0 };
+      return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 56, facing: 1, acc: 0, haul: 0 };
     });
     applyEndlessData({
       day: 1, buildings: blds, beavers: crew, padsN: padsN, fork: fork, fork18: fork18,
@@ -1298,6 +1331,7 @@
     playing = true; paused = false; state.ended = null;
     document.getElementById("endcard").classList.add("hidden");
     hideFork(); closeSheet();
+    centerCamOnLodge();
     enterPhase("dawn");
   }
   function setEndButtons(isWin) {
@@ -1389,8 +1423,8 @@
     if (state.phase !== "dawn" || state.ended) return;
     var b = state.beavers.find(function (x) { return x.id === id; });
     if (!b || b.status === "down") return;
-    if (job === "miner" && !hasBuilding("quarry")) { banner("Need Quarry Bench", 1800); return; }
-    b.job = job; Sfx.assign();
+    if (job === "miner" && !hasBuilding("quarry")) { banner("Need Stone Hut", 1800); return; }
+    b.job = job; b.haul = 0; b.workT = 0; Sfx.assign();
     dawnGoT = jobsReady() ? 3 : -1;
     syncDock(); save();
   }
@@ -1469,8 +1503,8 @@
       title.textContent = (info ? info.name : built).toUpperCase();
       sub.textContent = info ? info.blurb : "";
     } else {
-      title.textContent = "Build on pad " + (i + 1);
-      sub.textContent = "Places on this pad only. One of each (Bunk Hut up to 2).";
+      title.textContent = "Build on this plot";
+      sub.textContent = "Places on this plot only. One of each (Tent Row up to 2).";
       BUILDINGS.forEach(function (bd) {
         var btn = document.createElement("button");
         btn.type = "button";
@@ -1514,7 +1548,7 @@
     document.getElementById("endcard").classList.add("hidden");
     document.getElementById("paused").classList.add("hidden");
     document.getElementById("confirm").classList.add("hidden");
-    hideFork(); closeSheet(); enterPhase("dawn"); hud();
+    hideFork(); closeSheet(); centerCamOnLodge(); enterPhase("dawn"); hud();
   }
   function newWinter() { hardReset(); }
   function applyDamBonus() {
@@ -1530,6 +1564,7 @@
     app.classList.remove("booting");
     document.getElementById("splash").classList.add("hidden");
     playing = true; paused = false;
+    centerCamOnLodge();
     if (!fromSave) { state = newState(); Sfx.muted = false; applyDamBonus(); enterPhase("dawn"); }
     else {
       if (state.ended === "win") win();
@@ -1537,7 +1572,7 @@
       else {
         if (isWhiteoutNight()) Sfx.startWind();
         if (state.phase === "dawn" && state.day === 1 && state.dawnHint) {
-          banner("Assign jobs, then START DAY. Tap a glowing pad to build.", 3200); state.dawnHint = false;
+          banner("Assign jobs, then START DAY. Drag the snow to pan. FISH is the river, TAP the grove, MINE the sled road.", 3800); state.dawnHint = false;
         }
         if (forkPending()) showFork("pick");
         if (fork18Pending()) showFork18();
@@ -1612,7 +1647,7 @@
     if (state.damBonus) damRead.textContent = "Dam +10 Sap";
     var hint = {
       dawn: "Assign jobs · build · then START DAY",
-      day: "DAY — " + crewLine(),
+      day: "DAY — drag to pan · " + crewLine(),
       dusk: "DUSK — back to the lodge",
       night: "Stoke · feed · hold heat"
     }[state.phase] || "";
@@ -1674,8 +1709,8 @@
         var btn = document.createElement("button");
         btn.type = "button";
         if (j === "miner" && !hasBuilding("quarry")) {
-          btn.textContent = "Need Quarry";
-          btn.title = "Need Quarry Bench";
+          btn.textContent = "Need Stone Hut";
+          btn.title = "Need Stone Hut";
           btn.classList.add("need");
         } else {
           btn.textContent = JOB_LBL[j];
@@ -1712,14 +1747,33 @@
     state.beavers.forEach(function (b) {
       if (b.status === "down") return;
       var t = beaverTarget(b);
-      if (!atSite(b, t)) return;
       if (b.job === "tender") return;
-      if (b.job === "miner" && !hasBuilding("quarry")) return;
+      if (b.job === "miner") {
+        if (!hasBuilding("quarry")) return;
+        if (!b.haul) {
+          if (atSite(b, t)) {
+            b.workT = (b.workT || 0) + dt;
+            var loadNeed = 0.65 / shop;
+            if (b.status === "injured") loadNeed /= (b.trait === "sturdy" ? 0.7 : 0.5);
+            if (b.workT >= loadNeed) { b.haul = 1; b.workT = 0; }
+          }
+          return;
+        }
+        if (!atSite(b, t)) return;
+        var n = shop > 1 ? 1.2 : 1;
+        b.acc += n;
+        if (b.trait === "lucky") b.acc += 0.15;
+        var got = 0;
+        while (b.acc >= 1) { b.acc -= 1; got += 1; }
+        if (got && addRes("stone", got, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone");
+        b.haul = 0;
+        return;
+      }
+      if (!atSite(b, t)) return;
       var rate = 0;
       if (b.job === "chopper") rate = (CHOP_PER_DAY / PHASE_DUR.day) * shed * shop;
       else if (b.job === "fisher") rate = (FISH_PER_DAY / PHASE_DUR.day) * shop;
       else if (b.job === "tapper") rate = (tapR / PHASE_DUR.day) * shop;
-      else if (b.job === "miner") rate = (MINE_PER_DAY / PHASE_DUR.day) * shop;
       if (b.status === "injured") rate *= (b.trait === "sturdy" ? 0.7 : 0.5);
       if (b.trait === "lucky") rate *= 1.15;
       var clearing = !isEndless() && state.fork18 === "expand" && state.day >= 18 && state.day <= 25;
@@ -1731,7 +1785,6 @@
         if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
         else if (b.job === "fisher") { if (addRes("fish", 1, "chip-fish", "fish", "#A8C4E8", b.x, b.y - 28)) Sfx.gather("fish"); }
         else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) { Sfx.gather("sap"); got = true; } }
-        else if (b.job === "miner") { if (addRes("stone", 1, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone"); }
         if (got && clearing && Math.random() < 0.16) pop(b.x, b.y - 46, "+clearing", "#F4E6C3");
       }
     });
@@ -1864,153 +1917,83 @@
     c.fillStyle = "#F4E6C3";
     c.beginPath(); c.ellipse(x, y - 8, 12, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
   }
+  function drawPine(c, x, y, h, w, cool) {
+    var hh = h || 28, ww = w || 10;
+    ovalShadow(c, x + 2, y + 4, ww * 1.7, ww * 0.72, 0.3);
+    c.fillStyle = "#5C3A1A";
+    c.beginPath(); roundRect(c, x - ww * 0.22, y - hh * 0.22, ww * 0.44, hh * 0.26, 2); c.fill();
+    c.strokeStyle = "#1A1028"; c.lineWidth = 2; c.stroke();
+    var dark = cool ? "#1a3048" : "#1e3a2c";
+    var mid = cool ? "#2a4868" : "#2d5a3e";
+    var layers = [
+      { y: y - hh * 0.18, w: ww * 1.7, h: hh * 0.55 },
+      { y: y - hh * 0.42, w: ww * 1.28, h: hh * 0.48 },
+      { y: y - hh * 0.68, w: ww * 0.86, h: hh * 0.42 }
+    ];
+    layers.forEach(function (L, i) {
+      c.fillStyle = i % 2 ? mid : dark;
+      c.beginPath();
+      c.moveTo(x, L.y - L.h);
+      c.lineTo(x + L.w, L.y);
+      c.lineTo(x - L.w, L.y);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = "#1A1028"; c.lineWidth = 2.2; c.lineJoin = "round"; c.stroke();
+      c.fillStyle = "#F4E6C3";
+      c.beginPath();
+      c.moveTo(x, L.y - L.h);
+      c.lineTo(x + L.w * 0.42, L.y - L.h * 0.22);
+      c.lineTo(x - L.w * 0.42, L.y - L.h * 0.22);
+      c.closePath(); c.fill();
+    });
+  }
   function drawProp(c, p) {
-    if (p.kind === "pine") drawPineTop(c, p.x, p.y, p.r, false);
-    else if (p.kind === "rock") drawRock(c, p.x, p.y, p.r);
+    if (p.kind === "pine") drawPine(c, p.x, p.y, p.h || 26, p.w || 9, !!p.cool);
+    else if (p.kind === "pinetop") drawPineTop(c, p.x, p.y, p.r || 12, !!p.cool);
+    else if (p.kind === "rock") drawRock(c, p.x, p.y, p.r || 8);
+    else if (p.kind === "stump") drawStump(c, p.x, p.y, p.r || 10);
+    else if (p.kind === "drift") drawDrift(c, p.x, p.y, p.rx || 36, p.ry || 16);
+    else if (p.kind === "tap") drawTapTree(c, p.x, p.y, !!p.glow);
+    else if (p.kind === "dock") drawDock(c, p.x, p.y);
     else drawWoodpile(c, p.x, p.y);
   }
-  function drawPine(c, x, y, h, w, cool) {
-    drawPineTop(c, x, y, Math.max(9, w * 1.15 + h * 0.12), cool);
-  }
-  function drawFrozenDam(c) {
-    var night = state.phase === "night" || state.phase === "dusk" || isActIII() || whiteoutLook();
-    var splashOn = false;
-    try { splashOn = !document.getElementById("splash").classList.contains("hidden"); } catch (e) {}
-    var wash = splashOn ? 0.8 : (night ? 0.34 : 0.5);
-    var y0 = HORIZON - 18, y1 = HORIZON + 24;
-    c.save();
-    c.globalAlpha = wash;
-    var ig = c.createLinearGradient(0, y0, 0, y1);
-    ig.addColorStop(0, night ? "#2a3860" : "#3D5C9A");
-    ig.addColorStop(0.55, night ? "#31466e" : "#4a6a9c");
-    ig.addColorStop(1, night ? "#241848" : "#5a6e90");
-    c.fillStyle = ig;
-    c.beginPath();
-    c.moveTo(0, y0 + 10);
-    c.quadraticCurveTo(110, y0 - 4, 180, y0 + 6);
-    c.quadraticCurveTo(270, y0 + 16, W, y0 + 4);
-    c.lineTo(W, y1);
-    c.quadraticCurveTo(200, y1 + 6, 0, y1 - 2);
-    c.closePath();
-    c.fill();
-    c.fillStyle = "rgba(244,230,195,0.14)";
-    c.fill();
-    c.globalAlpha = wash * 0.42;
-    c.strokeStyle = "#F4E6C3";
-    c.lineWidth = 1.05;
-    c.lineCap = "round";
-    c.beginPath(); c.moveTo(22, HORIZON); c.lineTo(78, HORIZON + 7); c.lineTo(112, HORIZON + 1); c.stroke();
-    c.beginPath(); c.moveTo(148, HORIZON + 11); c.lineTo(198, HORIZON + 5); c.lineTo(246, HORIZON + 12); c.stroke();
-    c.beginPath(); c.moveTo(272, HORIZON + 3); c.lineTo(314, HORIZON + 9); c.lineTo(348, HORIZON + 1); c.stroke();
-    c.globalAlpha = wash * 0.86;
-    [
-      [96, HORIZON + 2, 52, 6, -0.16],
-      [140, HORIZON - 2, 60, 7, 0.07],
-      [190, HORIZON + 3, 56, 6, -0.11],
-      [122, HORIZON + 8, 46, 5, 0.18],
-      [168, HORIZON + 10, 68, 6, -0.05],
-      [224, HORIZON + 6, 42, 5, 0.13],
-      [152, HORIZON - 8, 34, 5, 0.26]
-    ].forEach(function (lg, i) {
-      c.save();
-      c.translate(lg[0], lg[1]);
-      c.rotate(lg[4]);
-      c.fillStyle = i % 2 ? "#5C3A1A" : "#6B4423";
-      roundRect(c, 0, 0, lg[2], lg[3], 2);
-      c.fill();
-      c.restore();
-    });
-    c.fillStyle = "#3a2410";
-    c.beginPath();
-    c.moveTo(158, HORIZON - 2); c.lineTo(164, HORIZON - 8); c.lineTo(170, HORIZON - 2);
-    c.closePath();
-    c.fill();
+  function drawDock(c, x, y) {
+    c.save(); c.translate(x, y);
+    ovalShadow(c, 8, 18, 46, 14, 0.35);
+    c.fillStyle = "#6B4423";
+    roundRect(c, -48, 4, 110, 10, 3); c.fill();
+    c.fillStyle = "#5C3A1A";
+    c.fillRect(-40, 14, 8, 16); c.fillRect(40, 14, 8, 16);
+    isoHut(c, 36, 26, 10, "#5C3A1A", "#8B5A2B", "#3A2A6A");
+    c.beginPath(); roundRect(c, -6, 2, 10, 12, 2); inkFill(c, "#1A1028");
     c.restore();
   }
-  function drawFarPines(c) {
-    var ox = para(0);
-    c.save(); c.translate(ox * 0.4, 0);
-    drawPine(c, 28, HORIZON + 10, 22, 7, true);
-    drawPine(c, 62, HORIZON + 14, 18, 6, true);
-    drawPine(c, 108, HORIZON + 8, 26, 8, true);
-    drawPine(c, 312, HORIZON + 9, 24, 7, true);
-    drawPine(c, 358, HORIZON + 6, 30, 9, true);
-    drawPine(c, 398, HORIZON + 12, 20, 6, true);
-    c.restore();
+  function drawStump(c, x, y, r) {
+    ovalShadow(c, x + 1, y + 4, r * 1.15, r * 0.5, 0.3);
+    c.fillStyle = "#5C3A1A";
+    c.beginPath(); c.ellipse(x, y, r, r * 0.72, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#1A1028"; c.lineWidth = 2; c.stroke();
+    c.strokeStyle = "#8B5A2B"; c.lineWidth = 1.4;
+    c.beginPath(); c.ellipse(x, y, r * 0.55, r * 0.4, 0, 0, Math.PI * 2); c.stroke();
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(x, y - r * 0.45, r * 0.45, 3, 0, Math.PI, Math.PI * 2); c.fill();
   }
-  function drawMidTrees(c) {}
-  function drawNearBanks(c) {}
-  function drawGround(c) {
-    c.fillStyle = "#c5d2e4";
-    c.beginPath(); c.moveTo(0, HORIZON + 8); c.lineTo(W, HORIZON + 8); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
-    var ng = c.createLinearGradient(0, HORIZON + 8, 0, H);
-    ng.addColorStop(0, "#d4deec");
-    ng.addColorStop(0.45, "#e8eef6");
-    ng.addColorStop(1, "#f2f4f8");
-    c.fillStyle = ng;
-    c.fillRect(0, HORIZON + 8, W, H - HORIZON - 8);
-    var ring = lodgeLevel() >= 4 ? 198 : 176;
-    var heat = state.heat / 100;
-    c.fillStyle = "#eadcc4";
-    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 6, ring + 16, ring * 0.74, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = heat > 0.2 ? "#F4E6C3" : "#e8e4d8";
-    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 4, ring, ring * 0.68, 0, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = "rgba(92,58,26,0.28)"; c.lineWidth = 7;
-    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 4, ring - 38, ring * 0.48, 0, 0, Math.PI * 2); c.stroke();
-    c.strokeStyle = "rgba(244,230,195,0.55)"; c.lineWidth = 4;
-    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 4, ring - 38, ring * 0.48, 0, 0, Math.PI * 2); c.stroke();
-    if (heat > 0.05) {
-      c.fillStyle = "rgba(245,196,0," + (0.06 + heat * 0.1) + ")";
-      c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 8, 50, 28, 0, 0, Math.PI * 2); c.fill();
+  function drawDrift(c, x, y, rx, ry) {
+    ovalShadow(c, x + 3, y + 6, rx, ry * 0.7, 0.2);
+    c.fillStyle = "#eef3f8";
+    c.beginPath(); c.ellipse(x, y, rx, ry, -0.12, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(26,16,40,0.18)"; c.lineWidth = 2; c.stroke();
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(x - rx * 0.15, y - ry * 0.35, rx * 0.55, ry * 0.38, 0, Math.PI, Math.PI * 2); c.fill();
+  }
+  function drawTapTree(c, x, y, glow) {
+    drawPine(c, x, y, 34, 11, false);
+    c.fillStyle = glow ? "#e8b060" : "#C4894A";
+    c.beginPath(); roundRect(c, x + 8, y - 6, 8, 11, 2); inkFill(c, glow ? "#e8b060" : "#C4894A");
+    if (glow) {
+      c.fillStyle = "rgba(232,176,96," + (0.35 + Math.sin(clock * 2.4 + x * 0.01) * 0.15) + ")";
+      c.beginPath(); c.ellipse(x + 12, y + 8 + Math.sin(clock * 3 + y) * 2, 4, 6, 0, 0, Math.PI * 2); c.fill();
     }
-    c.strokeStyle = "rgba(26,16,40,0.14)"; c.lineWidth = 2;
-    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 4, ring, ring * 0.68, 0, 0, Math.PI * 2); c.stroke();
-    sparkles.forEach(function (s) {
-      var a = 0.12 + (Math.sin(clock * 3.2 + s.p) * 0.5 + 0.5) * 0.55;
-      c.globalAlpha = a;
-      c.fillStyle = "#F4E6C3";
-      c.beginPath(); c.arc(s.x, s.y, s.s, 0, Math.PI * 2); c.fill();
-    });
-    c.globalAlpha = 1;
-  }
-  function drawChopSite(c) {
-    var x = SITE_CHOP.x, y = SITE_CHOP.y;
-    c.save(); c.translate(x, y);
-    ovalShadow(c, 4, 8, 26, 12, 0.3);
-    [[-10, -4, 11], [4, 2, 13], [16, -6, 10]].forEach(function (t) {
-      c.fillStyle = "#5C3A1A";
-      c.beginPath(); c.ellipse(t[0], t[1], t[2], t[2] * 0.72, 0, 0, Math.PI * 2); c.fill();
-      c.strokeStyle = "#1A1028"; c.lineWidth = 2; c.stroke();
-      c.strokeStyle = "#8B5A2B"; c.lineWidth = 1.4;
-      c.beginPath(); c.ellipse(t[0], t[1], t[2] * 0.55, t[2] * 0.4, 0, 0, Math.PI * 2); c.stroke();
-      c.fillStyle = "#F4E6C3";
-      c.beginPath(); c.ellipse(t[0], t[1] - t[2] * 0.45, t[2] * 0.45, 3, 0, Math.PI, Math.PI * 2); c.fill();
-    });
-    c.restore();
-  }
-  function drawFishSite(c) {
-    var x = SITE_FISH.x, y = SITE_FISH.y;
-    c.save(); c.translate(x, y);
-    ovalShadow(c, 1, 6, 28, 14, 0.28);
-    c.fillStyle = "#d8e8f8"; c.beginPath(); c.ellipse(0, 0, 32, 22, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#2a3a68"; c.beginPath(); c.ellipse(0, 0, 14, 10, 0, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = "#F4E6C3"; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, 14, 10, 0, 0, Math.PI * 2); c.stroke();
-    c.restore();
-  }
-  function drawSapSite(c) {
-    var x = SITE_SAP.x, y = SITE_SAP.y;
-    c.save(); c.translate(x, y);
-    drawPineTop(c, 0, 0, 14, false);
-    c.fillStyle = "#e8b060";
-    c.beginPath(); roundRect(c, 8, 2, 7, 8, 2); inkFill(c, "#e8b060");
-    c.restore();
-  }
-  function drawMineSite(c) {
-    var x = SITE_MINE.x, y = SITE_MINE.y;
-    c.save(); c.translate(x, y);
-    drawRock(c, -8, 2, 9);
-    drawRock(c, 8, -2, 7);
-    c.restore();
   }
   function inkFill(c, fill) {
     c.fillStyle = fill; c.fill();
@@ -2023,50 +2006,361 @@
     c.fillStyle = "#F4E6C3";
     c.beginPath(); c.ellipse(0, -bh / 2 + 1, bw * 0.4, 4.2, 0, Math.PI, Math.PI * 2); c.fill();
   }
+  function isoHut(c, bw, bh, wall, wallL, wallR, roof) {
+    ovalShadow(c, 3, bh * 0.46, bw * 0.58, 10, 0.4);
+    c.beginPath();
+    c.moveTo(-bw / 2, -bh / 2);
+    c.lineTo(bw / 2, -bh / 2);
+    c.lineTo(bw / 2 + 10, -bh / 2 - wall * 0.45);
+    c.lineTo(-bw / 2 + 10, -bh / 2 - wall * 0.45);
+    c.closePath(); inkFill(c, wallL || "#5C3A1A");
+    c.beginPath(); roundRect(c, -bw / 2, -bh / 2, bw, bh, 3); inkFill(c, wallR || "#8B5A2B");
+    c.beginPath();
+    c.moveTo(-bw / 2 - 2, -bh / 2 + 2);
+    c.lineTo(0, -bh / 2 - wall - 4);
+    c.lineTo(bw / 2 + 12, -bh / 2 + 2);
+    c.closePath(); inkFill(c, roof);
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(2, -bh / 2 - wall - 2, bw * 0.32, 4, 0, Math.PI, Math.PI * 2); c.fill();
+  }
+  function srnd(s) {
+    var x = Math.sin(s * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  }
+  function nearPad(x, y, r) {
+    if (Math.hypot(x - LODGE.x, y - LODGE.y) < 96) return true;
+    var list = PADS.concat([PAD_EXPAND]).concat(PADS_MORE), i;
+    for (i = 0; i < list.length; i++) if (Math.hypot(x - list[i].x, y - list[i].y) < (r || 58)) return true;
+    if (Math.hypot(x - SITE_STOCK.x, y - SITE_STOCK.y) < 44) return true;
+    return false;
+  }
+  function addPropAt(kind, x, y, extra) {
+    if (x < 18 || y < 40 || x > WORLD_W - 18 || y > WORLD_H - 18) return;
+    if (nearPad(x, y, extra && extra.clear || 54)) return;
+    var p = { kind: kind, x: x, y: y };
+    var k;
+    if (extra) for (k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) p[k] = extra[k];
+    CAMP_PROPS.push(p);
+  }
+  function initWorldDressing() {
+    CAMP_PROPS = [];
+    var i, x, y;
+    for (i = 0; i < 34; i++) {
+      x = 36 + srnd(i + 2) * 300;
+      y = 540 + srnd(i + 9) * 520;
+      addPropAt("pine", x, y, { h: 22 + srnd(i) * 16, w: 8 + srnd(i + 4) * 5 });
+    }
+    for (i = 0; i < 10; i++) {
+      x = 70 + srnd(i + 40) * 250;
+      y = 620 + srnd(i + 51) * 400;
+      addPropAt("stump", x, y, { r: 8 + srnd(i + 3) * 4 });
+    }
+    for (i = 0; i < 5; i++) addPropAt("woodpile", 80 + srnd(i + 70) * 220, 640 + srnd(i + 80) * 360, {});
+    for (i = 0; i < 26; i++) {
+      x = 680 + srnd(i + 110) * 440;
+      y = 70 + srnd(i + 130) * 360;
+      addPropAt("pine", x, y, { h: 26 + srnd(i + 5) * 14, w: 9 + srnd(i + 8) * 5, glow: true });
+    }
+    TAP_TREES.forEach(function (t, ti) { addPropAt("tap", t.x, t.y, { glow: true, clear: 20 }); });
+    for (i = 0; i < 18; i++) {
+      x = 900 + srnd(i + 200) * 270;
+      y = 520 + srnd(i + 220) * 460;
+      addPropAt("rock", x, y, { r: 7 + srnd(i + 6) * 8 });
+    }
+    for (i = 0; i < 10; i++) {
+      var ang = (i / 10) * Math.PI * 2;
+      addPropAt("pine", LODGE.x + Math.cos(ang) * 210, LODGE.y + Math.sin(ang) * 168, { h: 20, w: 8 });
+    }
+    for (i = 0; i < 12; i++) {
+      x = 40 + srnd(i + 300) * 180;
+      y = 1140 + srnd(i + 320) * 340;
+      addPropAt("pine", x, y, { h: 18 + srnd(i) * 10, w: 7, cool: true });
+    }
+    for (i = 0; i < 10; i++) {
+      x = 980 + srnd(i + 340) * 180;
+      y = 1180 + srnd(i + 360) * 300;
+      addPropAt("pine", x, y, { h: 18 + srnd(i) * 10, w: 7, cool: true });
+    }
+    addPropAt("drift", 90, 120, { rx: 50, ry: 22, clear: 10 });
+    addPropAt("drift", 1100, 110, { rx: 56, ry: 24, clear: 10 });
+    addPropAt("drift", 80, 1540, { rx: 60, ry: 26, clear: 10 });
+    addPropAt("drift", 1120, 1500, { rx: 54, ry: 22, clear: 10 });
+    addPropAt("drift", 200, 1480, { rx: 70, ry: 28, clear: 10 });
+    CHOP_STUMPS.forEach(function (s) { addPropAt("stump", s.x - 18, s.y + 8, { r: 11, clear: 12 }); });
+    addPropAt("woodpile", SITE_STOCK.x - 36, SITE_STOCK.y + 18, { clear: 8 });
+    CAMP_PROPS.push({ kind: "dock", x: 690, y: 1264 });
+    fishSchools = [];
+    for (i = 0; i < 22; i++) {
+      fishSchools.push({
+        x: 260 + srnd(i + 400) * 780, y: 1248 + srnd(i + 420) * 170,
+        vx: 16 + srnd(i + 7) * 22, ph: srnd(i + 9) * Math.PI * 2, s: 4 + srnd(i + 11) * 4
+      });
+    }
+    sapSpirits = SAP_NAMES.map(function (nm, i) {
+      return { name: nm, x: 780 + i * 70, y: 160 + (i % 2) * 50, ph: i * 1.3, r: 7 + i };
+    });
+  }
+  function tickWorldFx(dt) {
+    fishSchools.forEach(function (f) {
+      f.x += f.vx * dt;
+      f.y += Math.sin(clock * 1.6 + f.ph) * 8 * dt;
+      if (f.x > 1080) f.x = 240;
+      if (f.y < 1236) f.y = 1236;
+      if (f.y > 1448) f.y = 1448;
+    });
+    sapSpirits.forEach(function (s, i) {
+      s.x = 800 + i * 72 + Math.sin(clock * 0.7 + s.ph) * 28;
+      s.y = 168 + (i % 2) * 46 + Math.cos(clock * 0.9 + s.ph) * 16;
+    });
+  }
+  function drawFrozenDam(c) {
+    var night = state.phase === "night" || state.phase === "dusk" || isActIII() || whiteoutLook();
+    var y0 = WORLD_H - 92, y1 = WORLD_H - 8;
+    c.save();
+    c.globalAlpha = night ? 0.55 : 0.78;
+    var ig = c.createLinearGradient(0, y0, 0, y1);
+    ig.addColorStop(0, night ? "#2a3860" : "#3D5C9A");
+    ig.addColorStop(0.55, night ? "#31466e" : "#4a6a9c");
+    ig.addColorStop(1, night ? "#241848" : "#5a6e90");
+    c.fillStyle = ig;
+    c.beginPath();
+    c.moveTo(80, y0 + 18);
+    c.quadraticCurveTo(360, y0 - 10, 600, y0 + 8);
+    c.quadraticCurveTo(860, y0 + 22, 1120, y0 + 6);
+    c.lineTo(1160, y1);
+    c.quadraticCurveTo(600, y1 + 8, 40, y1 - 4);
+    c.closePath();
+    c.fill();
+    c.globalAlpha = 0.7;
+    [
+      [280, y0 + 10, 70, 8, -0.12],
+      [360, y0 + 4, 82, 9, 0.08],
+      [470, y0 + 14, 76, 8, -0.1],
+      [560, y0 + 6, 90, 9, 0.04],
+      [680, y0 + 12, 64, 7, -0.16],
+      [760, y0 + 2, 80, 8, 0.11]
+    ].forEach(function (lg, i) {
+      c.save(); c.translate(lg[0], lg[1]); c.rotate(lg[4]);
+      c.fillStyle = i % 2 ? "#5C3A1A" : "#6B4423";
+      roundRect(c, 0, 0, lg[2], lg[3], 2); c.fill();
+      c.restore();
+    });
+    c.restore();
+  }
+  function drawFarPines(c) {
+    var ox = para(0);
+    c.save(); c.translate(ox * 0.25, 0);
+    [[80, 70, 26, 8], [160, 58, 32, 10], [250, 74, 22, 7], [980, 62, 28, 9], [1080, 54, 34, 11], [1140, 78, 20, 7]].forEach(function (p) {
+      drawPine(c, p[0], p[1], p[2], p[3], true);
+    });
+    c.restore();
+  }
+  function drawMidTrees(c) {}
+  function drawNearBanks(c) {}
+  function strokePath(c, pts, col, w) {
+    if (!pts.length) return;
+    c.strokeStyle = col; c.lineWidth = w; c.lineCap = "round"; c.lineJoin = "round";
+    c.beginPath(); c.moveTo(pts[0][0], pts[0][1]);
+    var i;
+    for (i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
+    c.stroke();
+  }
+  function drawGround(c) {
+    c.fillStyle = "#c5d2e4";
+    c.fillRect(0, 40, WORLD_W, WORLD_H - 40);
+    var ng = c.createLinearGradient(0, 40, 0, WORLD_H);
+    ng.addColorStop(0, "#d4deec");
+    ng.addColorStop(0.4, "#e8eef6");
+    ng.addColorStop(1, "#e4ebf4");
+    c.fillStyle = ng;
+    c.fillRect(0, 40, WORLD_W, WORLD_H - 40);
+    c.strokeStyle = "rgba(168,196,232,0.16)"; c.lineWidth = 1;
+    var tw = 56, th = 28, gx, gy;
+    for (gy = 40; gy < WORLD_H; gy += th) {
+      for (gx = ((gy / th) % 2) * (tw / 2); gx < WORLD_W; gx += tw) {
+        c.beginPath();
+        c.moveTo(gx, gy);
+        c.lineTo(gx + tw / 2, gy + th / 2);
+        c.lineTo(gx, gy + th);
+        c.lineTo(gx - tw / 2, gy + th / 2);
+        c.closePath(); c.stroke();
+      }
+    }
+    var heat = state.heat / 100;
+    c.fillStyle = heat > 0.2 ? "#eadcc4" : "#d8dde6";
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 8, 168, 118, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = heat > 0.2 ? "#F4E6C3" : "#e8e4d8";
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 6, 142, 98, 0, 0, Math.PI * 2); c.fill();
+    if (heat > 0.05) {
+      c.fillStyle = "rgba(245,196,0," + (0.05 + heat * 0.1) + ")";
+      c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 10, 54, 30, 0, 0, Math.PI * 2); c.fill();
+    }
+    strokePath(c, [[LODGE.x - 40, LODGE.y], [320, 780], [220, 820], [SITE_CHOP.x, SITE_CHOP.y]], "rgba(196,137,74,0.45)", 16);
+    strokePath(c, [[LODGE.x, LODGE.y + 40], [640, 980], [700, 1140], [SITE_FISH.x, SITE_FISH.y - 40]], "rgba(196,137,74,0.4)", 16);
+    strokePath(c, [[LODGE.x + 20, LODGE.y - 40], [680, 560], [760, 360], [SITE_SAP.x, SITE_SAP.y + 20]], "rgba(196,137,74,0.4)", 14);
+    strokePath(c, [[SITE_STOCK.x, SITE_STOCK.y], [820, 840], [940, 780], [SITE_MINE.x - 20, SITE_MINE.y]], "rgba(92,58,26,0.38)", 10);
+    strokePath(c, [[SITE_STOCK.x, SITE_STOCK.y + 7], [820, 847], [940, 787], [SITE_MINE.x - 20, SITE_MINE.y + 7]], "rgba(92,58,26,0.28)", 4);
+    c.fillStyle = "#2a3a68";
+    c.beginPath();
+    c.moveTo(180, 1220);
+    c.quadraticCurveTo(520, 1188, 860, 1210);
+    c.quadraticCurveTo(1100, 1236, 1180, 1280);
+    c.lineTo(1180, 1488);
+    c.quadraticCurveTo(700, 1520, 160, 1470);
+    c.closePath(); c.fill();
+    var wg = c.createLinearGradient(0, 1240, 0, 1460);
+    wg.addColorStop(0, "#3D5C9A");
+    wg.addColorStop(0.45, "#243868");
+    wg.addColorStop(1, "#1a2848");
+    c.fillStyle = wg;
+    c.beginPath();
+    c.moveTo(240, 1268 + Math.sin(clock * 1.4) * 3);
+    c.quadraticCurveTo(560, 1248, 900, 1272 + Math.cos(clock * 1.1) * 3);
+    c.quadraticCurveTo(1080, 1290, 1140, 1320);
+    c.lineTo(1120, 1420);
+    c.quadraticCurveTo(700, 1456, 220, 1408);
+    c.closePath(); c.fill();
+    c.strokeStyle = "rgba(244,230,195,0.45)"; c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(200, 1234);
+    c.quadraticCurveTo(560, 1204, 980, 1238);
+    c.stroke();
+    FISH_HOLES.forEach(function (h) {
+      ovalShadow(c, h.x + 1, h.y + 6, 28, 14, 0.28);
+      c.fillStyle = "#d8e8f8"; c.beginPath(); c.ellipse(h.x, h.y, 26, 16, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#1a2848"; c.beginPath(); c.ellipse(h.x, h.y, 13, 9, 0, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = "#F4E6C3"; c.lineWidth = 3; c.beginPath(); c.ellipse(h.x, h.y, 13, 9, 0, 0, Math.PI * 2); c.stroke();
+    });
+    fishSchools.forEach(function (f) {
+      c.save();
+      c.translate(f.x, f.y);
+      c.globalAlpha = 0.7;
+      c.fillStyle = "#A8C4E8";
+      c.beginPath(); c.ellipse(0, 0, f.s, f.s * 0.42, 0.15, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.moveTo(f.s, 0); c.lineTo(f.s + 5, -3); c.lineTo(f.s + 5, 3); c.closePath(); c.fill();
+      c.restore();
+    });
+    c.save();
+    c.translate(SITE_MINE.x + 10, SITE_MINE.y - 36);
+    c.fillStyle = "#7a7670";
+    c.beginPath();
+    c.moveTo(-90, 50); c.lineTo(-40, -28); c.lineTo(70, -18); c.lineTo(110, 56); c.closePath();
+    inkFill(c, "#8a8480");
+    c.fillStyle = "#b8b0a8";
+    c.beginPath(); c.moveTo(-28, -8); c.lineTo(-8, -30); c.lineTo(24, -12); c.closePath(); c.fill();
+    drawRock(c, -24, 36, 12); drawRock(c, 18, 40, 9); drawRock(c, 48, 28, 11);
+    c.restore();
+    c.save();
+    c.translate(SITE_STOCK.x, SITE_STOCK.y);
+    ovalShadow(c, 2, 10, 22, 10, 0.32);
+    drawWoodpile(c, -6, 4);
+    drawRock(c, 16, 6, 7);
+    c.restore();
+    c.fillStyle = "rgba(232,176,96,0.08)";
+    c.beginPath(); c.ellipse(860, 230, 220, 150, 0, 0, Math.PI * 2); c.fill();
+  }
+  function drawChopSite(c) {
+    CHOP_STUMPS.forEach(function (s) { drawStump(c, s.x, s.y, 11); });
+  }
+  function drawFishSite(c) {}
+  function drawSapSite(c) {}
+  function drawMineSite(c) {
+    var x = SITE_MINE.x, y = SITE_MINE.y;
+    c.save(); c.translate(x, y);
+    drawRock(c, -8, 2, 9);
+    drawRock(c, 8, -2, 7);
+    c.restore();
+  }
+  function drawSled(c, x, y, facing) {
+    c.save(); c.translate(x - facing * 18, y + 8); c.scale(facing, 1);
+    ovalShadow(c, 2, 8, 16, 6, 0.3);
+    c.fillStyle = "#5C3A1A";
+    roundRect(c, -16, -2, 28, 8, 2); c.fill();
+    c.strokeStyle = "#1A1028"; c.lineWidth = 2; c.stroke();
+    c.fillStyle = "#8a8480";
+    roundRect(c, -12, -10, 10, 8, 1); c.fill();
+    roundRect(c, -1, -9, 9, 7, 1); c.fill();
+    c.restore();
+  }
+  function drawSapSpirit(c, s) {
+    var pulse = 0.55 + Math.sin(clock * 2.6 + s.ph) * 0.25;
+    ovalShadow(c, s.x + 1, s.y + 10, 8, 4, 0.2);
+    var g = c.createRadialGradient(s.x - 2, s.y - 2, 1, s.x, s.y, s.r + 6);
+    g.addColorStop(0, "rgba(255,230,160," + pulse + ")");
+    g.addColorStop(0.5, "rgba(232,176,96," + (pulse * 0.7) + ")");
+    g.addColorStop(1, "rgba(232,176,96,0)");
+    c.fillStyle = g;
+    c.beginPath(); c.ellipse(s.x, s.y, s.r + 4, s.r + 2, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#F5C400";
+    c.beginPath(); c.ellipse(s.x, s.y, s.r * 0.55, s.r * 0.45, 0, 0, Math.PI * 2); c.fill();
+  }
   function drawBuilding(c, kind, ghost) {
     var lit = !ghost && kind === "beacon" && state.beaconUsedNight && (state.phase === "night" || state.phase === "dusk");
     if (kind === "woodshed") {
-      topSlab(c, 38, 28, 7, "#8B5A2B", "#5C3A1A");
-      c.beginPath(); roundRect(c, -14, -8, 28, 6, 2); inkFill(c, "#6B4423");
-      c.beginPath(); roundRect(c, -14, 0, 28, 6, 2); inkFill(c, "#C4894A");
-      c.beginPath(); roundRect(c, -14, 8, 28, 6, 2); inkFill(c, "#6B4423");
+      isoHut(c, 42, 26, 12, "#5C3A1A", "#6B4423", "#8B5A2B");
+      c.beginPath(); roundRect(c, -14, -6, 28, 6, 2); inkFill(c, "#C4894A");
+      c.beginPath(); roundRect(c, -14, 2, 28, 6, 2); inkFill(c, "#6B4423");
+      c.beginPath(); roundRect(c, -14, 10, 28, 6, 2); inkFill(c, "#C4894A");
     } else if (kind === "smokehouse") {
-      topSlab(c, 34, 30, 8, "#3A2A6A", "#5C3A1A");
-      c.fillStyle = "#8B5A2B";
-      [-10, 0, 10].forEach(function (xx) { c.fillRect(xx - 1.5, -6, 3, 16); });
-      c.strokeStyle = "#1A1028"; c.lineWidth = 1.6;
-      c.beginPath(); c.moveTo(-12, -6); c.lineTo(12, -6); c.moveTo(-12, 10); c.lineTo(12, 10); c.stroke();
+      ovalShadow(c, 2, 16, 20, 9, 0.4);
+      c.fillStyle = "#6a6560";
+      c.beginPath(); c.ellipse(0, 6, 18, 14, 0, 0, Math.PI * 2); inkFill(c, "#8a8480");
+      c.beginPath(); c.ellipse(0, -4, 14, 12, 0, 0, Math.PI * 2); inkFill(c, "#9a948e");
+      c.beginPath(); c.ellipse(0, -14, 9, 8, 0, 0, Math.PI * 2); inkFill(c, "#6a6560");
+      c.beginPath(); roundRect(c, -4, -24, 8, 10, 2); inkFill(c, "#5C3A1A");
+      c.fillStyle = "#E86A2A";
+      c.beginPath(); c.ellipse(0, 4, 6, 5, 0, 0, Math.PI * 2); c.fill();
       if (!ghost) {
         c.fillStyle = "rgba(210,210,220," + (0.4 + Math.sin(clock * 2) * 0.18) + ")";
-        c.beginPath(); c.ellipse(8, -22 - Math.sin(clock * 1.5) * 2, 5, 7, 0.15, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(4, -30 - Math.sin(clock * 1.5) * 2, 6, 8, 0.15, 0, Math.PI * 2); c.fill();
       }
     } else if (kind === "sapboiler") {
-      topSlab(c, 32, 26, 6, "#b8a888", "#6a5a48");
-      c.beginPath(); c.ellipse(0, 1, 11, 9, 0, 0, Math.PI * 2); inkFill(c, "#6a6a70");
-      c.beginPath(); c.ellipse(0, 0, 7, 5, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
+      ovalShadow(c, 2, 14, 22, 9, 0.4);
+      c.fillStyle = "#e8eef6";
+      c.beginPath(); c.ellipse(0, 4, 22, 14, 0, 0, Math.PI * 2); inkFill(c, "#d8e8f8");
+      c.beginPath(); roundRect(c, -8, -2, 16, 14, 3); inkFill(c, "#1A1028");
+      c.beginPath(); c.ellipse(-12, 8, 5, 4, 0, 0, Math.PI * 2); inkFill(c, "#A8C4E8");
+      c.beginPath(); c.ellipse(12, 6, 5, 4, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
+      c.fillStyle = "#F4E6C3";
+      c.beginPath(); c.ellipse(0, -8, 16, 5, 0, Math.PI, Math.PI * 2); c.fill();
     } else if (kind === "quarry") {
-      topSlab(c, 36, 26, 6, "#9a948e", "#6a6560");
-      c.beginPath(); roundRect(c, -12, -6, 10, 10, 2); inkFill(c, "#c4b08a");
-      c.beginPath(); roundRect(c, 2, -2, 12, 8, 2); inkFill(c, "#8a8480");
+      isoHut(c, 38, 26, 10, "#6a6560", "#8a8480", "#c4b08a");
+      c.beginPath(); roundRect(c, -12, -4, 10, 12, 2); inkFill(c, "#5C3A1A");
+      drawRock(c, 10, 8, 6);
     } else if (kind === "bunk") {
-      topSlab(c, 36, 28, 8, "#3A2A6A", "#5C3A1A");
-      c.beginPath(); roundRect(c, -12, -4, 10, 14, 2); inkFill(c, "#F4E6C3");
-      c.beginPath(); roundRect(c, 2, -4, 10, 14, 2); inkFill(c, "#F4E6C3");
+      ovalShadow(c, 2, 16, 24, 9, 0.36);
+      [[-14, 2, 0.05], [8, 6, -0.08]].forEach(function (t) {
+        c.save(); c.translate(t[0], t[1]); c.rotate(t[2]);
+        c.fillStyle = "#3A2A6A";
+        c.beginPath(); c.moveTo(0, -18); c.lineTo(14, 8); c.lineTo(-14, 8); c.closePath(); inkFill(c, "#3A2A6A");
+        c.fillStyle = "#F4E6C3";
+        c.beginPath(); c.moveTo(0, -18); c.lineTo(8, -4); c.lineTo(-8, -4); c.closePath(); c.fill();
+        c.beginPath(); roundRect(c, -4, 0, 6, 8, 1); inkFill(c, "#1A1028");
+        c.restore();
+      });
     } else if (kind === "watch") {
-      topSlab(c, 28, 28, 10, "#c4b08a", "#6a5a48");
-      c.beginPath(); roundRect(c, -6, -18, 12, 10, 2); inkFill(c, "#8B5A2B");
-      c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -4, 4, 0, Math.PI * 2); c.fill();
+      ovalShadow(c, 2, 16, 14, 8, 0.4);
+      c.beginPath(); roundRect(c, -8, -8, 16, 24, 2); inkFill(c, "#8B5A2B");
+      c.beginPath(); roundRect(c, -14, -20, 28, 14, 2); inkFill(c, "#c4b08a");
+      c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -14, 4, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#F4E6C3";
+      c.beginPath(); c.ellipse(0, -20, 12, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
     } else if (kind === "workshop") {
-      topSlab(c, 36, 28, 7, "#8B5A2B", "#5C3A1A");
-      c.beginPath(); c.arc(-6, 0, 7, 0, Math.PI * 2); inkFill(c, "#F5C400");
-      c.beginPath(); roundRect(c, 4, -6, 10, 12, 2); inkFill(c, "#F4E6C3");
+      isoHut(c, 40, 26, 10, "#5C3A1A", "#8B5A2B", "#6B4423");
+      c.beginPath(); roundRect(c, -16, 0, 12, 10, 2); inkFill(c, "#C4894A");
+      c.beginPath(); roundRect(c, 2, -2, 12, 12, 2); inkFill(c, "#8a8480");
+      c.beginPath(); roundRect(c, -6, 8, 10, 6, 2); inkFill(c, "#e8b060");
     } else if (kind === "beacon") {
-      topSlab(c, 26, 26, 12, "#c4b08a", "#6a5a48");
-      c.beginPath(); c.ellipse(0, -16, 10, 7, 0, 0, Math.PI * 2); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
+      ovalShadow(c, 2, 18, 14, 8, 0.42);
+      c.beginPath(); roundRect(c, -7, -6, 14, 26, 2); inkFill(c, "#6a5a48");
+      c.beginPath(); roundRect(c, -16, -22, 32, 16, 3); inkFill(c, "#c4b08a");
+      c.beginPath(); c.ellipse(0, -28, 11, 8, 0, 0, Math.PI * 2); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
       if (lit) {
         c.fillStyle = "rgba(245,196,0," + (0.4 + Math.sin(clock * 9) * 0.16) + ")";
-        c.beginPath(); c.arc(0, -16, 12 + Math.sin(clock * 8) * 2, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(0, -28, 14 + Math.sin(clock * 8) * 2, 0, Math.PI * 2); c.fill();
       }
+      c.fillStyle = "#F4E6C3";
+      c.beginPath(); c.ellipse(0, -22, 12, 3, 0, Math.PI, Math.PI * 2); c.fill();
     }
   }
   function drawPad(c, i) {
@@ -2076,24 +2370,29 @@
     var squash = padPop[i] > 0 ? 1 + padPop[i] * 0.14 : 1;
     var sel = selectedPad === i;
     c.save(); c.translate(p.x, p.y); c.scale(squash, squash);
-    ovalShadow(c, 2, 14, sel ? 26 : 22, 11, sel ? 0.48 : 0.32);
-    c.fillStyle = "#dce6f2";
-    c.beginPath(); roundRect(c, -24, -22, 48, 44, 6); c.fill();
-    c.beginPath(); roundRect(c, -20, -18, 40, 34, 4); inkFill(c, "#8B5A2B");
-    c.beginPath(); roundRect(c, -18, -14, 36, 28, 3); inkFill(c, "#C4894A");
-    c.strokeStyle = "rgba(26,16,40,0.35)"; c.lineWidth = 1.2;
-    c.beginPath(); c.moveTo(-16, -6); c.lineTo(16, -6); c.moveTo(-16, 2); c.lineTo(16, 2); c.moveTo(-16, 10); c.lineTo(16, 10); c.stroke();
-    c.fillStyle = "#F4E6C3";
-    c.beginPath(); c.ellipse(0, -16, 14, 3.4, 0, Math.PI, Math.PI * 2); c.fill();
+    ovalShadow(c, 2, 16, sel ? 28 : 24, 12, sel ? 0.46 : 0.3);
+    c.fillStyle = sel ? "#e8dcc4" : "#dce6f2";
+    c.beginPath();
+    c.moveTo(0, -20); c.lineTo(26, 0); c.lineTo(0, 18); c.lineTo(-26, 0);
+    c.closePath(); c.fill();
+    c.strokeStyle = "#5C3A1A"; c.lineWidth = 2.4; c.stroke();
+    [[-18, -6], [18, -6], [-16, 10], [16, 10]].forEach(function (peg) {
+      c.fillStyle = "#8B5A2B";
+      c.beginPath(); roundRect(c, peg[0] - 2, peg[1] - 4, 4, 8, 1); c.fill();
+    });
     if (!kind) {
       if (canBuild) {
         var aura = 0.45 + Math.sin(clock * 4.2) * 0.28;
         c.strokeStyle = "rgba(245,196,0," + aura + ")"; c.lineWidth = 4;
-        c.beginPath(); roundRect(c, -22, -16, 44, 32, 5); c.stroke();
+        c.beginPath();
+        c.moveTo(0, -22); c.lineTo(28, 0); c.lineTo(0, 20); c.lineTo(-28, 0);
+        c.closePath(); c.stroke();
       }
       if (sel) {
         c.strokeStyle = "#F5C400"; c.lineWidth = 5;
-        c.beginPath(); roundRect(c, -23, -17, 46, 34, 5); c.stroke();
+        c.beginPath();
+        c.moveTo(0, -23); c.lineTo(29, 0); c.lineTo(0, 21); c.lineTo(-29, 0);
+        c.closePath(); c.stroke();
       }
       if (sel && hoverBuild) {
         c.globalAlpha = 0.42 + Math.sin(clock * 5) * 0.1;
@@ -2115,25 +2414,36 @@
     var lv = lodgeLevel();
     c.save(); c.translate(LODGE.x, LODGE.y);
     c.scale(LODGE_SCALE, LODGE_SCALE);
-    ovalShadow(c, 4, 26, 40, 16, 0.46);
-    topSlab(c, 64, 48, 10, "#3A2A6A", "#6a5a48");
-    c.beginPath(); roundRect(c, -10, 10, 20, 12, 3); inkFill(c, "#1A1028");
-    c.beginPath(); roundRect(c, 10, -32, 12, 10, 2); inkFill(c, "#5C3A1A");
+    ovalShadow(c, 4, 28, 44, 16, 0.46);
+    c.fillStyle = "#6B4423";
+    c.beginPath(); c.ellipse(0, 8, 46, 22, 0, 0, Math.PI * 2); inkFill(c, "#6B4423");
+    c.fillStyle = "#8B5A2B";
+    c.beginPath(); c.ellipse(0, -6, 40, 26, 0, 0, Math.PI * 2); inkFill(c, "#8B5A2B");
+    [[-22, 2, 18, 5, -0.4], [-8, 8, 20, 5, 0.15], [10, 4, 16, 5, -0.2], [18, -6, 14, 4, 0.3]].forEach(function (lg) {
+      c.save(); c.translate(lg[0], lg[1]); c.rotate(lg[4]);
+      c.fillStyle = "#5C3A1A"; roundRect(c, 0, 0, lg[2], lg[3], 2); c.fill();
+      c.restore();
+    });
     c.fillStyle = "#F4E6C3";
-    c.beginPath(); c.ellipse(16, -32, 8, 3, 0, Math.PI, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0, -22, 32, 14, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#1A1028"; c.lineWidth = 2.2; c.stroke();
+    c.beginPath(); roundRect(c, -10, 4, 20, 16, 3); inkFill(c, "#1A1028");
+    c.beginPath(); roundRect(c, 10, -28, 12, 10, 2); inkFill(c, "#5C3A1A");
+    c.fillStyle = "#F4E6C3";
+    c.beginPath(); c.ellipse(16, -28, 8, 3, 0, Math.PI, Math.PI * 2); c.fill();
     var smokeA = 0.32 + Math.sin(clock * 1.6) * 0.12;
     c.fillStyle = "rgba(210,210,220," + smokeA + ")";
-    c.beginPath(); c.ellipse(16 + Math.sin(clock * 1.2) * 2, -42 - Math.sin(clock * 1.4) * 3, 7, 9, 0.2, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(16 + Math.sin(clock * 1.2) * 2, -40 - Math.sin(clock * 1.4) * 3, 7, 9, 0.2, 0, Math.PI * 2); c.fill();
     c.fillStyle = "rgba(210,210,220," + (smokeA * 0.7) + ")";
-    c.beginPath(); c.ellipse(18 + Math.sin(clock * 0.9) * 3, -52 - Math.sin(clock * 1.1) * 2, 8, 8, 0.1, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(18 + Math.sin(clock * 0.9) * 3, -50 - Math.sin(clock * 1.1) * 2, 8, 8, 0.1, 0, Math.PI * 2); c.fill();
     if (lv >= 2) {
-      c.save(); c.translate(-38, 4); topSlab(c, 20, 22, 6, "#8B5A2B", "#5C3A1A"); c.restore();
+      c.save(); c.translate(-42, 8); isoHut(c, 20, 18, 6, "#5C3A1A", "#8B5A2B", "#6B4423"); c.restore();
     }
     if (lv >= 3) {
-      c.save(); c.translate(38, 4); topSlab(c, 20, 22, 6, "#c4b08a", "#6a5a48"); c.restore();
+      c.save(); c.translate(42, 8); isoHut(c, 20, 18, 6, "#6a5a48", "#c4b08a", "#8a8480"); c.restore();
     }
     if (lv >= 4) {
-      c.beginPath(); roundRect(c, -8, -40, 16, 10, 2); inkFill(c, "#F5C400");
+      c.beginPath(); roundRect(c, -8, -38, 16, 10, 2); inkFill(c, "#F5C400");
     }
     if (state.fork18 === "reinforce") {
       c.strokeStyle = "#C4894A"; c.lineWidth = 3;
@@ -2185,6 +2495,7 @@
     var working = !b.moving && state.phase === "day";
     var bob = b.moving ? Math.abs(Math.sin(clock * 11)) * 3.2 : (working ? Math.sin(clock * 8) * 2.2 : 0);
     var ds = depthScale(b.y);
+    if (b.job === "miner" && b.haul && state.phase === "day") drawSled(c, b.x, b.y, b.facing || 1);
     c.save(); c.translate(b.x, b.y);
     ovalShadow(c, 1, 4, 16, 9, 0.38);
     c.fillStyle = "rgba(26,16,40,0.18)";
@@ -2270,6 +2581,7 @@
     list.push({ y: SITE_SAP.y, z: 0, kind: "sap" });
     list.push({ y: SITE_MINE.y, z: 0, kind: "mine" });
     CAMP_PROPS.forEach(function (pr, pi) { list.push({ y: pr.y, z: 0, kind: "prop", p: pr, i: pi }); });
+    sapSpirits.forEach(function (s, si) { list.push({ y: s.y + 8, z: 2, kind: "spirit", s: s, i: si }); });
     state.beavers.forEach(function (b, bi) { list.push({ y: b.y, z: 3, kind: "beaver", b: b, i: bi }); });
     list.sort(function (a, b) { return a.y - b.y || a.z - b.z; });
     list.forEach(function (item) {
@@ -2279,6 +2591,7 @@
       else if (item.kind === "sap") drawSapSite(c);
       else if (item.kind === "mine") drawMineSite(c);
       else if (item.kind === "prop") drawProp(c, item.p);
+      else if (item.kind === "spirit") drawSapSpirit(c, item.s);
       else if (item.kind === "beaver") drawBeaver(c, item.b);
       else drawPad(c, item.i);
     });
@@ -2306,10 +2619,14 @@
     var g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     drawMoon(ctx);
-    drawFrozenDam(ctx);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+    ctx.translate(-camX, -camY);
     drawFarPines(ctx);
-    drawMidTrees(ctx);
     drawGround(ctx);
+    drawFrozenDam(ctx);
+    drawMidTrees(ctx);
+    drawNearBanks(ctx);
     drawSorted(ctx);
     if (beaconPulse > 0.02) {
       var bx = LODGE.x, by = LODGE.y - 10;
@@ -2325,10 +2642,11 @@
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(bx, by, pr * 0.62, 0, Math.PI * 2); ctx.stroke();
     }
-    drawGrade(ctx);
     drawFireLight(ctx);
-    drawSnow(ctx);
     drawPops(ctx);
+    ctx.restore();
+    drawGrade(ctx);
+    drawSnow(ctx);
     if (shake > 0.02 || wind) ctx.restore();
   }
 
@@ -2365,10 +2683,40 @@
     var rect = canvas.getBoundingClientRect();
     var t = (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || ev;
     var x = t.clientX - rect.left, y = t.clientY - rect.top;
-    return { x: (x - viewOx) / viewScale, y: (y - viewOy) / viewScale };
+    var vx = (x - viewOx) / viewScale, vy = (y - viewOy) / viewScale;
+    return { x: vx + camX, y: vy + camY, vx: vx, vy: vy };
+  }
+  function overlaysBlock() {
+    return !playing || paused || state.ended || cameoLock || historyOpen() || museumOpen();
+  }
+  function onCanvasDown(ev) {
+    if (overlaysBlock()) return;
+    if (document.getElementById("sheet") && !document.getElementById("sheet").classList.contains("hidden")) return;
+    if (document.getElementById("fork") && !document.getElementById("fork").classList.contains("hidden")) return;
+    if (document.getElementById("fork18") && !document.getElementById("fork18").classList.contains("hidden")) return;
+    Sfx.ensure();
+    var t = ev;
+    panDrag = { x: t.clientX, y: t.clientY, camX: camX, camY: camY, moved: 0, id: ev.pointerId, mouse: ev.pointerType === "mouse" };
+    try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+  }
+  function onCanvasMove(ev) {
+    var rect = canvas.getBoundingClientRect();
+    var vx = (ev.clientX - rect.left - viewOx) / viewScale;
+    var vy = (ev.clientY - rect.top - viewOy) / viewScale;
+    mouseView = { x: vx, y: vy, over: true, mouse: ev.pointerType === "mouse" };
+    if (!panDrag || panDrag.id !== ev.pointerId) return;
+    var dx = (ev.clientX - panDrag.x) / viewScale;
+    var dy = (ev.clientY - panDrag.y) / viewScale;
+    panDrag.moved = Math.max(panDrag.moved, Math.hypot(dx, dy));
+    if (panDrag.moved > 6) {
+      camX = panDrag.camX - dx;
+      camY = panDrag.camY - dy;
+      clampCam();
+      canvas.classList.add("panning");
+    }
   }
   function onCanvasTap(ev) {
-    if (!playing || paused || state.ended || cameoLock || historyOpen() || museumOpen()) return;
+    if (overlaysBlock()) return;
     Sfx.ensure();
     var p = canvasPos(ev);
     var hit = -1;
@@ -2385,8 +2733,28 @@
       return;
     }
     if (state.phase === "dawn") { skipDawn(); return; }
-    if (state.phase === "day") { pop(p.x, p.y - 8, "tap a glowing pad", "#F4E6C3"); return; }
+    if (state.phase === "day") { pop(p.x, p.y - 8, "drag to pan · tap a glowing plot", "#F4E6C3"); return; }
     if (Math.hypot(p.x - LODGE.x, p.y - LODGE.y) < 52 * LODGE_SCALE) stokeWood();
+  }
+  function onCanvasUp(ev) {
+    if (!panDrag || panDrag.id !== ev.pointerId) {
+      panDrag = null; canvas.classList.remove("panning"); return;
+    }
+    var moved = panDrag.moved;
+    panDrag = null;
+    canvas.classList.remove("panning");
+    try { canvas.releasePointerCapture(ev.pointerId); } catch (e) {}
+    if (moved < 10) onCanvasTap(ev);
+  }
+  function tickEdgeScroll(dt) {
+    if (overlaysBlock() || panDrag || !mouseView.over || !mouseView.mouse) return;
+    if (document.getElementById("sheet") && !document.getElementById("sheet").classList.contains("hidden")) return;
+    var edge = 28, spd = 220 * dt;
+    if (mouseView.x < edge) camX -= spd;
+    if (mouseView.x > W - edge) camX += spd;
+    if (mouseView.y < edge) camY -= spd;
+    if (mouseView.y > H - edge) camY += spd;
+    clampCam();
   }
   function loop(ts) {
     requestAnimationFrame(loop);
@@ -2394,22 +2762,24 @@
     var dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
     if (playing && !paused && !state.ended && !cameoLock && !historyOpen() && !museumOpen()) {
       var step = dt * state.speed; clock += step;
-      tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step);
+      tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step); tickWorldFx(step);
+      tickEdgeScroll(step);
       if (bannerTimer && clock > bannerTimer) hideBanner();
       saveAcc += step; if (saveAcc >= 4) { saveAcc = 0; save(); }
       hud();
-    } else { clock += dt; tickSnow(dt * 0.45); }
+    } else { clock += dt; tickSnow(dt * 0.45); tickWorldFx(dt * 0.45); }
     draw();
   }
 
   var HIST_FREEZE = [
-    { src: "assets/history/graph.jpg", line: "Twenty-five days. Whiteouts 4 · 8 · 12 · 18 · 22. Night 25 opens Nightfall.", t: 0 },
-    { src: "assets/history/f0.jpg", line: "After the dam, winter came looking for a hearth.", t: 5.5 },
-    { src: "assets/history/f1.jpg", line: "Frost Lodge kept one flame. That was the deal.", t: 11 },
-    { src: "assets/history/f2.jpg", line: "Whiteouts ate the map. Beavers stayed.", t: 16.5 },
-    { src: "assets/history/f3.jpg", line: "Hold the fire here. Nightfall is the long night after.", t: 22 },
-    { src: "assets/history/f4.jpg", line: "Then the freeze learned the door.", t: 27.5 },
-    { src: "assets/history/f5.jpg", line: "HOLD THE FIRE.", t: 33 }
+    { src: "assets/history/f0.jpg", line: "After the Dam — Wood held the river. Winter wanted the rest.", t: 0 },
+    { src: "assets/history/f1.jpg", line: "Lodge Raised — One fire. Four Bobers. Snow already counting.", t: 5.5 },
+    { src: "assets/history/f2.jpg", line: "River Still Runs — Fish under ice. Hunger doesn’t wait for thaw.", t: 11 },
+    { src: "assets/history/f3.jpg", line: "Sap-Spirit Wood — The trees bleed warmth if you ask kindly.", t: 16.5 },
+    { src: "assets/history/f4.jpg", line: "Stone Hauls — Rock for walls. Walls for heat.", t: 22 },
+    { src: "assets/history/f5.jpg", line: "Whiteout Nights — Assign wrong, wake colder.", t: 27.5 },
+    { src: "assets/history/f6.jpg", line: "Fire Holds — Dawn. Crew up. Day again.", t: 33 },
+    { src: "assets/history/f7.jpg", line: "Toward Nightfall — Survive this winter; the keep still waits.", t: 38.5 }
   ];
   var HIST_AFTER = [
     { src: "assets/history/a0.jpg", line: "The lodge warmed. Folks started calling it a green home.", t: 0 },
@@ -2417,7 +2787,7 @@
     { src: "assets/history/a2.jpg", line: "A grey wanderer leaned on a stick. Quiet place, he said.", t: 11 },
     { src: "assets/history/a3.jpg", line: "Nightfall waits. Blade first. The long road after.", t: 16.5 }
   ];
-  var HIST_END = 38.5, HIST_AFTER_END = 22;
+  var HIST_END = 44, HIST_AFTER_END = 22;
   var HIST_BEATS = HIST_FREEZE;
   var histEl = document.getElementById("history");
   var histImg = document.getElementById("hist-img");
@@ -2550,22 +2920,40 @@
 
   var MUSEUM_KEY = "bober-frost-museum-v1";
   var musTab = "crew", museumFrom = "splash", musDetailFrom = null;
+  var MUS_CREW = [
+    { id: "bober", name: "Bober", art: "assets/sprites/bober-hat.png", blurb: "Yellow hat. Holds the fire." },
+    { id: "nib", name: "Nib", art: "assets/sprites/bober-idle.png", blurb: "Darker fur. Likes the hole." },
+    { id: "puddle", name: "Puddle", art: "assets/sprites/bober-tend.png", blurb: "Bright. Tends the hearth." },
+    { id: "twig", name: "Twig", art: "assets/sprites/bober-walk.png", blurb: "Late to the fire." }
+  ];
   var MUS_JOBS = [
-    { id: "chopper", name: "Chopper", art: "assets/sprites/bober-chop.png", blurb: "Cuts wood at the copse. Woodshed makes them faster." },
-    { id: "fisher", name: "Fisher", art: "assets/sprites/bober-fish.png", blurb: "Pulls Fish from the hole. Smokehouse turns Fish to rations." },
-    { id: "tender", name: "Tender", art: "assets/sprites/bober-tend.png", blurb: "Stays by the hearth. Cuts night drain and boosts Heat per wood." },
-    { id: "tapper", name: "Tapper", art: "assets/sprites/bober-chop.png", blurb: "Draws Sap. Boiler turns Sap to syrup for Heat." },
-    { id: "miner", name: "Miner", art: "assets/sprites/bober-chop.png", blurb: "Needs Quarry Bench. Brings Stone for crafts." }
+    { id: "chopper", name: "Chop", art: "assets/sprites/bober-chop.png", blurb: "Woodlots west. CHOP means trees." },
+    { id: "fisher", name: "Fish", art: "assets/sprites/bober-fish.png", blurb: "River south. FISH means river fish." },
+    { id: "tender", name: "Tend", art: "assets/sprites/bober-tend.png", blurb: "Lodge hearth. If this dies, the chapter dies." },
+    { id: "tapper", name: "Tap", art: "assets/sprites/bober-chop.png", blurb: "Sap forest north. TAP means sap grove." },
+    { id: "miner", name: "Mine", art: "assets/sprites/bober-chop.png", blurb: "Stone trail east. MINE means sled haul." }
+  ];
+  var MUS_BUILD_FEAT = [
+    { id: "hearth", name: "Lodge Hearth", art: "assets/history/f1.jpg", blurb: "If this dies, the chapter dies.", always: true },
+    { id: "woodshed", name: "Woodcache", blurb: "Logs in. Heat later." },
+    { id: "smokehouse", name: "Smoke Kiln", blurb: "Fish in. Rations out." },
+    { id: "quarry", name: "Stone Hut", blurb: "Rock for walls. Walls for heat." },
+    { id: "sapboiler", name: "Ice Cellar", blurb: "Cold keeps the sweet." }
   ];
   var MUS_FIRE = [
-    { id: "embers", name: "Embers", art: "assets/splash.jpg", blurb: "Day 1. Hold the lodge fire through 25 winter days.", at: 1 },
-    { id: "wo4", name: "Whiteout 4", art: "assets/history/f2.jpg", blurb: "First whiteout. Stoke wood. Heat is Heat.", at: 4 },
-    { id: "wo8", name: "Whiteout 8", art: "assets/history/f2.jpg", blurb: "The map shrinks. Beavers stay.", at: 8 },
+    { id: "chopbelt", name: "Chop Belt", art: "assets/history/f0.jpg", blurb: "Trees that still stand.", at: 1, zone: true },
+    { id: "fishhole", name: "Fish Hole", art: "assets/history/f2.jpg", blurb: "The river still runs.", at: 1, zone: true },
+    { id: "sapstand", name: "Sap-Spirit Stand", art: "assets/history/f3.jpg", blurb: "Ask kindly. The trees bleed warmth.", at: 1, zone: true },
+    { id: "stonefield", name: "Stone Field", art: "assets/history/f4.jpg", blurb: "Haul or freeze.", at: 1, zone: true },
+    { id: "deepdrift", name: "Deep Drift", art: "assets/history/f5.jpg", blurb: "Whiteout lives here.", at: 4, zone: true },
+    { id: "embers", name: "Embers", art: "assets/splash.jpg", blurb: "Day 1. Hold the fire.", at: 1 },
+    { id: "wo4", name: "Whiteout 4", art: "assets/history/f5.jpg", blurb: "First whiteout. Stoke wood.", at: 4 },
+    { id: "wo8", name: "Whiteout 8", art: "assets/history/f5.jpg", blurb: "The camp shrinks. Bobers stay.", at: 8 },
     { id: "wo12", name: "Whiteout 12", art: "assets/history/f4.jpg", blurb: "The ice road splits. Stockpile or scout.", at: 12 },
     { id: "wo18", name: "Whiteout 18", art: "assets/history/f4.jpg", blurb: "Brace the lodge or expand the clearing.", at: 18 },
-    { id: "wo22", name: "Whiteout 22", art: "assets/history/f4.jpg", blurb: "Deep winter. Fire still counts.", at: 22 },
-    { id: "boss", name: "Night 25", art: "assets/history/graph.jpg", blurb: "Boss whiteout. Fire the Beacon or hold 40% Heat. Nightfall waits past the door.", at: 25 },
-    { id: "thaw", name: "Thaw Holds", art: "assets/history/f5.jpg", blurb: "The lodge fire outlasted the freeze. Nightfall is the long road after.", at: 26 }
+    { id: "wo22", name: "Whiteout 22", art: "assets/history/f5.jpg", blurb: "Deep winter. Fire still counts.", at: 22 },
+    { id: "boss", name: "Night 25", art: "assets/history/graph.jpg", blurb: "Boss whiteout. Fire the Beacon or hold 40% Heat.", at: 25 },
+    { id: "thaw", name: "Thaw Holds", art: "assets/history/f6.jpg", blurb: "The lodge fire outlasted the freeze.", at: 26 }
   ];
   function loadMuseum() {
     try {
@@ -2610,25 +2998,32 @@
   function musList() {
     if (musTab === "jobs") return MUS_JOBS.map(function (j) { return { id: j.id, name: j.name, art: j.art, blurb: j.blurb, kind: "jobs", on: true }; });
     if (musTab === "build") {
-      return BUILDINGS.map(function (bd) {
-        var m = loadMuseum();
+      var m = loadMuseum();
+      var feat = MUS_BUILD_FEAT.map(function (bd) {
+        if (bd.always) return { id: bd.id, name: bd.name, art: bd.art, blurb: bd.blurb, kind: "build", on: true, meta: "Lodge Hub" };
+        var info = BUILDINGS.filter(function (b) { return b.id === bd.id; })[0];
         var on = !!(m.built[bd.id] || (state && countBuilding(bd.id)));
-        return { id: bd.id, name: bd.name, art: musThumb(bd.id), blurb: bd.blurb, kind: "build", on: on, meta: on ? ("Day " + bd.day + " · " + costLine(bd)) : ("Unlocks Day " + bd.day) };
+        return { id: bd.id, name: bd.name, art: musThumb(bd.id), blurb: bd.blurb, kind: "build", on: on, meta: info ? (on ? ("Day " + info.day + " · " + costLine(info)) : ("Unlocks Day " + info.day)) : "" };
       });
+      BUILDINGS.forEach(function (bd) {
+        if (MUS_BUILD_FEAT.some(function (f) { return f.id === bd.id; })) return;
+        var on = !!(m.built[bd.id] || (state && countBuilding(bd.id)));
+        feat.push({ id: bd.id, name: bd.name, art: musThumb(bd.id), blurb: bd.blurb, kind: "build", on: on, meta: on ? ("Day " + bd.day + " · " + costLine(bd)) : ("Unlocks Day " + bd.day) });
+      });
+      return feat;
     }
     if (musTab === "fire") {
       return MUS_FIRE.map(function (f) {
         var m = loadMuseum();
-        var on = f.id === "embers" || (f.id === "thaw" && m.win) || (f.at <= 25 && (m.storms[String(f.at)] || m.maxDay >= f.at || (state && state.day > f.at)));
+        var on = f.zone || f.id === "embers" || (f.id === "thaw" && m.win) || (f.at <= 25 && (m.storms[String(f.at)] || m.maxDay >= f.at || (state && state.day > f.at)));
         if (f.id === "boss") on = !!(m.storms["25"] || m.win || (state && state.day >= 25));
-        return { id: f.id, name: f.name, art: f.art, blurb: f.blurb, kind: "fire", on: on, mile: true };
+        if (f.id === "deepdrift") on = !!(m.storms["4"] || m.maxDay >= 4 || (state && state.day > 4));
+        return { id: f.id, name: f.name, art: f.art, blurb: f.blurb, kind: "fire", on: on, mile: !f.zone };
       });
     }
-    return [{
-      id: "bober", name: "Bober", art: "assets/sprites/bober-hat.png",
-      blurb: "Square-headed holder. Yellow hat. Keeps the lodge fire. Fan game — not official.",
-      kind: "crew", on: true
-    }];
+    return MUS_CREW.map(function (cr) {
+      return { id: cr.id, name: cr.name, art: cr.art, blurb: cr.blurb, kind: "crew", on: true };
+    });
   }
   function paintMuseum() {
     var grid = document.getElementById("museum-grid");
@@ -2836,7 +3231,11 @@
   document.getElementById("btn-keep").addEventListener("click", function () { document.getElementById("confirm").classList.add("hidden"); });
   document.getElementById("btn-sheet-close").addEventListener("click", closeSheet);
   document.getElementById("sheet-list").addEventListener("pointerleave", function () { hoverBuild = null; });
-  canvas.addEventListener("pointerdown", onCanvasTap);
+  canvas.addEventListener("pointerdown", onCanvasDown);
+  canvas.addEventListener("pointermove", onCanvasMove);
+  canvas.addEventListener("pointerup", onCanvasUp);
+  canvas.addEventListener("pointercancel", onCanvasUp);
+  canvas.addEventListener("pointerleave", function () { mouseView.over = false; });
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", function () { if (document.hidden) save(); });
   document.addEventListener("keydown", function (e) {
@@ -2845,7 +3244,7 @@
     if (e.key === "2" || e.key === "4") document.getElementById("btn-speed").click();
   });
 
-  initSnow(); resize(); hud(); syncDock();
+  initWorldDressing(); initSnow(); centerCamOnLodge(); resize(); hud(); syncDock();
   requestAnimationFrame(loop);
 })();
   </script>
