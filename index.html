@@ -420,7 +420,7 @@
       <div class="chips">
         <div class="chip" id="chip-day">Day 1/25</div>
         <div class="chip fork" id="chip-fork" hidden>STOCK</div>
-        <div class="chip wood" id="chip-wood">$BOBER 0</div>
+        <div class="chip wood" id="chip-wood">Wood 0</div>
         <div class="chip fish" id="chip-fish">F 0</div>
         <div class="chip sap" id="chip-sap">SA 0</div>
         <div class="chip stone" id="chip-stone">ST 0</div>
@@ -498,7 +498,7 @@
           <h2>DAY 12</h2>
           <p class="end-msg" id="fork-copy">The ice road splits. Pick one.</p>
           <div id="fork-choices">
-            <button class="play" id="fork-stock" type="button">STOCKPILE<small>Bank the fire · +8 $BOBER +4 Sap · Night 12–18 drain +10%</small></button>
+            <button class="play" id="fork-stock" type="button">STOCKPILE<small>Bank the fire · +8 wood +4 Sap · Night 12–18 drain +10%</small></button>
             <button class="play ghost" id="fork-scout" type="button">SCOUT THE ICE<small>Push farther · extra beaver Days 12–16 · Night 12–18 drain −10%</small></button>
           </div>
           <div id="fork-jobs" class="hidden">
@@ -549,7 +549,7 @@
             SYRUP <small id="syrup-pred">+14</small>
           </button>
           <button id="btn-beacon" type="button" hidden>
-            BEACON <small>5 $BOBER + 3Sa → +25</small>
+            BEACON <small>5 wood + 3Sa → +25</small>
           </button>
         </div>
       </div>
@@ -640,7 +640,7 @@
     { id: "bunk", name: "Bunk Hut", day: 3, wood: 20, fish: 0, sap: 5, stone: 0, max: 2, blurb: "+1 beaver bed (start 3, cap 5)." },
     { id: "watch", name: "Watch Post", day: 5, wood: 18, fish: 0, sap: 0, stone: 10, max: 1, blurb: "Warns Whiteout a day early. −2 night drain." },
     { id: "workshop", name: "Workshop", day: 6, wood: 25, fish: 0, sap: 8, stone: 12, max: 1, blurb: "All gather jobs work faster." },
-    { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5 $BOBER + 3Sa. Day 25 ritual." }
+    { id: "beacon", name: "Beacon Tower", day: 10, wood: 30, fish: 0, sap: 10, stone: 12, max: 1, blurb: "Once a night: +25 heat for 5 wood + 3Sa. Day 25 ritual." }
   ];
   var SPR_SRC = {
     idle: "assets/sprites/bober-idle.png", hat: "assets/sprites/bober-hat.png",
@@ -1071,7 +1071,7 @@
     state.wood = clamp(state.wood + 8, 0, CAP);
     state.sap = clamp(state.sap + 4, 0, CAP);
     hideFork();
-    banner("Banked +8 $BOBER +4 Sap. Storms 12–18 hit harder.", 2400);
+    banner("Banked +8 wood +4 Sap. Storms 12–18 hit harder.", 2400);
     flashChip("chip-wood", true); flashChip("chip-sap", true);
     syncDock(); hud(); save();
   }
@@ -1313,7 +1313,7 @@
 
   function stokeWood() {
     if (!canNightAct()) return;
-    if (state.wood < 1) { flashChip("chip-wood"); banner("No $BOBER to burn.", 1400); return; }
+    if (state.wood < 1) { flashChip("chip-wood"); banner("No wood to burn.", 1400); return; }
     state.wood -= 1;
     var add = heatPerWood();
     state.heat = clamp(state.heat + add, 0, 100);
@@ -1339,7 +1339,7 @@
     if (state.wood < 5 || state.sap < 3) {
       if (state.wood < 5) flashChip("chip-wood");
       if (state.sap < 3) flashChip("chip-sap");
-      banner("Need 5 $BOBER + 3Sa", 1600);
+      banner("Need 5 wood + 3Sa", 1600);
       return;
     }
     state.wood -= 5; state.sap -= 3;
@@ -1372,7 +1372,7 @@
 
   function costLine(bd) {
     var p = [];
-    if (bd.wood) p.push(bd.wood + " $BOBER");
+    if (bd.wood) p.push(bd.wood + " wood");
     if (bd.fish) p.push(bd.fish + "F");
     if (bd.sap) p.push(bd.sap + "Sa");
     if (bd.stone) p.push(bd.stone + "St");
@@ -1383,7 +1383,7 @@
   }
   function shortage(bd) {
     var bits = [];
-    if (state.wood < bd.wood) bits.push((bd.wood - Math.floor(state.wood)) + " more $BOBER");
+    if (state.wood < bd.wood) bits.push((bd.wood - Math.floor(state.wood)) + " more wood");
     if (state.fish < bd.fish) bits.push((bd.fish - Math.floor(state.fish)) + " more fish");
     if (state.sap < bd.sap) bits.push((bd.sap - Math.floor(state.sap)) + " more sap");
     if (state.stone < bd.stone) bits.push((bd.stone - Math.floor(state.stone)) + " more stone");
@@ -1406,7 +1406,7 @@
     var why = buildBlock(bd);
     if (why) {
       banner(why, 1600);
-      if (why.indexOf("$BOBER") !== -1) flashChip("chip-wood");
+      if (why.indexOf("wood") !== -1) flashChip("chip-wood");
       if (why.indexOf("fish") !== -1) flashChip("chip-fish");
       if (why.indexOf("sap") !== -1) flashChip("chip-sap");
       if (why.indexOf("stone") !== -1) flashChip("chip-stone");
@@ -1426,7 +1426,7 @@
       if (isEndless()) {
         addEndlessPad(true);
         state.wood = clamp(state.wood + 5, 0, CAP);
-        pop(LODGE.x, LODGE.y - 36, "+5 $BOBER", "#F5C400");
+        pop(LODGE.x, LODGE.y - 36, "+5 wood", "#F5C400");
       }
     }
     closeSheet(); hud(); save();
@@ -1532,7 +1532,7 @@
     if (f18Tag) forkChip.textContent = state.fork18 === "expand" ? "EXPAND" : "BRACE";
     else if (forkTag) forkChip.textContent = state.fork === "scout" ? "SCOUT" : "STOCK";
     app.classList.toggle("act3", playing && isActIII());
-    document.getElementById("chip-wood").textContent = "$BOBER " + Math.floor(state.wood);
+    document.getElementById("chip-wood").textContent = "Wood " + Math.floor(state.wood);
     var fishTxt = "F " + Math.floor(state.fish);
     if (state.rations > 0) fishTxt += " · R " + Math.floor(state.rations);
     document.getElementById("chip-fish").textContent = fishTxt;
@@ -1703,7 +1703,7 @@
       while (b.acc >= 1) {
         b.acc -= 1;
         var got = false;
-        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "$BOBER", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
+        if (b.job === "chopper") { if (addRes("wood", 1, "chip-wood", "wood", "#F5C400", b.x, b.y - 28)) { Sfx.gather("wood"); got = true; } }
         else if (b.job === "fisher") { if (addRes("fish", 1, "chip-fish", "fish", "#A8C4E8", b.x, b.y - 28)) Sfx.gather("fish"); }
         else if (b.job === "tapper") { if (addRes("sap", 1, "chip-sap", "sap", "#e8b060", b.x, b.y - 28)) { Sfx.gather("sap"); got = true; } }
         else if (b.job === "miner") { if (addRes("stone", 1, "chip-stone", "stone", "#d4cdc0", b.x, b.y - 28)) Sfx.gather("stone"); }
@@ -2606,15 +2606,15 @@
   var MUSEUM_KEY = "bober-frost-museum-v1";
   var musTab = "crew", museumFrom = "splash", musDetailFrom = null;
   var MUS_JOBS = [
-    { id: "chopper", name: "Chopper", art: "assets/sprites/bober-chop.png", blurb: "Cuts $BOBER at the copse. Woodshed makes them faster." },
+    { id: "chopper", name: "Chopper", art: "assets/sprites/bober-chop.png", blurb: "Cuts wood at the copse. Woodshed makes them faster." },
     { id: "fisher", name: "Fisher", art: "assets/sprites/bober-fish.png", blurb: "Pulls Fish from the hole. Smokehouse turns Fish to rations." },
-    { id: "tender", name: "Tender", art: "assets/sprites/bober-tend.png", blurb: "Stays by the hearth. Cuts night drain and boosts Heat per $BOBER." },
+    { id: "tender", name: "Tender", art: "assets/sprites/bober-tend.png", blurb: "Stays by the hearth. Cuts night drain and boosts Heat per wood." },
     { id: "tapper", name: "Tapper", art: "assets/sprites/bober-chop.png", blurb: "Draws Sap. Boiler turns Sap to syrup for Heat." },
     { id: "miner", name: "Miner", art: "assets/sprites/bober-chop.png", blurb: "Needs Quarry Bench. Brings Stone for crafts." }
   ];
   var MUS_FIRE = [
     { id: "embers", name: "Embers", art: "assets/splash.jpg", blurb: "Day 1. Hold the lodge fire through 25 winter days.", at: 1 },
-    { id: "wo4", name: "Whiteout 4", art: "assets/history/f2.jpg", blurb: "First whiteout. Stoke $BOBER. Heat is Heat.", at: 4 },
+    { id: "wo4", name: "Whiteout 4", art: "assets/history/f2.jpg", blurb: "First whiteout. Stoke wood. Heat is Heat.", at: 4 },
     { id: "wo8", name: "Whiteout 8", art: "assets/history/f2.jpg", blurb: "The map shrinks. Beavers stay.", at: 8 },
     { id: "wo12", name: "Whiteout 12", art: "assets/history/f4.jpg", blurb: "The ice road splits. Stockpile or scout.", at: 12 },
     { id: "wo18", name: "Whiteout 18", art: "assets/history/f4.jpg", blurb: "Brace the lodge or expand the clearing.", at: 18 },

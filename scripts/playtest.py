@@ -38,12 +38,12 @@ def main() -> int:
         "Hold the lodge fire through 25 winter days.",
         "Assign beavers, build the lodge, survive whiteouts — a winter story, not a grind wallet.",
         "Fan game by a holder.",
-        "$BOBER 0",
-        '"$BOBER " + Math.floor(state.wood)',
+        "Wood 0",
+        '"Wood " + Math.floor(state.wood)',
         "F 0",
         "SA 0",
         "ST 0",
-        "5 $BOBER + 3Sa",
+        "5 wood + 3Sa",
         "remain * 0.72",
         "Math.max(220, remain - minStage)",
         "HOLD THE FIRE",
@@ -154,8 +154,10 @@ def main() -> int:
         errors.append("banned string present: wallet")
     if "Survive 25 winter days. Assign Chopper" in text:
         errors.append("splash still has doubled how-text")
+    if "$BOBER" in text:
+        errors.append("spendable wood still labeled $BOBER")
     if 'textContent = "W "' in text or ">W 0<" in text:
-        errors.append("wood HUD still shows W instead of $BOBER")
+        errors.append("wood HUD still uses W shorthand")
     if '"F " + Math.floor(state.fish)' not in text:
         errors.append("fish HUD label changed")
     if '"SA " + Math.floor(state.sap)' not in text:

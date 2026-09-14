@@ -2,7 +2,7 @@
 
 Fan game by a holder. Not affiliated with any token, studio, or official Bober project.
 
-Chapter 3 of the beaver river story: a winter colony. **Hold the lodge fire through 25 winter days.** Spendable wood shows as **$BOBER**. Fish, sap, and stone stay as named materials.
+Chapter 3 of the beaver river story: a winter colony. **Hold the lodge fire through 25 winter days.** Spendable currency is **wood**. Fish, sap, and stone stay as named materials.
 
 No install. No wallet. No login. No ads. No gacha. No PvP.
 
@@ -17,22 +17,22 @@ Survive **Days 1–25**. Night 25 is the boss Whiteout. Win is **THAW HOLDS** at
 1. Tap **HOLD THE FIRE**.
 2. **Dawn** waits until every living beaver has a job, then **START DAY** (or tap the snow). Jobs: **Chopper**, **Fisher**, **Tender**, **Tapper**, **Miner**. ×2 / ×4 if you want it faster.
 3. **Day** (~30s): they walk and gather. Tap a **pad** (there are eight) to build.
-4. **Dusk / Night**: stoke **$BOBER** (or syrup). Whiteouts on nights **4, 8, 12, 18, 22**. Night **25** is the boss.
-5. **Day 12 dawn** you must pick **STOCKPILE** (bank $BOBER/sap, harder storms 12–18) or **SCOUT THE ICE** (temp beaver 12–16, lighter storms 12–18).
+4. **Dusk / Night**: stoke **wood** (or syrup). Whiteouts on nights **4, 8, 12, 18, 22**. Night **25** is the boss.
+5. **Day 12 dawn** you must pick **STOCKPILE** (bank wood/sap, harder storms 12–18) or **SCOUT THE ICE** (temp beaver 12–16, lighter storms 12–18).
 6. Heat 0 at night end, or the whole crew Down, is a freeze lose.
 
 ### Buildings (day-gated, max one each except Bunk Hut ×2)
 
 | Building | Day | Cost | Effect |
 |---|---|---|---|
-| Woodshed | 1 | 10 $BOBER | Choppers faster |
-| Smokehouse | 1 | 8 $BOBER 4F | Fish → rations at night |
-| Sap Boiler | 2 | 12 $BOBER 6Sa | Sap → syrup (1 syrup → +14 heat) |
-| Quarry Bench | 3 | 15 $BOBER 8St | Unlocks Miner |
-| Bunk Hut | 3 | 20 $BOBER 5Sa | +1 beaver (start 3, cap 5) |
-| Watch Post | 5 | 18 $BOBER 10St | “Whiteout tomorrow”; −2 night drain |
-| Workshop | 6 | 25 $BOBER 12St 8Sa | Faster gathering |
-| Beacon Tower | 10 | 30 $BOBER 12St 10Sa | Once/night +25 heat (5 $BOBER + 3Sa). Day 25 ritual. |
+| Woodshed | 1 | 10 wood | Choppers faster |
+| Smokehouse | 1 | 8 wood 4F | Fish → rations at night |
+| Sap Boiler | 2 | 12 wood 6Sa | Sap → syrup (1 syrup → +14 heat) |
+| Quarry Bench | 3 | 15 wood 8St | Unlocks Miner |
+| Bunk Hut | 3 | 20 wood 5Sa | +1 beaver (start 3, cap 5) |
+| Watch Post | 5 | 18 wood 10St | “Whiteout tomorrow”; −2 night drain |
+| Workshop | 6 | 25 wood 12St 8Sa | Faster gathering |
+| Beacon Tower | 10 | 30 wood 12St 10Sa | Once/night +25 heat (5 wood + 3Sa). Day 25 ritual. |
 
 Miner needs a Quarry. Tapper can gather raw sap slowly before the Boiler.
 
