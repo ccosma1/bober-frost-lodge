@@ -38,8 +38,11 @@ def main() -> int:
         "Hold the lodge fire through 25 winter days.",
         "Assign beavers, build the lodge, survive whiteouts — a winter story, not a grind wallet.",
         "Fan game by a holder.",
-        "Wood 0",
-        '"Wood " + Math.floor(state.wood)',
+        "WOOD 0",
+        '"WOOD " + Math.floor(state.wood)',
+        "CAMP_PROPS",
+        "topSlab",
+        "drawPineTop",
         "F 0",
         "SA 0",
         "ST 0",
@@ -105,7 +108,7 @@ def main() -> int:
         "MUSEUM",
         "bober-frost-museum-v1",
         "var W = 420, H = 480",
-        "mortarFace",
+        "roundRect(c, -20, -18, 40, 34, 4)",
         "mus-tab-jobs",
         "Heat 80%",
         "afterFreezeUnlock",
@@ -156,6 +159,8 @@ def main() -> int:
         errors.append("splash still has doubled how-text")
     if "$BOBER" in text:
         errors.append("spendable wood still labeled $BOBER")
+    if "c.ellipse(0, 6, 32, 20" in text or "c.ellipse(0, 10, 34, 22" in text:
+        errors.append("circular sticker pads still live")
     if 'textContent = "W "' in text or ">W 0<" in text:
         errors.append("wood HUD still uses W shorthand")
     if '"F " + Math.floor(state.fish)' not in text:
