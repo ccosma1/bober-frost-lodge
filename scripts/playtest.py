@@ -100,7 +100,14 @@ def main() -> int:
         "The lodge warmed. Folks started calling it a green home.",
         "Something small. Something heavy. Not wood.",
         "A grey wanderer leaned on a stick. Quiet place, he said.",
-        "Ash lands wait. Blade first. The long road after.",
+        "Nightfall waits. Blade first. The long road after.",
+        "assets/history/graph.jpg",
+        "MUSEUM",
+        "bober-frost-museum-v1",
+        "var W = 420, H = 480",
+        "mortarFace",
+        "mus-tab-jobs",
+        "Heat 80%",
         "afterFreezeUnlock",
         "maybeEndlessCameo",
         "CAMEO_BEATS",
@@ -223,7 +230,7 @@ def main() -> int:
     if start_st - quarry + mined < 12:
         errors.append("beacon stone unreachable on a normal miner")
 
-    for name in ("f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg", "a0.jpg", "a1.jpg", "a2.jpg", "a3.jpg"):
+    for name in ("graph.jpg", "f0.jpg", "f1.jpg", "f2.jpg", "f3.jpg", "f4.jpg", "f5.jpg", "a0.jpg", "a1.jpg", "a2.jpg", "a3.jpg"):
         if not (ROOT / "assets" / "history" / name).exists():
             errors.append(f"missing history still {name}")
     for name in ("e50.jpg", "e75-check.jpg", "e75-drill.jpg", "e100.jpg"):

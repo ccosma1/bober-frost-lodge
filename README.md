@@ -42,7 +42,9 @@ If a **Bober Dam Defense** save has any stars, a new run gets **+10 Sap** (“Da
 
 Mute, Pause, Restart sit in the top-right. Restart / **NEW WINTER** wipes `bober-frost-lodge-v1` (mute and History-seen stay). Old `v0` slice saves are cleared.
 
-**HISTORY** on splash, win, and lose plays **The Freeze** — a silent 6-panel slideshow (no song). Tap to skip after a short arm.
+**HISTORY** on splash, win, and lose plays **The Freeze** — a 25-day fire graph, then stills that bridge toward Nightfall (no song). Tap to skip after a short arm. **HOLD THE FIRE** is never blocked.
+
+**MUSEUM** (splash, pause, or end) is a card gallery: Bober, jobs, buildings, fire/whiteout milestones. Tap a card for detail. Buildings and storms unlock as you play.
 
 After a campaign win, **ENDLESS WINTER** keeps the lodge running (pads, storms every 4, mini-boss every 10, lodge tiers). Hitting **E-Day 50 / 75 / 100** plays skippable silent Long Night preview stills (John Snow, then Frost King prep, then a victory still). E-Day 100 unlocks **After the Freeze**, a 4-panel History chapter. Lodge play continues.
 

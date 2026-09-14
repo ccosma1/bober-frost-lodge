@@ -320,6 +320,97 @@
     #cameo .cameo-skip {
       margin: 0; font-size: 11px; font-weight: 700; color: var(--cream); opacity: 0.9;
     }
+    .ghost-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+    .ghost-row .play { margin-top: 0; }
+    #museum {
+      z-index: 22; justify-content: flex-start; overflow: hidden;
+      overscroll-behavior: contain; touch-action: pan-y;
+      padding: 10px 10px max(18px, env(safe-area-inset-bottom));
+      background: #1a1028f4; align-items: stretch;
+    }
+    .museum-panel {
+      width: 100%; max-width: 390px; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: stretch;
+      flex: 1 1 auto; min-height: 0; overflow: auto;
+      -webkit-overflow-scrolling: touch; touch-action: pan-y;
+    }
+    .museum-panel h2 { margin: 4px 0 4px; color: var(--yellow); text-shadow: 0 2px 0 #1A1028; }
+    .museum-panel > .how { margin: 0 0 8px; max-width: none; }
+    .museum-tabs {
+      display: flex; gap: 6px; justify-content: center; margin: 0 0 10px; flex-wrap: wrap;
+    }
+    .museum-tabs button {
+      appearance: none; border: 2px solid var(--cream); background: transparent;
+      color: var(--cream); font-family: inherit; font-weight: 800; font-size: 12px;
+      padding: 6px 10px; border-radius: 10px; cursor: pointer;
+    }
+    .museum-tabs button.on {
+      background: var(--yellow); color: var(--ink); border-color: var(--yellow);
+    }
+    #museum-grid {
+      display: flex; flex-direction: column; gap: 10px; width: 100%;
+      padding-bottom: 8px;
+    }
+    .mus-card {
+      appearance: none; -webkit-appearance: none; font-family: inherit;
+      display: grid; grid-template-columns: 92px minmax(0, 1fr);
+      gap: 10px; align-items: center; text-align: left;
+      background: #2a1c4e; border: 3px solid var(--ice); border-radius: 14px;
+      padding: 10px; width: 100%; min-height: 104px; cursor: pointer; color: inherit;
+    }
+    .mus-card:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+    .mus-card.mile { grid-template-columns: 1fr; }
+    .mus-art {
+      width: 92px; height: 92px; border-radius: 12px; overflow: hidden;
+      background: #1A1028; display: flex; align-items: center; justify-content: center;
+      flex: 0 0 auto;
+    }
+    .mus-card.mile .mus-art { width: 100%; height: 120px; }
+    .mus-art img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .mus-card.mile .mus-art img { width: 100%; height: 100%; object-fit: cover; }
+    .mus-body { min-width: 0; }
+    .mus-card h3 {
+      margin: 0 0 4px; font-size: 16px; line-height: 1.15; color: var(--yellow);
+    }
+    .mus-card p {
+      margin: 0; font-size: 13px; font-weight: 700; line-height: 1.35;
+      color: var(--cream); overflow-wrap: anywhere;
+    }
+    .mus-card.locked { border-color: #5C3A1A; background: #241836; }
+    .mus-card.locked h3 { color: var(--ice); }
+    .mus-card.locked .mus-art img { filter: brightness(0); opacity: 0.45; }
+    #museum #btn-museum-back { align-self: center; margin-top: 12px; }
+    #mus-detail {
+      position: absolute; inset: 0; z-index: 4;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; overflow: auto;
+      padding: 12px 12px max(18px, env(safe-area-inset-bottom));
+      background: #1a1028f6;
+    }
+    #mus-detail.hidden { display: none !important; }
+    .mus-detail-wrap { position: relative; width: 100%; max-width: 390px; margin: 0 auto; padding-top: 48px; }
+    .mus-x {
+      appearance: none; position: absolute; top: 0; right: 0; z-index: 2;
+      width: 44px; height: 44px; border: 2px solid var(--yellow); background: #1A1028;
+      color: var(--yellow); border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer;
+    }
+    .mus-detail-card {
+      width: 100%; background: #2a1c4e; border: 3px solid var(--ice);
+      border-radius: 16px; padding: 14px 12px 16px; text-align: center;
+    }
+    #mus-detail.locked .mus-detail-card { border-color: #5C3A1A; background: #241836; }
+    .mus-detail-art {
+      width: 100%; height: 200px; margin: 0 0 12px; border-radius: 12px;
+      overflow: hidden; background: #1A1028;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mus-detail-art img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    #mus-detail.mile .mus-detail-art { height: 220px; }
+    #mus-detail.mile .mus-detail-art img { width: 100%; height: 100%; object-fit: cover; }
+    #mus-detail.locked .mus-detail-art img { filter: brightness(0); opacity: 0.45; }
+    #mus-detail-name { margin: 0 0 6px; font-size: 22px; color: var(--yellow); }
+    #mus-detail-body { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--cream); }
+    #mus-detail-meta { margin: 0 0 12px; font-size: 12px; font-weight: 800; color: var(--ice); }
   </style>
 </head>
 <body>
@@ -352,7 +443,7 @@
     <div id="clockbar"><i id="clockfill"></i></div>
     </div>
     <div id="stage">
-      <canvas id="view" width="360" height="640"></canvas>
+      <canvas id="view" width="420" height="480"></canvas>
       <div id="banner" class="hidden"></div>
       <div id="splash" class="overlay">
         <img class="hero" src="assets/splash.jpg" alt="" />
@@ -364,7 +455,10 @@
         </div>
         <p id="dam-tip" class="hidden">Dam reserves: +10 Sap this run.</p>
         <button class="play" id="btn-hold" type="button">HOLD THE FIRE</button>
-        <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
+        <div class="ghost-row">
+          <button class="play ghost" id="btn-splash-history" type="button">HISTORY</button>
+          <button class="play ghost" id="btn-splash-museum" type="button">MUSEUM</button>
+        </div>
         <button class="play ghost" id="btn-splash-endless" type="button" hidden>ENDLESS WINTER</button>
       </div>
       <div id="paused" class="overlay hidden">
@@ -373,6 +467,7 @@
           <p class="end-msg">The river can wait.</p>
           <div class="end-actions">
             <button class="play" id="btn-resume" type="button">RESUME</button>
+            <button class="play ghost" id="btn-pause-museum" type="button">MUSEUM</button>
             <button class="play ghost" id="btn-pause-restart" type="button">RESTART</button>
           </div>
         </div>
@@ -383,6 +478,7 @@
         <div class="end-actions">
           <button class="play" id="btn-new-winter" type="button">NEW WINTER</button>
           <button class="play ghost" id="btn-end-history" type="button">HISTORY</button>
+          <button class="play ghost" id="btn-end-museum" type="button">MUSEUM</button>
           <button class="play ghost" id="btn-keep-warming" type="button">ENDLESS WINTER</button>
           <button class="play ghost" id="btn-end-restart" type="button">RETRY</button>
         </div>
@@ -459,6 +555,32 @@
       </div>
     </div>
     <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
+    <div id="museum" class="overlay hidden" role="dialog" aria-label="Museum">
+      <div class="museum-panel">
+        <h2>MUSEUM</h2>
+        <p class="how">Jobs, lodge, fire — tap a card. Fan game by a holder.</p>
+        <div class="museum-tabs">
+          <button type="button" id="mus-tab-crew" class="on">Bober</button>
+          <button type="button" id="mus-tab-jobs">Jobs</button>
+          <button type="button" id="mus-tab-build">Build</button>
+          <button type="button" id="mus-tab-fire">Fire</button>
+        </div>
+        <div id="museum-grid"></div>
+        <button class="play ghost" id="btn-museum-back" type="button">Back</button>
+      </div>
+      <div id="mus-detail" class="hidden" role="dialog" aria-label="Card detail">
+        <div class="mus-detail-wrap">
+          <button type="button" class="mus-x" id="mus-detail-x" aria-label="Close">X</button>
+          <div class="mus-detail-card">
+            <div class="mus-detail-art"><img id="mus-detail-img" alt="" /></div>
+            <h3 id="mus-detail-name"></h3>
+            <p id="mus-detail-body"></p>
+            <p id="mus-detail-meta"></p>
+            <button class="play ghost" id="mus-detail-back" type="button">Back</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="cameo" class="overlay hidden" role="dialog" aria-label="Cameo">
       <div class="cameo-stage">
         <img id="cameo-img" class="hero" alt="" />
@@ -480,24 +602,24 @@
   var HIST_SEEN_KEY = "bober-history-v1";
   var VERSE_KEY = "boberverse-v1";
   var DAM_KEY = "bober-dam-campaign-v1";
-  var W = 360, H = 640, DAYS = 25;
+  var W = 420, H = 480, DAYS = 25;
   var PHASE_DUR = { dawn: 5, day: 30, dusk: 4, night: 8 };
   var STORM_DAYS = [4, 8, 12, 18, 22, 25];
   var ACTS = { 1: "Act I · Embers", 9: "Act II · Deepening", 17: "Act III · White Heart" };
   var CHOP_PER_DAY = 7, FISH_PER_DAY = 5, TAP_SLOW = 3, TAP_FAST = 5, MINE_PER_DAY = 4;
-  var WOODSHED_MUL = 1.25, WORKSHOP_MUL = 1.2, WALK = 130, SPRITE_H = 52, CAP = 99, PAD_R = 56;
-  var HORIZON = 88, LODGE_SCALE = 1.22;
-  var LODGE = { x: 180, y: 318 };
+  var WOODSHED_MUL = 1.25, WORKSHOP_MUL = 1.2, WALK = 145, SPRITE_H = 46, CAP = 99, PAD_R = 56;
+  var HORIZON = 52, LODGE_SCALE = 1.06;
+  var LODGE = { x: 210, y: 236 };
   var PADS = [
-    { x: 180, y: 202 }, { x: 272, y: 236 }, { x: 310, y: 318 }, { x: 272, y: 400 },
-    { x: 180, y: 434 }, { x: 88, y: 400 }, { x: 50, y: 318 }, { x: 88, y: 236 }
+    { x: 210, y: 88 }, { x: 315, y: 131 }, { x: 358, y: 236 }, { x: 315, y: 341 },
+    { x: 210, y: 384 }, { x: 105, y: 341 }, { x: 62, y: 236 }, { x: 105, y: 131 }
   ];
-  var PAD_EXPAND = { x: 180, y: 510 };
-  var PADS_MORE = [{ x: 115, y: 512 }, { x: 245, y: 512 }, { x: 340, y: 390 }];
-  var SITE_CHOP = { x: 52, y: 530 };
-  var SITE_FISH = { x: 308, y: 534 };
-  var SITE_SAP = { x: 36, y: 478 };
-  var SITE_MINE = { x: 324, y: 478 };
+  var PAD_EXPAND = { x: 210, y: 456 };
+  var PADS_MORE = [{ x: 128, y: 458 }, { x: 292, y: 458 }, { x: 390, y: 318 }];
+  var SITE_CHOP = { x: 48, y: 455 };
+  var SITE_FISH = { x: 372, y: 455 };
+  var SITE_SAP = { x: 40, y: 360 };
+  var SITE_MINE = { x: 380, y: 360 };
   var JOBS = ["chopper", "fisher", "tender", "tapper", "miner"];
   var JOB_LBL = { chopper: "CHOP", fisher: "FISH", tender: "TEND", tapper: "TAP", miner: "MINE" };
   var TRAITS = ["sturdy", "hungry", "lucky"];
@@ -595,7 +717,7 @@
 
   function newBeavers() {
     return CREW_SEED.map(function (s, i) {
-      return { id: s.id, name: s.name, job: s.job, trait: null, status: "ok", hungry: 0, x: LODGE.x + (i - 1) * 38, y: LODGE.y + 58, facing: 1, acc: 0, moving: false };
+      return { id: s.id, name: s.name, job: s.job, trait: null, status: "ok", hungry: 0, x: LODGE.x + (i - 1) * 40, y: LODGE.y + 50, facing: 1, acc: 0, moving: false };
     });
   }
   function newState() {
@@ -690,7 +812,7 @@
           return {
             id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
             trait: s.trait || null, status: s.status || "ok", hungry: s.hungry || 0,
-            x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 44,
+            x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 50,
             facing: s.facing || 1, acc: s.acc || 0, moving: false
           };
         });
@@ -701,8 +823,8 @@
   function wipeSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
   function clamp(n, a, b) { n = +n || 0; return n < a ? a : n > b ? b : n; }
-  function depthT(y) { return clamp((y - HORIZON) / (530 - HORIZON), 0, 1); }
-  function depthScale(y) { return 0.92 + depthT(y) * 0.14; }
+  function depthT(y) { return clamp((y - HORIZON) / (430 - HORIZON), 0, 1); }
+  function depthScale(y) { return 0.97 + depthT(y) * 0.08; }
   function isEndless() { return !!(state && state.endless); }
   function padCount() {
     if (isEndless()) return clamp(state.padsN || (state.fork18 === "expand" ? 9 : 8), 8, 12);
@@ -784,17 +906,17 @@
     var i = 0;
     for (var n = 0; n < state.beavers.length; n++) if (state.beavers[n].id === b.id) i = n;
     var nB = state.beavers.length;
-    return (i - (nB - 1) / 2) * 32;
+    return (i - (nB - 1) / 2) * 36;
   }
   function beaverTarget(b) {
     if (state.phase === "dawn" || state.phase === "night" || state.phase === "dusk" || b.status === "down")
-      return { x: LODGE.x + offsetFor(b), y: LODGE.y + 58 };
-    if (b.job === "tender") return { x: LODGE.x + 36, y: LODGE.y + 42 };
+      return { x: LODGE.x + offsetFor(b), y: LODGE.y + 50 };
+    if (b.job === "tender") return { x: LODGE.x + 40, y: LODGE.y + 38 };
     if (b.job === "chopper") return { x: SITE_CHOP.x + 16, y: SITE_CHOP.y + 4 };
     if (b.job === "fisher") return { x: SITE_FISH.x - 18, y: SITE_FISH.y + 2 };
     if (b.job === "tapper") return { x: SITE_SAP.x + 14, y: SITE_SAP.y };
     if (b.job === "miner") return { x: SITE_MINE.x - 14, y: SITE_MINE.y };
-    return { x: LODGE.x, y: LODGE.y + 58 };
+    return { x: LODGE.x, y: LODGE.y + 50 };
   }
   function atSite(b, t) { return Math.hypot(b.x - t.x, b.y - t.y) < 18; }
 
@@ -861,7 +983,7 @@
     if (!spec) spec = { id: "reed", name: "REED" };
     var trait = TRAITS[Math.floor(Math.random() * TRAITS.length)];
     var job = hasBuilding("quarry") ? "miner" : (hasBuilding("sapboiler") ? "tapper" : "chopper");
-    var b = { id: spec.id, name: spec.name, job: job, trait: trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 58, facing: 1, acc: 0, moving: false };
+    var b = { id: spec.id, name: spec.name, job: job, trait: trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 50, facing: 1, acc: 0, moving: false };
     state.beavers.push(b);
     return b;
   }
@@ -957,7 +1079,7 @@
     state.fork = "scout";
     var scout = {
       id: "scout", name: "SCOUT", job: job, trait: null, status: "ok", hungry: 0,
-      x: LODGE.x + 48, y: LODGE.y + 58, facing: 1, acc: 0, moving: false
+      x: LODGE.x + 48, y: LODGE.y + 50, facing: 1, acc: 0, moving: false
     };
     state.beavers.push(scout);
     hideFork();
@@ -1028,7 +1150,8 @@
     if (isEndless()) {
       if (isBossDay() && !(state.beaconUsedNight || state.heat >= 40)) { lose("boss"); return; }
       Sfx.cheer();
-      if (isStormDay()) banner("The lodge held.", 1800);
+      if (isStormDay()) { banner("The lodge held.", 1800); markMuseumStorm(state.day); }
+      saveMuseum({ maxDay: state.day });
       state.day += 1;
       state.beavers.forEach(function (b) { b.acc = 0; });
       enterPhase("dawn");
@@ -1043,7 +1166,8 @@
       lose("boss"); return;
     }
     Sfx.cheer();
-    if (isStormDay()) banner("The lodge held.", 1800);
+    if (isStormDay()) { banner("The lodge held.", 1800); markMuseumStorm(state.day); }
+    saveMuseum({ maxDay: state.day });
     state.day += 1;
     state.beavers.forEach(function (b) { b.acc = 0; });
     enterPhase("dawn");
@@ -1102,7 +1226,7 @@
         return {
           id: s.id || ("b" + i), name: s.name || ("CREW" + i), job: s.job || "chopper",
           trait: s.trait || null, status: s.status === "down" ? "injured" : (s.status || "ok"),
-          hungry: 0, x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 58,
+          hungry: 0, x: typeof s.x === "number" ? s.x : LODGE.x, y: typeof s.y === "number" ? s.y : LODGE.y + 50,
           facing: s.facing || 1, acc: 0, moving: false
         };
       });
@@ -1138,7 +1262,7 @@
     var padsN = padCount();
     var fork = state.fork, fork18 = state.fork18;
     var crew = state.beavers.map(function (b) {
-      return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 58, facing: 1, acc: 0 };
+      return { id: b.id, name: b.name, job: b.job, trait: b.trait, status: "ok", hungry: 0, x: LODGE.x, y: LODGE.y + 50, facing: 1, acc: 0 };
     });
     applyEndlessData({
       day: 1, buildings: blds, beavers: crew, padsN: padsN, fork: fork, fork18: fork18,
@@ -1165,6 +1289,7 @@
     state.ended = "win";
     Sfx.stopWind(); Sfx.win();
     markCleared();
+    saveMuseum({ win: true, storms: { "25": true }, maxDay: 25 });
     snapshotEndless();
     save();
     document.getElementById("end-title").textContent = "THAW HOLDS";
@@ -1290,6 +1415,7 @@
     var pad = selectedPad;
     state.wood -= bd.wood; state.fish -= bd.fish; state.sap -= bd.sap; state.stone -= bd.stone;
     state.buildings[pad] = kind;
+    markMuseumBuild(kind);
     padPop[pad] = 1;
     Sfx.place();
     pop(allPads()[pad].x, allPads()[pad].y - 28, bd.name + "!", "#F4E6C3");
@@ -1614,7 +1740,7 @@
     streaks = [];
     for (var j = 0; j < 40; j++) streaks.push({ x: Math.random() * W, y: Math.random() * H, len: 16 + Math.random() * 34, v: 90 + Math.random() * 80 });
     sparkles = [];
-    for (var k = 0; k < 42; k++) sparkles.push({ x: 16 + Math.random() * 328, y: 168 + Math.random() * 390, p: Math.random() * Math.PI * 2, s: 0.7 + Math.random() * 1.5 });
+    for (var k = 0; k < 48; k++) sparkles.push({ x: 16 + Math.random() * (W - 32), y: HORIZON + 20 + Math.random() * (H - HORIZON - 40), p: Math.random() * Math.PI * 2, s: 0.7 + Math.random() * 1.5 });
   }
   function spawnEmber(hot) {
     embers.push({ x: LODGE.x + 10 + (Math.random() - 0.5) * 22, y: LODGE.y + 18, vx: (Math.random() - 0.5) * (hot ? 28 : 12), vy: -20 - Math.random() * (hot ? 50 : 28), life: 0.5 + Math.random() * 0.5 });
@@ -1672,7 +1798,7 @@
   function para(layer) { return Math.sin(clock * (0.09 + layer * 0.06)) * (6 + layer * 7); }
   function drawMoon(c) {
     if (state.phase !== "night" && state.phase !== "dusk") return;
-    var mx = 302, my = 58;
+    var mx = W - 58, my = 28;
     var g = c.createRadialGradient(mx - 3, my - 2, 3, mx, my, 52);
     g.addColorStop(0, "rgba(244,230,195,0.95)");
     g.addColorStop(0.32, "rgba(168,196,232,0.45)");
@@ -1713,8 +1839,8 @@
     c.beginPath();
     c.moveTo(0, y0 + 10);
     c.quadraticCurveTo(110, y0 - 4, 180, y0 + 6);
-    c.quadraticCurveTo(270, y0 + 16, 360, y0 + 4);
-    c.lineTo(360, y1);
+    c.quadraticCurveTo(270, y0 + 16, W, y0 + 4);
+    c.lineTo(W, y1);
     c.quadraticCurveTo(200, y1 + 6, 0, y1 - 2);
     c.closePath();
     c.fill();
@@ -1755,21 +1881,21 @@
   function drawFarPines(c) {
     var ox = para(0);
     c.save(); c.translate(ox * 0.4, 0);
-    drawPine(c, 24, HORIZON + 10, 26, 8, true);
-    drawPine(c, 52, HORIZON + 14, 20, 7, true);
-    drawPine(c, 90, HORIZON + 8, 30, 9, true);
-    drawPine(c, 270, HORIZON + 9, 28, 8, true);
-    drawPine(c, 308, HORIZON + 6, 34, 10, true);
-    drawPine(c, 340, HORIZON + 12, 22, 7, true);
+    drawPine(c, 28, HORIZON + 10, 22, 7, true);
+    drawPine(c, 62, HORIZON + 14, 18, 6, true);
+    drawPine(c, 108, HORIZON + 8, 26, 8, true);
+    drawPine(c, 312, HORIZON + 9, 24, 7, true);
+    drawPine(c, 358, HORIZON + 6, 30, 9, true);
+    drawPine(c, 398, HORIZON + 12, 20, 6, true);
     c.restore();
   }
   function drawMidTrees(c) {
     var ox = para(1);
     c.save(); c.translate(ox * 0.7, 0);
-    drawPine(c, 18, 210, 54, 14, false);
-    drawPine(c, 42, 470, 48, 13, false);
-    drawPine(c, 338, 214, 58, 15, false);
-    drawPine(c, 348, 464, 46, 12, false);
+    drawPine(c, 18, 168, 42, 12, false);
+    drawPine(c, 28, 430, 38, 11, false);
+    drawPine(c, 398, 170, 44, 13, false);
+    drawPine(c, 404, 428, 36, 11, false);
     c.restore();
   }
   function drawNearBanks(c) {}
@@ -1783,24 +1909,24 @@
     c.fillStyle = ng;
     c.fillRect(0, HORIZON + 8, W, H - HORIZON - 8);
     c.fillStyle = "#e4ecf6";
-    c.beginPath(); c.ellipse(18, 612, 88, 26, 0.08, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.ellipse(342, 616, 92, 28, -0.1, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.ellipse(40, 250, 48, 14, 0.2, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.ellipse(328, 248, 52, 14, -0.18, 0, Math.PI * 2); c.fill();
-    var ring = lodgeLevel() >= 4 ? 182 : 158;
+    c.beginPath(); c.ellipse(22, H - 18, 90, 22, 0.08, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(W - 22, H - 16, 94, 24, -0.1, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(36, 190, 44, 12, 0.2, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(W - 36, 188, 48, 12, -0.18, 0, Math.PI * 2); c.fill();
+    var ring = lodgeLevel() >= 4 ? 198 : 176;
     var heat = state.heat / 100;
     c.fillStyle = "#eadcc4";
-    c.beginPath(); c.ellipse(180, 330, ring + 20, ring + 10, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 10, ring + 18, ring * 0.78, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = heat > 0.2 ? "#F4E6C3" : "#e8e4d8";
-    c.beginPath(); c.ellipse(180, 324, ring, ring - 10, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 6, ring, ring * 0.72, 0, 0, Math.PI * 2); c.fill();
     if (heat > 0.05) {
       c.fillStyle = "rgba(245,196,0," + (0.06 + heat * 0.1) + ")";
-      c.beginPath(); c.ellipse(180, 328, 54, 28, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 8, 58, 30, 0, 0, Math.PI * 2); c.fill();
     }
     c.strokeStyle = "rgba(26,16,40,0.14)"; c.lineWidth = 2;
-    c.beginPath(); c.ellipse(180, 324, ring, ring - 10, 0, 0, Math.PI * 2); c.stroke();
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 6, ring, ring * 0.72, 0, 0, Math.PI * 2); c.stroke();
     c.strokeStyle = "rgba(168,196,232,0.35)"; c.lineWidth = 1.4;
-    c.beginPath(); c.ellipse(180, 324, ring - 10, ring - 18, 0, 0, Math.PI * 2); c.stroke();
+    c.beginPath(); c.ellipse(LODGE.x, LODGE.y + 6, ring - 12, ring * 0.64, 0, 0, Math.PI * 2); c.stroke();
     sparkles.forEach(function (s) {
       var a = 0.12 + (Math.sin(clock * 3.2 + s.p) * 0.5 + 0.5) * 0.55;
       c.globalAlpha = a;
@@ -1863,97 +1989,89 @@
   }
   function sideFace(c, x, y, h) {
     c.beginPath();
-    c.moveTo(x, y); c.lineTo(x - 11, y - 9); c.lineTo(x - 11, y - 9 + h); c.lineTo(x, y + h);
-    c.closePath(); inkFill(c, "#5C3A1A");
+    c.moveTo(x, y); c.lineTo(x - 10, y - 7); c.lineTo(x - 10, y - 7 + h); c.lineTo(x, y + h);
+    c.closePath(); inkFill(c, "#6a5a48");
+  }
+  function mortarFace(c, x, y, w, h, col) {
+    c.beginPath(); roundRect(c, x, y, w, h, 3); inkFill(c, col || "#c4b08a");
+    c.strokeStyle = "rgba(26,16,40,0.28)"; c.lineWidth = 1.05;
+    var r, k;
+    for (r = 6; r < h - 3; r += 7) { c.beginPath(); c.moveTo(x + 2, y + r); c.lineTo(x + w - 2, y + r); c.stroke(); }
+    for (k = 10; k < w - 4; k += 12) { c.beginPath(); c.moveTo(x + k, y + 2); c.lineTo(x + k, y + h - 2); c.stroke(); }
+  }
+  function snowRoof(c, x, y, w, peak) {
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + w / 2, y - peak); c.lineTo(x + w, y); c.closePath(); inkFill(c, "#3A2A6A");
+    c.beginPath(); c.moveTo(x + 6, y - 1); c.lineTo(x + w / 2, y - peak + 3); c.lineTo(x + w - 6, y - 1); c.closePath(); inkFill(c, "#F4E6C3");
   }
   function drawBuilding(c, kind, ghost) {
     var lit = !ghost && kind === "beacon" && state.beaconUsedNight && (state.phase === "night" || state.phase === "dusk");
+    ovalShadow(c, 3, 16, 36, 11, 0.38);
     if (kind === "woodshed") {
-      sideFace(c, -32, -8, 28);
-      c.beginPath(); roundRect(c, -32, 6, 64, 14, 4); inkFill(c, "#3a2410");
-      for (var k = 0; k < 5; k++) {
-        var yy = -10 + k * 6.2;
-        c.beginPath(); roundRect(c, -30, yy, 60, 6, 3); inkFill(c, k % 2 ? "#8B5A2B" : "#6B4423");
-        c.fillStyle = "#C4894A";
-        c.beginPath(); c.arc(-30, yy + 3, 3.1, 0, Math.PI * 2); c.fill();
-        c.beginPath(); c.arc(30, yy + 3, 3.1, 0, Math.PI * 2); c.fill();
+      sideFace(c, -30, -6, 26);
+      mortarFace(c, -30, -6, 60, 26, "#c4b08a");
+      for (var k = 0; k < 4; k++) {
+        var yy = -4 + k * 6;
+        c.beginPath(); roundRect(c, -26, yy, 52, 5, 2); inkFill(c, k % 2 ? "#8B5A2B" : "#6B4423");
       }
-      c.beginPath(); c.moveTo(-36, -8); c.lineTo(0, -24); c.lineTo(36, -8); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-26, -10); c.lineTo(0, -22); c.lineTo(26, -10); c.closePath(); inkFill(c, "#F4E6C3");
+      snowRoof(c, -34, -6, 68, 18);
     } else if (kind === "smokehouse") {
-      sideFace(c, -24, -6, 26);
-      c.beginPath(); roundRect(c, -24, -6, 42, 26, 6); inkFill(c, "#8B5A2B");
-      c.beginPath(); roundRect(c, -8, 2, 14, 18, 3); inkFill(c, "#5C3A1A");
-      c.beginPath(); c.moveTo(-28, -4); c.lineTo(-4, -26); c.lineTo(22, -4); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-18, -8); c.lineTo(-4, -24); c.lineTo(12, -8); c.closePath(); inkFill(c, "#F4E6C3");
-      c.fillStyle = "#E86A2A"; c.fillRect(-18, 4, 7, 10); c.fillRect(6, 4, 7, 10);
-      c.beginPath(); roundRect(c, 16, -28, 10, 36, 3); inkFill(c, "#5C3A1A");
+      sideFace(c, -22, -8, 26);
+      mortarFace(c, -22, -8, 44, 26, "#c4b08a");
+      snowRoof(c, -26, -8, 52, 16);
+      c.beginPath(); roundRect(c, -8, 2, 14, 16, 3); inkFill(c, "#5C3A1A");
+      c.fillStyle = "#E86A2A"; c.fillRect(-16, 4, 6, 8); c.fillRect(8, 4, 6, 8);
+      mortarFace(c, 16, -28, 10, 28, "#b8a888");
       c.beginPath(); roundRect(c, 13, -34, 16, 8, 3); inkFill(c, "#8B5A2B");
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(21, -34, 8, 3, 0, Math.PI, Math.PI * 2); c.fill();
       if (!ghost) {
         c.fillStyle = "rgba(210,210,220," + (0.45 + Math.sin(clock * 2) * 0.2) + ")";
         c.beginPath(); c.ellipse(22, -42 - Math.sin(clock * 1.5) * 3, 7, 11, 0.2, 0, Math.PI * 2); c.fill();
       }
     } else if (kind === "sapboiler") {
-      c.beginPath(); roundRect(c, -22, 4, 44, 14, 4); inkFill(c, "#5C3A1A");
+      mortarFace(c, -22, 4, 44, 14, "#b8a888");
       c.beginPath(); c.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2); inkFill(c, "#6a6a70");
       c.beginPath(); c.ellipse(0, -4, 16, 11, 0, 0, Math.PI * 2); inkFill(c, "#e8b060");
       c.beginPath(); c.ellipse(0, -8, 10, 6, 0, 0, Math.PI * 2); inkFill(c, "#F5C400");
       c.fillStyle = "#8B5A2B"; c.fillRect(14, -18, 5, 16);
       c.fillStyle = "rgba(244,230,195,0.55)"; c.beginPath(); c.ellipse(8, -24, 8, 10, 0.15, 0, Math.PI * 2); c.fill();
     } else if (kind === "quarry") {
-      c.beginPath(); roundRect(c, -26, 2, 52, 16, 4); inkFill(c, "#8a8480");
+      mortarFace(c, -26, 2, 52, 16, "#9a948e");
       c.beginPath(); c.moveTo(-22, 4); c.lineTo(-12, -18); c.lineTo(4, 4); c.closePath(); inkFill(c, "#6a6560");
-      c.beginPath(); c.moveTo(-4, 4); c.lineTo(10, -16); c.lineTo(22, 4); c.closePath(); inkFill(c, "#9a948e");
+      c.beginPath(); c.moveTo(-4, 4); c.lineTo(10, -16); c.lineTo(22, 4); c.closePath(); inkFill(c, "#c4b08a");
       c.beginPath(); roundRect(c, 14, -22, 7, 26, 2); inkFill(c, "#8B5A2B");
       c.beginPath(); c.moveTo(10, -22); c.lineTo(28, -26); c.lineTo(28, -18); c.closePath(); inkFill(c, "#d4cdc0");
     } else if (kind === "bunk") {
       sideFace(c, -26, -6, 26);
-      c.beginPath(); roundRect(c, -26, -6, 52, 26, 5); inkFill(c, "#8B5A2B");
-      c.beginPath(); c.moveTo(-28, -6); c.lineTo(0, -26); c.lineTo(28, -6); c.closePath(); inkFill(c, "#3A2A6A");
-      c.beginPath(); c.moveTo(-16, -8); c.lineTo(0, -24); c.lineTo(16, -8); c.closePath(); inkFill(c, "#F4E6C3");
+      mortarFace(c, -26, -6, 52, 26, "#c4b08a");
+      snowRoof(c, -30, -6, 60, 18);
       c.beginPath(); roundRect(c, -8, 2, 16, 18, 3); inkFill(c, "#5C3A1A");
       c.fillStyle = "#F5C400"; c.fillRect(-4, 8, 8, 4);
       c.beginPath(); roundRect(c, -22, 2, 10, 8, 2); inkFill(c, "#F4E6C3");
       c.beginPath(); roundRect(c, 12, 2, 10, 8, 2); inkFill(c, "#F4E6C3");
     } else if (kind === "watch") {
-      c.beginPath(); roundRect(c, -7, -8, 14, 28, 3); inkFill(c, "#5C3A1A");
-      c.beginPath(); roundRect(c, -18, -28, 36, 20, 4); inkFill(c, "#8B5A2B");
-      c.beginPath(); c.moveTo(-20, -26); c.lineTo(0, -44); c.lineTo(20, -26); c.closePath(); inkFill(c, "#3A2A6A");
+      mortarFace(c, -8, -8, 16, 28, "#b8a888");
+      mortarFace(c, -18, -28, 36, 20, "#c4b08a");
+      snowRoof(c, -20, -28, 40, 14);
       c.fillStyle = "#F5C400"; c.beginPath(); c.arc(0, -18, 5, 0, Math.PI * 2); c.fill();
       c.strokeStyle = "#1A1028"; c.lineWidth = 2.4;
       c.beginPath(); c.moveTo(-10, 12); c.lineTo(-10, -8); c.lineTo(10, -8); c.stroke();
     } else if (kind === "workshop") {
       sideFace(c, -28, -8, 28);
-      c.beginPath(); roundRect(c, -28, -8, 56, 28, 5); inkFill(c, "#8B5A2B");
+      mortarFace(c, -28, -8, 56, 28, "#c4b08a");
+      snowRoof(c, -32, -8, 64, 16);
       c.beginPath(); roundRect(c, -22, 0, 44, 8, 2); inkFill(c, "#5C3A1A");
-      c.beginPath(); c.arc(-8, -4, 8, 0, Math.PI * 2); inkFill(c, "#F5C400");
-      c.beginPath(); roundRect(c, 8, -16, 12, 12, 2); inkFill(c, "#F4E6C3");
+      c.beginPath(); c.arc(-8, -2, 7, 0, Math.PI * 2); inkFill(c, "#F5C400");
+      c.beginPath(); roundRect(c, 8, -4, 12, 10, 2); inkFill(c, "#F4E6C3");
     } else if (kind === "beacon") {
-      sideFace(c, -8, -30, 40);
-      c.beginPath(); roundRect(c, -16, 8, 32, 12, 3); inkFill(c, "#8B5A2B");
-      c.beginPath(); roundRect(c, -8, -30, 16, 40, 3); inkFill(c, "#5C3A1A");
-      c.beginPath(); roundRect(c, -14, -46, 28, 18, 4); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
+      sideFace(c, -10, -28, 40);
+      mortarFace(c, -16, 8, 32, 12, "#b8a888");
+      mortarFace(c, -10, -30, 20, 40, "#c4b08a");
+      c.beginPath(); roundRect(c, -14, -46, 28, 16, 4); inkFill(c, lit ? "#F5C400" : "#3A2A6A");
       c.beginPath(); roundRect(c, -9, -42, 18, 10, 2); inkFill(c, lit ? "#E86A2A" : "#F4E6C3");
-      c.beginPath(); c.moveTo(-10, -44); c.lineTo(0, -64); c.lineTo(10, -44); c.closePath(); inkFill(c, lit ? "#F5C400" : "#F4E6C3");
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(0, -46, 14, 4, 0, Math.PI, Math.PI * 2); c.fill();
       if (lit) {
         c.fillStyle = "rgba(245,196,0," + (0.4 + Math.sin(clock * 9) * 0.16) + ")";
         c.beginPath(); c.arc(0, -36, 18 + Math.sin(clock * 8) * 3, 0, Math.PI * 2); c.fill();
-      }
-    }
-    if (!ghost) {
-      c.fillStyle = "#F4E6C3";
-      if (kind === "woodshed") {
-        c.beginPath(); c.ellipse(0, -16, 22, 5, 0, Math.PI, Math.PI * 2); c.fill();
-      } else if (kind === "smokehouse") {
-        c.beginPath(); c.ellipse(-4, -16, 16, 4.2, 0, Math.PI, Math.PI * 2); c.fill();
-      } else if (kind === "bunk") {
-        c.beginPath(); c.ellipse(0, -18, 18, 4.5, 0, Math.PI, Math.PI * 2); c.fill();
-      } else if (kind === "watch") {
-        c.beginPath(); c.ellipse(0, -34, 12, 3.4, 0, Math.PI, Math.PI * 2); c.fill();
-      } else if (kind === "workshop") {
-        c.beginPath(); c.ellipse(0, -10, 20, 4, 0, Math.PI, Math.PI * 2); c.fill();
-      } else if (kind === "beacon") {
-        c.beginPath(); c.ellipse(0, -48, 10, 3, 0, Math.PI, Math.PI * 2); c.fill();
       }
     }
   }
@@ -1967,23 +2085,23 @@
     var lift = sel ? 11 : 0;
     var ds = depthScale(p.y);
     c.save(); c.translate(p.x, p.y);
-    ovalShadow(c, 8, 14 * ds, (sel ? 52 : 42) * ds, (sel ? 18 : 13) * ds, sel ? 0.52 : 0.34);
+    ovalShadow(c, 4, 10 * ds, (sel ? 40 : 32) * ds, (sel ? 22 : 18) * ds, sel ? 0.5 : 0.34);
     c.scale(ds, ds);
     c.translate(0, -lift); c.scale(squash, squashY);
     c.fillStyle = "#d8cbb0";
-    c.beginPath(); c.ellipse(0, 14, 44, 16, 0, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.ellipse(0, 10, 42, 15, 0, 0, Math.PI * 2); inkFill(c, "#F4E6C3");
+    c.beginPath(); c.ellipse(0, 10, 34, 22, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0, 6, 32, 20, 0, 0, Math.PI * 2); inkFill(c, "#F4E6C3");
     if (!kind) {
       if (canBuild) {
         var aura = 0.45 + Math.sin(clock * 4.2) * 0.28;
         c.strokeStyle = "rgba(245,196,0," + aura + ")"; c.lineWidth = 5;
-        c.beginPath(); c.ellipse(0, 8, 40, 18, 0, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.ellipse(0, 4, 30, 18, 0, 0, Math.PI * 2); c.stroke();
       }
       if (selectedPad === i) {
         c.strokeStyle = "#F5C400"; c.lineWidth = 6;
-        c.beginPath(); c.ellipse(0, 8, 46, 21, 0, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.ellipse(0, 4, 34, 20, 0, 0, Math.PI * 2); c.stroke();
         c.strokeStyle = "#1A1028"; c.lineWidth = 2;
-        c.beginPath(); c.ellipse(0, 8, 46, 21, 0, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.ellipse(0, 4, 34, 20, 0, 0, Math.PI * 2); c.stroke();
       }
       if (selectedPad === i && hoverBuild) {
         c.globalAlpha = 0.42 + Math.sin(clock * 5) * 0.1;
@@ -2002,104 +2120,90 @@
     var flick = storm
       ? 0.46 + Math.sin(clock * 28) * 0.34 + Math.sin(clock * 47) * 0.12
       : 0.68 + Math.sin(clock * 17) * 0.24 + Math.sin(clock * 31) * 0.12;
+    var lv = lodgeLevel();
     c.save(); c.translate(LODGE.x, LODGE.y);
     c.scale(LODGE_SCALE, LODGE_SCALE);
-    ovalShadow(c, 4, 30, 60, 22, 0.4);
+    ovalShadow(c, 6, 28, 58, 18, 0.46);
     c.fillStyle = "#e8eef6";
-    c.beginPath(); c.ellipse(0, 30, 62, 16, 0, 0, Math.PI * 2); c.fill();
-    c.beginPath(); roundRect(c, -38, 4, 76, 26, 6); inkFill(c, "#6B4423");
-    for (var lg = 0; lg < 4; lg++) {
-      var ly = 6 + lg * 6;
-      c.beginPath(); roundRect(c, -36, ly, 72, 6, 2.5); inkFill(c, lg % 2 ? "#8B5A2B" : "#6B4423");
-      c.fillStyle = "#C4894A";
-      c.beginPath(); c.arc(-36, ly + 3, 2.6, 0, Math.PI * 2); c.fill();
-      c.beginPath(); c.arc(36, ly + 3, 2.6, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0, 26, 56, 14, 0, 0, Math.PI * 2); c.fill();
+    sideFace(c, -36, -8, 34);
+    mortarFace(c, -36, -8, 72, 34, "#c4b08a");
+    var t;
+    c.fillStyle = "#d8c4a0";
+    for (t = -28; t < 30; t += 12) {
+      c.beginPath(); roundRect(c, t, -22, 8, 10, 1); c.fill();
+      c.strokeStyle = "#1A1028"; c.lineWidth = 1.6; c.stroke();
     }
     c.beginPath();
-    c.moveTo(-48, 8); c.quadraticCurveTo(-22, -36, 0, -46); c.quadraticCurveTo(22, -36, 48, 8);
-    c.lineTo(30, 16); c.quadraticCurveTo(14, -20, 0, -28); c.quadraticCurveTo(-14, -20, -30, 16);
-    c.closePath(); inkFill(c, "#3A2A6A");
-    c.beginPath();
-    c.moveTo(-40, 6); c.quadraticCurveTo(-18, -32, 0, -40); c.quadraticCurveTo(18, -32, 40, 6);
-    c.lineTo(24, 12); c.quadraticCurveTo(10, -18, 0, -24); c.quadraticCurveTo(-10, -18, -24, 12);
-    c.closePath(); inkFill(c, "#F4E6C3");
-    c.fillStyle = "rgba(232, 240, 250, 0.7)";
-    c.beginPath(); c.ellipse(0, -18, 22, 10, 0, Math.PI, Math.PI * 2); c.fill();
-    c.strokeStyle = "rgba(168,196,232,0.7)"; c.lineWidth = 2.2;
-    c.beginPath(); c.moveTo(-40, 6); c.quadraticCurveTo(-18, -32, 0, -40); c.quadraticCurveTo(18, -32, 40, 6); c.stroke();
-    [[-28, 8, 9], [-10, 10, 12], [8, 10, 11], [26, 8, 9]].forEach(function (ic) {
-      c.beginPath();
-      c.moveTo(ic[0] - 2.6, ic[1]); c.lineTo(ic[0], ic[1] + ic[2]); c.lineTo(ic[0] + 2.6, ic[1]);
-      c.closePath(); inkFill(c, "#A8C4E8");
+    c.moveTo(-42, -8); c.lineTo(-42, -18); c.lineTo(-30, -18); c.lineTo(-30, -8);
+    c.moveTo(30, -8); c.lineTo(30, -18); c.lineTo(42, -18); c.lineTo(42, -8);
+    c.moveTo(-8, -8); c.lineTo(-8, -18); c.lineTo(8, -18); c.lineTo(8, -8);
+    c.strokeStyle = "#1A1028"; c.lineWidth = 2.4; c.stroke();
+    c.fillStyle = "#c4b08a";
+    [[-42, -18, 12], [-8, -18, 16], [30, -18, 12]].forEach(function (bt) {
+      c.beginPath(); roundRect(c, bt[0], bt[1], bt[2], 10, 1); inkFill(c, "#c4b08a");
     });
-    c.beginPath(); roundRect(c, 12, -38, 11, 20, 2); inkFill(c, "#5C3A1A");
-    c.beginPath(); roundRect(c, 8, -44, 19, 8, 3); inkFill(c, "#8B5A2B");
     c.fillStyle = "#F4E6C3";
-    c.beginPath(); c.ellipse(17.5, -44, 10, 3.4, 0, Math.PI, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0, -18, 38, 8, 0, Math.PI, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(-36, -16, 10, 4, 0, Math.PI, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(36, -16, 10, 4, 0, Math.PI, Math.PI * 2); c.fill();
+    mortarFace(c, 14, -36, 12, 20, "#b8a888");
+    c.beginPath(); roundRect(c, 10, -42, 20, 8, 3); inkFill(c, "#8B5A2B");
+    c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(20, -42, 10, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
     var smokeA = 0.28 + Math.sin(clock * 1.6) * 0.1;
     c.fillStyle = "rgba(210,210,220," + smokeA + ")";
-    c.beginPath(); c.ellipse(18 + Math.sin(clock * 1.2) * 2, -50 - Math.sin(clock * 1.4) * 2, 6, 8, 0.2, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "rgba(210,210,220," + (smokeA * 0.65) + ")";
-    c.beginPath(); c.ellipse(20 + Math.sin(clock * 0.9) * 3, -58 - Math.sin(clock * 1.1) * 2, 7, 8, 0.15, 0, Math.PI * 2); c.fill();
-    c.beginPath(); roundRect(c, -28, 6, 10, 8, 2); inkFill(c, heat > 0.15 ? "#F5C400" : "#3A2A6A");
+    c.beginPath(); c.ellipse(20 + Math.sin(clock * 1.2) * 2, -48 - Math.sin(clock * 1.4) * 2, 6, 7, 0.2, 0, Math.PI * 2); c.fill();
+    c.beginPath(); roundRect(c, -30, 2, 10, 8, 2); inkFill(c, heat > 0.15 ? "#F5C400" : "#3A2A6A");
     if (heat > 0.15) {
       c.fillStyle = "rgba(245,196,0," + (0.35 + flick * 0.25) + ")";
-      c.fillRect(-26, 8, 6, 4);
+      c.fillRect(-28, 4, 6, 4);
     }
-    if (isActIII()) {
-      c.strokeStyle = "#A8C4E8"; c.lineWidth = 2.4;
-      c.beginPath(); c.moveTo(-36, 4); c.lineTo(-36, 28); c.stroke();
-      c.beginPath(); c.moveTo(36, 4); c.lineTo(36, 28); c.stroke();
-    }
-    var lv = lodgeLevel();
     if (lv >= 2) {
-      c.beginPath(); roundRect(c, -58, 6, 22, 20, 4); inkFill(c, "#6B4423");
-      c.beginPath(); c.moveTo(-60, 6); c.lineTo(-47, -8); c.lineTo(-34, 6); c.closePath(); inkFill(c, "#F4E6C3");
-      c.fillStyle = "#F4E6C3";
-      c.beginPath(); c.ellipse(-47, -6, 10, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
+      sideFace(c, -52, 2, 22);
+      mortarFace(c, -52, 2, 20, 22, "#b8a888");
+      snowRoof(c, -54, 2, 24, 12);
     }
     if (lv >= 3) {
-      c.beginPath(); roundRect(c, 38, 4, 24, 22, 4); inkFill(c, "#8B5A2B");
-      c.beginPath(); roundRect(c, 46, -18, 8, 24, 2); inkFill(c, "#5C3A1A");
-      c.fillStyle = "#F4E6C3";
-      c.beginPath(); c.ellipse(50, -18, 7, 2.6, 0, Math.PI, Math.PI * 2); c.fill();
-      c.fillStyle = "rgba(210,210,220,0.45)";
-      c.beginPath(); c.ellipse(50, -24, 6, 8, 0.2, 0, Math.PI * 2); c.fill();
+      mortarFace(c, 36, 0, 22, 24, "#c4b08a");
+      mortarFace(c, 42, -22, 10, 24, "#b8a888");
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(47, -22, 8, 3, 0, Math.PI, Math.PI * 2); c.fill();
+      c.fillStyle = "rgba(210,210,220,0.4)";
+      c.beginPath(); c.ellipse(48, -28, 5, 7, 0.2, 0, Math.PI * 2); c.fill();
     }
     if (lv >= 4) {
-      c.beginPath(); roundRect(c, -6, -62, 12, 22, 2); inkFill(c, "#5C3A1A");
-      c.beginPath(); c.moveTo(-10, -60); c.lineTo(0, -78); c.lineTo(10, -60); c.closePath(); inkFill(c, "#F5C400");
+      mortarFace(c, -8, -48, 16, 18, "#c4b08a");
+      c.beginPath(); roundRect(c, -12, -56, 24, 8, 2); inkFill(c, "#F5C400");
+      c.fillStyle = "#F4E6C3"; c.beginPath(); c.ellipse(0, -56, 12, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
     }
     if (state.fork18 === "reinforce") {
       c.strokeStyle = "#C4894A"; c.lineWidth = 3.2;
-      c.beginPath(); c.moveTo(-40, 28); c.lineTo(-22, 8); c.stroke();
-      c.beginPath(); c.moveTo(40, 28); c.lineTo(22, 8); c.stroke();
+      c.beginPath(); c.moveTo(-40, 26); c.lineTo(-22, 6); c.stroke();
+      c.beginPath(); c.moveTo(40, 26); c.lineTo(22, 6); c.stroke();
       c.fillStyle = "#A8C4E8";
-      c.beginPath(); c.moveTo(-44, 30); c.lineTo(-36, 8); c.lineTo(-28, 30); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(28, 30); c.lineTo(36, 8); c.lineTo(44, 30); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(-44, 28); c.lineTo(-36, 6); c.lineTo(-28, 28); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(28, 28); c.lineTo(36, 6); c.lineTo(44, 28); c.closePath(); c.fill();
       c.strokeStyle = "#1A1028"; c.lineWidth = 1.6;
-      c.beginPath(); c.moveTo(-44, 30); c.lineTo(-36, 8); c.lineTo(-28, 30); c.stroke();
-      c.beginPath(); c.moveTo(28, 30); c.lineTo(36, 8); c.lineTo(44, 30); c.stroke();
+      c.beginPath(); c.moveTo(-44, 28); c.lineTo(-36, 6); c.lineTo(-28, 28); c.stroke();
+      c.beginPath(); c.moveTo(28, 28); c.lineTo(36, 6); c.lineTo(44, 28); c.stroke();
     }
-    [[-16, 28], [-6, 30], [6, 30], [16, 28], [-12, 32], [12, 32]].forEach(function (st, si) {
-      c.beginPath(); c.ellipse(st[0], st[1], si < 4 ? 5.2 : 4.2, 3.2, 0, 0, Math.PI * 2); inkFill(c, si % 2 ? "#8a8480" : "#6a6560");
+    [[-14, 26], [-4, 28], [4, 28], [14, 26]].forEach(function (st, si) {
+      c.beginPath(); c.ellipse(st[0], st[1], 4.6, 3, 0, 0, Math.PI * 2); inkFill(c, si % 2 ? "#8a8480" : "#6a6560");
     });
-    c.beginPath(); roundRect(c, -11, 10, 22, 18, 5); inkFill(c, "#1A1028");
-    var fh = (12 + heat * 24) * flick; if (storm) fh *= 0.72;
+    c.beginPath(); roundRect(c, -11, 8, 22, 18, 4); inkFill(c, "#1A1028");
+    var fh = (12 + heat * 22) * flick; if (storm) fh *= 0.72;
     if (heat > 0.01) {
-      var bloom = c.createRadialGradient(0, 20, 2, 0, 16, 40 + heat * 18);
+      var bloom = c.createRadialGradient(0, 16, 2, 0, 14, 36 + heat * 16);
       bloom.addColorStop(0, "rgba(255,236,160," + (0.8 + flick * 0.18) + ")");
-      bloom.addColorStop(0.35, "rgba(245,196,0," + (0.5 + heat * 0.22) + ")");
-      bloom.addColorStop(0.7, "rgba(232,106,42," + (0.18 * heat) + ")");
+      bloom.addColorStop(0.4, "rgba(245,196,0," + (0.48 + heat * 0.2) + ")");
       bloom.addColorStop(1, "rgba(245,196,0,0)");
-      c.fillStyle = bloom; c.beginPath(); c.ellipse(lean * 0.2, 16, 24 + heat * 10, 18 + heat * 7, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "#E85D4C"; c.beginPath(); c.moveTo(-6 + lean, 28); c.quadraticCurveTo(lean * 0.4, 28 - fh * 1.05, 6 + lean, 28); c.closePath(); c.fill();
+      c.fillStyle = bloom; c.beginPath(); c.ellipse(lean * 0.2, 14, 22 + heat * 8, 16 + heat * 6, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#E85D4C"; c.beginPath(); c.moveTo(-6 + lean, 24); c.quadraticCurveTo(lean * 0.4, 24 - fh * 1.05, 6 + lean, 24); c.closePath(); c.fill();
       var lean2 = lean + Math.sin(clock * 23) * 2.2;
-      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-5 + lean2 * 0.4, 28); c.quadraticCurveTo(lean2 * 0.4, 28 - fh, 5 + lean2 * 0.4, 28); c.closePath(); c.fill();
+      c.fillStyle = "#E86A2A"; c.beginPath(); c.moveTo(-5 + lean2 * 0.4, 24); c.quadraticCurveTo(lean2 * 0.4, 24 - fh, 5 + lean2 * 0.4, 24); c.closePath(); c.fill();
       var lean3 = lean + Math.sin(clock * 31) * 1.6;
-      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-3 + lean3 * 0.5, 28); c.quadraticCurveTo(lean3 * 0.5, 28 - fh * 0.78, 3 + lean3 * 0.5, 28); c.closePath(); c.fill();
-      c.fillStyle = "#fff6d0"; c.beginPath(); c.moveTo(-1.6 + lean3 * 0.3, 26); c.quadraticCurveTo(lean3 * 0.3, 26 - fh * 0.42, 1.6 + lean3 * 0.3, 26); c.closePath(); c.fill();
-    } else { c.fillStyle = "#3a3030"; c.fillRect(-6, 18, 12, 8); }
+      c.fillStyle = "#F5C400"; c.beginPath(); c.moveTo(-3 + lean3 * 0.5, 24); c.quadraticCurveTo(lean3 * 0.5, 24 - fh * 0.78, 3 + lean3 * 0.5, 24); c.closePath(); c.fill();
+      c.fillStyle = "#fff6d0"; c.beginPath(); c.moveTo(-1.6 + lean3 * 0.3, 22); c.quadraticCurveTo(lean3 * 0.3, 22 - fh * 0.42, 1.6 + lean3 * 0.3, 22); c.closePath(); c.fill();
+    } else { c.fillStyle = "#3a3030"; c.fillRect(-6, 14, 12, 8); }
     c.restore();
     embers.forEach(function (e) {
       c.globalAlpha = Math.max(0, e.life);
@@ -2319,7 +2423,7 @@
     return { x: (x - viewOx) / viewScale, y: (y - viewOy) / viewScale };
   }
   function onCanvasTap(ev) {
-    if (!playing || paused || state.ended || cameoLock || historyOpen()) return;
+    if (!playing || paused || state.ended || cameoLock || historyOpen() || museumOpen()) return;
     Sfx.ensure();
     var p = canvasPos(ev);
     var hit = -1;
@@ -2343,7 +2447,7 @@
     requestAnimationFrame(loop);
     if (!lastTs) lastTs = ts;
     var dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
-    if (playing && !paused && !state.ended && !cameoLock && !historyOpen()) {
+    if (playing && !paused && !state.ended && !cameoLock && !historyOpen() && !museumOpen()) {
       var step = dt * state.speed; clock += step;
       tickPhase(step); moveBeavers(step); gather(step); tickHeat(step); tickSnow(step); tickPops(step);
       if (bannerTimer && clock > bannerTimer) hideBanner();
@@ -2354,20 +2458,21 @@
   }
 
   var HIST_FREEZE = [
-    { src: "assets/history/f0.jpg", line: "After the dam, winter came looking for a hearth.", t: 0 },
-    { src: "assets/history/f1.jpg", line: "Frost Lodge kept one flame. That was the deal.", t: 5.5 },
-    { src: "assets/history/f2.jpg", line: "Whiteouts ate the map. Beavers stayed.", t: 11 },
-    { src: "assets/history/f3.jpg", line: "Logs in. Cold out. Yeet optional.", t: 16.5 },
-    { src: "assets/history/f4.jpg", line: "Then the freeze learned the door.", t: 22 },
-    { src: "assets/history/f5.jpg", line: "HOLD THE FIRE.", t: 27.5 }
+    { src: "assets/history/graph.jpg", line: "Twenty-five days. Whiteouts 4 · 8 · 12 · 18 · 22. Night 25 opens Nightfall.", t: 0 },
+    { src: "assets/history/f0.jpg", line: "After the dam, winter came looking for a hearth.", t: 5.5 },
+    { src: "assets/history/f1.jpg", line: "Frost Lodge kept one flame. That was the deal.", t: 11 },
+    { src: "assets/history/f2.jpg", line: "Whiteouts ate the map. Beavers stayed.", t: 16.5 },
+    { src: "assets/history/f3.jpg", line: "Hold the fire here. Nightfall is the long night after.", t: 22 },
+    { src: "assets/history/f4.jpg", line: "Then the freeze learned the door.", t: 27.5 },
+    { src: "assets/history/f5.jpg", line: "HOLD THE FIRE.", t: 33 }
   ];
   var HIST_AFTER = [
     { src: "assets/history/a0.jpg", line: "The lodge warmed. Folks started calling it a green home.", t: 0 },
     { src: "assets/history/a1.jpg", line: "Something small. Something heavy. Not wood.", t: 5.5 },
     { src: "assets/history/a2.jpg", line: "A grey wanderer leaned on a stick. Quiet place, he said.", t: 11 },
-    { src: "assets/history/a3.jpg", line: "Ash lands wait. Blade first. The long road after.", t: 16.5 }
+    { src: "assets/history/a3.jpg", line: "Nightfall waits. Blade first. The long road after.", t: 16.5 }
   ];
-  var HIST_END = 33, HIST_AFTER_END = 22;
+  var HIST_END = 38.5, HIST_AFTER_END = 22;
   var HIST_BEATS = HIST_FREEZE;
   var histEl = document.getElementById("history");
   var histImg = document.getElementById("hist-img");
@@ -2419,6 +2524,10 @@
   }
 
   function historyOpen() { return !!(histEl && !histEl.classList.contains("hidden")); }
+  function museumOpen() {
+    var el = document.getElementById("museum");
+    return !!(el && !el.classList.contains("hidden"));
+  }
   function markHistorySeen() {
     if (histChapter === "after") writeHistFlags({ afterFreeze: true });
     else writeHistFlags({ freeze: true });
@@ -2492,6 +2601,149 @@
   function historyFromEnd() {
     document.getElementById("endcard").classList.add("hidden");
     playHistoryChain(function () { document.getElementById("endcard").classList.remove("hidden"); });
+  }
+
+  var MUSEUM_KEY = "bober-frost-museum-v1";
+  var musTab = "crew", museumFrom = "splash", musDetailFrom = null;
+  var MUS_JOBS = [
+    { id: "chopper", name: "Chopper", art: "assets/sprites/bober-chop.png", blurb: "Cuts $BOBER at the copse. Woodshed makes them faster." },
+    { id: "fisher", name: "Fisher", art: "assets/sprites/bober-fish.png", blurb: "Pulls Fish from the hole. Smokehouse turns Fish to rations." },
+    { id: "tender", name: "Tender", art: "assets/sprites/bober-tend.png", blurb: "Stays by the hearth. Cuts night drain and boosts Heat per $BOBER." },
+    { id: "tapper", name: "Tapper", art: "assets/sprites/bober-chop.png", blurb: "Draws Sap. Boiler turns Sap to syrup for Heat." },
+    { id: "miner", name: "Miner", art: "assets/sprites/bober-chop.png", blurb: "Needs Quarry Bench. Brings Stone for crafts." }
+  ];
+  var MUS_FIRE = [
+    { id: "embers", name: "Embers", art: "assets/splash.jpg", blurb: "Day 1. Hold the lodge fire through 25 winter days.", at: 1 },
+    { id: "wo4", name: "Whiteout 4", art: "assets/history/f2.jpg", blurb: "First whiteout. Stoke $BOBER. Heat is Heat.", at: 4 },
+    { id: "wo8", name: "Whiteout 8", art: "assets/history/f2.jpg", blurb: "The map shrinks. Beavers stay.", at: 8 },
+    { id: "wo12", name: "Whiteout 12", art: "assets/history/f4.jpg", blurb: "The ice road splits. Stockpile or scout.", at: 12 },
+    { id: "wo18", name: "Whiteout 18", art: "assets/history/f4.jpg", blurb: "Brace the lodge or expand the clearing.", at: 18 },
+    { id: "wo22", name: "Whiteout 22", art: "assets/history/f4.jpg", blurb: "Deep winter. Fire still counts.", at: 22 },
+    { id: "boss", name: "Night 25", art: "assets/history/graph.jpg", blurb: "Boss whiteout. Fire the Beacon or hold 40% Heat. Nightfall waits past the door.", at: 25 },
+    { id: "thaw", name: "Thaw Holds", art: "assets/history/f5.jpg", blurb: "The lodge fire outlasted the freeze. Nightfall is the long road after.", at: 26 }
+  ];
+  function loadMuseum() {
+    try {
+      var raw = localStorage.getItem(MUSEUM_KEY);
+      var o = raw ? JSON.parse(raw) : {};
+      return {
+        built: o && o.built && typeof o.built === "object" ? o.built : {},
+        storms: o && o.storms && typeof o.storms === "object" ? o.storms : {},
+        win: !!(o && o.win),
+        maxDay: (o && o.maxDay) | 0
+      };
+    } catch (e) { return { built: {}, storms: {}, win: false, maxDay: 0 }; }
+  }
+  function saveMuseum(patch) {
+    var m = loadMuseum(), k;
+    if (patch) {
+      if (patch.built) { for (k in patch.built) if (patch.built[k]) m.built[k] = true; }
+      if (patch.storms) { for (k in patch.storms) if (patch.storms[k]) m.storms[k] = true; }
+      if (patch.win) m.win = true;
+      if (patch.maxDay) m.maxDay = Math.max(m.maxDay, patch.maxDay | 0);
+    }
+    try { localStorage.setItem(MUSEUM_KEY, JSON.stringify(m)); } catch (e) {}
+    return m;
+  }
+  function markMuseumBuild(id) {
+    var b = {}; b[id] = true; saveMuseum({ built: b });
+  }
+  function markMuseumStorm(day) {
+    var s = {}; s[String(day)] = true; saveMuseum({ storms: s, maxDay: day });
+  }
+  function musThumb(kind) {
+    try {
+      var cv = document.createElement("canvas");
+      cv.width = 160; cv.height = 160;
+      var g = cv.getContext("2d");
+      g.fillStyle = "#1A1028"; g.fillRect(0, 0, 160, 160);
+      g.translate(80, 108); g.scale(1.35, 1.35);
+      drawBuilding(g, kind, true);
+      return cv.toDataURL();
+    } catch (e) { return "assets/splash.jpg"; }
+  }
+  function musList() {
+    if (musTab === "jobs") return MUS_JOBS.map(function (j) { return { id: j.id, name: j.name, art: j.art, blurb: j.blurb, kind: "jobs", on: true }; });
+    if (musTab === "build") {
+      return BUILDINGS.map(function (bd) {
+        var m = loadMuseum();
+        var on = !!(m.built[bd.id] || (state && countBuilding(bd.id)));
+        return { id: bd.id, name: bd.name, art: musThumb(bd.id), blurb: bd.blurb, kind: "build", on: on, meta: on ? ("Day " + bd.day + " · " + costLine(bd)) : ("Unlocks Day " + bd.day) };
+      });
+    }
+    if (musTab === "fire") {
+      return MUS_FIRE.map(function (f) {
+        var m = loadMuseum();
+        var on = f.id === "embers" || (f.id === "thaw" && m.win) || (f.at <= 25 && (m.storms[String(f.at)] || m.maxDay >= f.at || (state && state.day > f.at)));
+        if (f.id === "boss") on = !!(m.storms["25"] || m.win || (state && state.day >= 25));
+        return { id: f.id, name: f.name, art: f.art, blurb: f.blurb, kind: "fire", on: on, mile: true };
+      });
+    }
+    return [{
+      id: "bober", name: "Bober", art: "assets/sprites/bober-hat.png",
+      blurb: "Square-headed holder. Yellow hat. Keeps the lodge fire. Fan game — not official.",
+      kind: "crew", on: true
+    }];
+  }
+  function paintMuseum() {
+    var grid = document.getElementById("museum-grid");
+    if (!grid) return;
+    var list = musList(), html = "", i, c;
+    for (i = 0; i < list.length; i++) {
+      c = list[i];
+      html += "<button type=\"button\" class=\"mus-card" + (c.mile ? " mile" : "") + (c.on ? "" : " locked") +
+        "\" data-id=\"" + c.id + "\" aria-label=\"" + (c.on ? c.name : "Locked") + "\">" +
+        "<div class=\"mus-art\"><img src=\"" + c.art + "\" alt=\"\" /></div>" +
+        "<div class=\"mus-body\"><h3>" + (c.on ? c.name : "???") + "</h3><p>" +
+        (c.on ? c.blurb : "Hold the fire further.") + "</p></div></button>";
+    }
+    grid.innerHTML = html;
+  }
+  function closeMusDetail() {
+    var el = document.getElementById("mus-detail");
+    if (el) el.classList.add("hidden");
+    musDetailFrom = null;
+  }
+  function openMusDetail(id) {
+    var list = musList(), card = null, i;
+    for (i = 0; i < list.length; i++) if (list[i].id === id) { card = list[i]; break; }
+    if (!card) return;
+    musDetailFrom = document.activeElement;
+    var el = document.getElementById("mus-detail");
+    document.getElementById("mus-detail-img").src = card.art;
+    document.getElementById("mus-detail-name").textContent = card.on ? card.name : "???";
+    document.getElementById("mus-detail-body").textContent = card.on ? card.blurb : "Hold the fire further.";
+    document.getElementById("mus-detail-meta").textContent = card.on ? (card.meta || (card.kind === "crew" ? "Hero of Frost Lodge." : "")) : "Not yet.";
+    if (el) {
+      el.classList.toggle("locked", !card.on);
+      el.classList.toggle("mile", !!card.mile);
+      el.classList.remove("hidden");
+    }
+  }
+  function openMuseum(from) {
+    museumFrom = from || "splash";
+    closeMusDetail();
+    document.getElementById("museum").classList.remove("hidden");
+    if (from === "splash") document.getElementById("splash").classList.add("hidden");
+    if (from === "paused") document.getElementById("paused").classList.add("hidden");
+    if (from === "end") document.getElementById("endcard").classList.add("hidden");
+    paintMuseum();
+  }
+  function closeMuseum() {
+    closeMusDetail();
+    document.getElementById("museum").classList.add("hidden");
+    if (museumFrom === "splash") document.getElementById("splash").classList.remove("hidden");
+    if (museumFrom === "paused") document.getElementById("paused").classList.remove("hidden");
+    if (museumFrom === "end") document.getElementById("endcard").classList.remove("hidden");
+  }
+  function setMusTab(tab) {
+    closeMusDetail();
+    musTab = tab;
+    ["crew", "jobs", "build", "fire"].forEach(function (t) {
+      var b = document.getElementById("mus-tab-" + t);
+      if (b) b.classList.toggle("on", musTab === t);
+    });
+    paintMuseum();
   }
 
   function dismissCameo() {
@@ -2582,7 +2834,7 @@
     hud(); save();
   });
   document.getElementById("btn-pause").addEventListener("click", function () {
-    if (cameoLock || historyOpen()) return;
+    if (cameoLock || historyOpen() || museumOpen()) return;
     if (!playing || state.ended) return; paused = !paused;
     document.getElementById("paused").classList.toggle("hidden", !paused);
   });
@@ -2602,6 +2854,21 @@
   });
   document.getElementById("btn-splash-history").addEventListener("click", historyFromSplash);
   document.getElementById("btn-end-history").addEventListener("click", historyFromEnd);
+  document.getElementById("btn-splash-museum").addEventListener("click", function () { openMuseum("splash"); });
+  document.getElementById("btn-pause-museum").addEventListener("click", function () { openMuseum("paused"); });
+  document.getElementById("btn-end-museum").addEventListener("click", function () { openMuseum("end"); });
+  document.getElementById("btn-museum-back").addEventListener("click", closeMuseum);
+  document.getElementById("mus-detail-back").addEventListener("click", closeMusDetail);
+  document.getElementById("mus-detail-x").addEventListener("click", closeMusDetail);
+  document.getElementById("mus-tab-crew").addEventListener("click", function () { setMusTab("crew"); });
+  document.getElementById("mus-tab-jobs").addEventListener("click", function () { setMusTab("jobs"); });
+  document.getElementById("mus-tab-build").addEventListener("click", function () { setMusTab("build"); });
+  document.getElementById("mus-tab-fire").addEventListener("click", function () { setMusTab("fire"); });
+  document.getElementById("museum-grid").addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest(".mus-card") : null;
+    if (!btn || !document.getElementById("museum-grid").contains(btn)) return;
+    openMusDetail(btn.getAttribute("data-id"));
+  });
   document.getElementById("history").addEventListener("click", function (ev) {
     ev.preventDefault();
     if (!historyOpen()) return;
