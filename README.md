@@ -1,10 +1,8 @@
-# Bober Frost Lodge
+# Bober Willow Cut
 
 Fan game by a holder. Not affiliated with any token, studio, or official Bober project.
 
-Chapter 3 of the beaver river story: a winter colony. **Hold the fire.** 25 days. One lodge. Don’t freeze.
-
-Spendable currency is **wood**. Fish, sap, and stone stay as named materials.
+The bank is a farm. Walk Bober. Four seasons. Soil, a mill, a barn, and Moss's stall.
 
 No install. No wallet. No login. No ads. No gacha. No PvP.
 
@@ -14,55 +12,33 @@ Run `START.bat` or open `index.html` in a browser.
 
 ## How to play
 
-Survive **Days 1–25**. Night 25 is the boss Whiteout. Win is **THAW HOLDS** at **dawn of Day 26** if the lodge is standing and at least one beaver is up — and you either **fired the Beacon** that night or hold **≥40% heat**.
+A year is 4 seasons of 7 days. Sleep ends the day. The clock caps near 3 minutes. Crops advance at dawn, not on a real-time timer.
 
-1. Tap **HOLD THE FIRE**.
-2. **Dawn** waits until every living beaver has a job, then **START DAY** (or tap the snow). Jobs: **Chop**, **Fish**, **Tend**, **Tap**, **Mine**. ×2 / ×4 if you want it faster. Day 1 shows a one-time tip: jobs send Bobers to Woodlots, River, Sap Forest, and Stone Trail.
-3. **Drag** the snow to pan the camp (touch or mouse). Desktop can edge-scroll. The world is a scrollable winter camp, not one screen. Arrival callouts fire when a Bober reaches a workplace.
-4. On **START DAY**, Bobers **walk to their workplaces**:
-   - **CHOP** → Woodlots / Chop Belt (west)
-   - **FISH** → River (south) — river fish, ice holes, dock
-   - **TEND** → Lodge hearth
-   - **TAP** → Sap-Spirit Stand (north) — sap grove
-   - **MINE** → Stone Trail (east) — quarry, then sled haul to the stockpile
-5. **Day** (~30s): they gather. Tap a **plot** (there are eight) to build.
-6. **Dusk / Night**: stoke **wood** (or syrup). Whiteouts on nights **4, 8, 12, 18, 22**. Night **25** is the boss.
-7. **Day 12 dawn** you must pick **STOCKPILE** (bank wood/sap, harder storms 12–18) or **SCOUT THE ICE** (temp beaver 12–16, lighter storms 12–18).
-8. Heat 0 at night end, or the whole crew Down, is a freeze lose.
+You are Bober, yellow hat. Tap the ground to walk. Drag to look.
 
-### Buildings (day-gated, max one each except Tent Row ×2)
+- **Reedbean** — spring, 3 watered dawns
+- **Pond beet** — summer, 5 watered dawns
+- **Lanternpod** — fall, 4 watered dawns
+- **Willow** on the lease — cut it, it regrows in 4 dawns, spring through fall. Winter it rests.
 
-| Building | Day | Cost | Effect |
-|---|---|---|---|
-| Woodcache | 1 | 10 wood | Choppers faster |
-| Smoke Kiln | 1 | 8 wood 4F | Fish → rations at night |
-| Ice Cellar | 2 | 12 wood 6Sa | Sap → syrup (1 syrup → +14 heat) |
-| Stone Hut | 3 | 15 wood 8St | Unlocks Miner |
-| Tent Row | 3 | 20 wood 5Sa | +1 beaver (start 3, cap 5) |
-| Watch Post | 5 | 18 wood 10St | “Whiteout tomorrow”; −2 night drain |
-| Stockpile | 6 | 25 wood 12St 8Sa | Faster gathering |
-| Beacon Tower | 10 | 30 wood 12St 10Sa | Once/night +25 heat (5 wood + 3Sa). Day 25 ritual. |
+Skip a watering and that bed waits. A crop left into the wrong season withers. Fertility falls when you harvest. Chaff from the mill puts it back.
 
-Miner needs a Stone Hut. Tapper can gather raw sap slowly before the Ice Cellar.
+Reedswans lay an egg at dawn only if the trough had fodder. Plodders leave cream only if fodder is left after the swan. They do not die.
 
-New recruits roll a light trait: **Sturdy**, **Hungry**, or **Lucky**. Bober keeps the yellow hat.
+The mill takes one reedbean sack. When it has run, the sack becomes meal plus chaff. Meal sells for more than the sack. An empty mill does nothing.
 
-If a **Bober Dam Defense** save has any stars, a new run gets **+10 Sap** (“Dam reserves”).
+Creek stones are the money. Moss's stall posts a price each season. Selling is a choice. Seed is bought there.
 
-Mute, Pause, Restart sit in the top-right. Restart / **NEW WINTER** wipes `bober-frost-lodge-v1` (mute and History-seen stay). Old `v0` slice saves are cleared.
+Nib, Puddle, and Twig take one chore each morning: field, barn, or mill. They walk to the work. You can do it yourself.
 
-**HISTORY** on splash, win, and lose plays **The Freeze** — eight stills from the dam to the keep that still waits. Tap to skip after a short arm. **HOLD THE FIRE** is never blocked.
+The lodge is the farmhouse. The far bank is closed. Nightfall is still downriver.
 
-**MUSEUM** (splash, pause, or end) is a card gallery: crew, jobs, lodge buildings, camp zones. Tap a card for detail. Buildings and storms unlock as you play.
-
-After a campaign win, **LONG WINTER** keeps the lodge running (plots, storms every 4, mini-boss every 10, lodge tiers). Hitting **E-Day 50 / 75 / 100** plays skippable silent Long Night preview stills (John Snow, then Frost King prep, then a victory still). E-Day 100 unlocks **After the Freeze**, a 4-panel History chapter. Lodge play continues.
+**START THE YEAR** wipes `bober-willow-cut-v1`.
 
 ## GitHub Pages
 
-Static root. After push, enable Pages on `main` / root. `.nojekyll` is included.
+Static root. The folder and the Pages URL stay `bober-frost-lodge`. The title on the page is Bober Willow Cut.
 
 ## Note
 
 This is a fan game by a holder. It does not connect to a chain, a wallet, or a score server.
-
-Also play · [Yeet](https://ccosma1.github.io/bober-yeet/) · [Dam Defense](https://ccosma1.github.io/bober-dam-defense/). Other games are not required to play.

@@ -1,36 +1,32 @@
-# Bober Frost Lodge mark
+# Bober Willow Cut mark
 
-Metaphor: **a snow-capped beaver lodge with a hearth flame** — winter
-colony, hold the fire. The mark is a hut, not a portrait and not a dam.
-At 32px the read is **white mound + orange flame**.
+Metaphor: **a coppiced willow stool on a creek bank** — the crop you cut,
+and it grows back. The mark is the stool, not a portrait and not a house.
+At 32px the read is **green wands + a yellow cut-top + a blue creek band**.
 
-Shape: **full-bleed square field** of dusk/night purple. Primary silhouette
-is a **rounded stick-lodge mound** (beaver lodge / snow hut) sitting on a
-short snow bank, with a **tall yellow-orange flame** rising from the
-smoke-hole at the apex. A dark timber doorway is cut into the mound;
-tiny ear-bumps may peek from the door (ears only). Not a circle-in-a-badge,
-not stacked horizontal logs, not a square chocolate-bar head.
+Shape: **full-bleed square** of daylight meadow. Primary silhouette is a
+**low, wide stump** (flat elliptical cut, root flare, vertical bark only)
+with **upright willow wands** of uneven height rising out of it. The cut
+face is the yellow accent. A soil bank sits under the stool; a creek band
+runs along the bottom edge. Not a dome, not a door, not a snow cap.
 
 Palette (4):
-- Night purple `#3A2A6A`
-- Lodge / fur brown `#8B5A2B`
-- Flame yellow `#F5C400`
-- Snow cream `#F4E6C3`
-- (supporting) timber dark `#5C3A1A`, flame orange `#E86A2A`,
-  ice-blue snow highlight `#A8C4E8`
+- Willow green `#2F8A45`
+- Creek blue `#2B86A8`
+- Soil brown `#6E4632`
+- Cut-wood yellow `#F6D36B`
 
 Forbidden (do not reuse):
-- **Bober Yeet**: square chocolate-bar beaver FACE as the whole mark,
-  yellow sling-V behind the chin, giant buckteeth on a square head
-- **Bober Dam Defense**: beaver peeking OVER stacked horizontal capsule
-  LOGS, crescent moon in the corner, 32px read of log bars + teeth
+- **Bober Frost Lodge**: snow-capped stick-lodge mound, hearth flame,
+  night purple `#3A2A6A`, ice blue, snow cream, flame orange
+- **Bober Yeet**: square chocolate-bar beaver face, yellow sling-V,
+  giant buckteeth as the whole mark
+- **Bober Dam Defense**: beaver peeking over stacked horizontal capsule
+  logs, crescent moon
 - **Orion / grok-crypto-trader**: constellation, stars, deep-space navy,
-  cyan rim, nebula glow, stacked glow-orbs, rounded-square + inner
-  glow-circle recipe
-- **Lowlight**: iron lantern, peaked roof, keyhole glass, oxblood / amber lamp
-- **ViaPass / VignetteRoute**: cream travel ticket, punch-holes, terracotta sun
+  cyan rim, nebula glow, rounded-square plus inner glow-circle
+- **Lowlight**: lantern, peaked roof, keyhole glass
+- **ViaPass**: ticket, punch-holes
 - **ConstructCost**: invoice / calculator tiles
-- CMC / MultiversX Bober coin art — do not paste or trace
-- Same rounded-square badge + glow-circle recipe as any sibling
-- Moon, sling-V, stacked dam logs, wallet/crypto glyphs, text,
-  stars-as-constellation
+- Moon, sling-V, stacked dam logs, wallet glyphs, text in the icon
+- Beaver face-badge, buckteeth, ears-as-the-mark, any flame
