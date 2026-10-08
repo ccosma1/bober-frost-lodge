@@ -29,6 +29,12 @@ The mill takes one reedbean sack. When it has run, the sack becomes meal plus ch
 
 Creek stones are the money. Moss's stall posts a price each season. Selling is a choice. Seed is bought there.
 
+Moss also posts a slate: two of the season's crop, or two eggs in winter. Filling it pays the stall price plus a bonus.
+
+Three willow cuts tie into one bundle at the rack on the lease. A bundle pays more than the loose cuts.
+
+South of the first beds the acre is still wild and stony. Clear it yourself, or hand someone the field after the watering is done. On day 4 of a growing season, creek fog wets whatever is already planted.
+
 Nib, Puddle, and Twig take one chore each morning: field, barn, or mill. They walk to the work. You can do it yourself.
 
 The lodge is the farmhouse. The far bank is closed. Nightfall is still downriver.

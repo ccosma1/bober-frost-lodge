@@ -100,6 +100,7 @@
     <div id="subrow">
       <span id="trough">Trough 0</span>
       <span id="mill-read">Mill empty</span>
+      <span id="slate">Slate 0/2</span>
       <button id="btn-pack" type="button" style="margin-left:auto;border:0;background:transparent;color:#f5c400;font-weight:900;">PACK</button>
     </div>
     <p id="verb">Tap the ground to walk.</p>
@@ -157,9 +158,17 @@
     beet: [4, 10, 5, 4],
     lantern: [4, 4, 12, 6],
     willow: [6, 8, 10, 3],
+    bundle: [24, 30, 36, 14],
     egg: [5, 5, 6, 8],
     cream: [7, 7, 8, 9]
   };
+  var SLATE = [
+    { key: "reedbean", n: 2, bonus: 12, name: "Reedbean" },
+    { key: "beet", n: 2, bonus: 12, name: "Pond beet" },
+    { key: "lantern", n: 2, bonus: 14, name: "Lanternpod" },
+    { key: "egg", n: 2, bonus: 10, name: "Egg" }
+  ];
+  var RACK = { x: 240, y: 1420 };
   var DOOR = { x: 1240, y: 1196 };
   var MILLP = { x: 1560, y: 1188 };
   var MOSS = { x: 2280, y: 1288 };
@@ -171,13 +180,34 @@
   var canvas = document.getElementById("view");
   var ctx = canvas.getContext("2d");
   var viewScale = 1, viewOx = 0, viewOy = 0, dpr = 1, cssW = 420, cssH = 480;
+  var viewW = VW, viewH = VH;
   var camX = 0, camY = 0, looking = false;
   var ptr = null, mode = "splash", sheetBack = "play", toastTill = 0, lastTs = 0;
   var state;
   var flakes = [];
+  var anim = 0;
   var imgHat = new Image(); imgHat.src = "assets/sprites/bober-hat.png";
   var imgIdle = new Image(); imgIdle.src = "assets/sprites/bober-idle.png";
   var imgWalk = new Image(); imgWalk.src = "assets/sprites/bober-walk.png";
+  var world = {};
+  ["lodge", "barn", "mill", "stall", "reedbean", "beet", "lantern", "willow", "swan", "plodder", "grass", "trough"].forEach(function (name) {
+    var im = new Image();
+    im.src = "assets/world/" + name + ".png";
+    world[name] = im;
+  });
+  function artReady(im) { return !!(im && im.complete && im.naturalWidth); }
+  function blit(im, x, footY, h) {
+    if (!artReady(im)) return false;
+    var w = im.naturalWidth * (h / im.naturalHeight);
+    ctx.drawImage(im, Math.round(x - w / 2), Math.round(footY - h), Math.round(w), Math.round(h));
+    return true;
+  }
+  function shadow(x, y, rx) {
+    ctx.fillStyle = "rgba(20, 33, 15, 0.16)";
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, rx * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   function bed(x, y, st, crop, days, fert) {
     return { x: x, y: y, state: st, crop: crop || null, days: days || 0, need: crop ? NEED[crop] : 0, wet: false, fert: fert || 0 };
@@ -185,7 +215,8 @@
   function fresh() {
     state = {
       year: 1, season: 0, day: 1, clock: 0, stones: 6, fodder: 0, chaff: 0,
-      items: { reedbean: 0, beet: 0, lantern: 0, willow: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedBeet: 0, seedLantern: 0 },
+      items: { reedbean: 0, beet: 0, lantern: 0, willow: 0, bundle: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedBeet: 0, seedLantern: 0 },
+      slate: { season: 0, got: 0 },
       mill: { sack: 0, t: 0 },
       beds: [
         bed(1105, 1275, "growing", "reedbean", 1, 1),
@@ -195,7 +226,11 @@
         bed(1320, 1560, "stony", null, 0, 0),
         bed(1420, 1620, "stony", null, 0, 0),
         bed(1200, 1700, "wild", null, 0, 0),
-        bed(1320, 1760, "wild", null, 0, 0)
+        bed(1320, 1760, "wild", null, 0, 0),
+        bed(1040, 1880, "wild", null, 0, 0),
+        bed(1160, 1880, "stony", null, 0, 0),
+        bed(1280, 1880, "wild", null, 0, 0),
+        bed(1400, 1880, "stony", null, 0, 0)
       ],
       willows: [
         { x: 180, y: 1160, days: 0 },
@@ -207,7 +242,9 @@
         { x: 1336, y: 1264, ready: true, wait: 0 },
         { x: 1396, y: 1324, ready: true, wait: 0 },
         { x: 1296, y: 1336, ready: true, wait: 0 },
-        { x: 1472, y: 1288, ready: true, wait: 0 }
+        { x: 1472, y: 1288, ready: true, wait: 0 },
+        { x: 1510, y: 1348, ready: true, wait: 0 },
+        { x: 1364, y: 1396, ready: true, wait: 0 }
       ],
       player: { x: 1240, y: 1256, tx: null, ty: null, face: 1, pending: null },
       crew: [
@@ -223,6 +260,11 @@
     };
   }
 
+  function ensure() {
+    if (!state || !state.items) return;
+    if (state.items.bundle == null) state.items.bundle = 0;
+    if (!state.slate || state.slate.season !== state.season) state.slate = { season: state.season, got: 0 };
+  }
   function price(key) { return PRICE[key][state.season]; }
   function seasonName() { return SEASON[state.season]; }
   function whenText() { return seasonName() + " · DAY " + state.day; }
@@ -246,6 +288,7 @@
       var raw = localStorage.getItem(KEY);
       if (!raw) return false;
       state = JSON.parse(raw);
+      ensure();
       return true;
     } catch (e) { return false; }
   }
@@ -341,6 +384,27 @@
     save();
     return null;
   }
+  function tieBundle() {
+    if (state.items.willow < 3) return "Need 3 willow";
+    state.items.willow -= 3;
+    state.items.bundle += 1;
+    toast("Bundle tied");
+    save();
+    return null;
+  }
+  function fillSlate() {
+    ensure();
+    var spec = SLATE[state.season];
+    if (state.slate.got >= spec.n) return "Slate is filled";
+    if ((state.items[spec.key] || 0) < spec.n) return "Need " + spec.n + " " + spec.name;
+    state.items[spec.key] -= spec.n;
+    var pay = spec.n * price(spec.key) + spec.bonus;
+    state.stones += pay;
+    state.slate.got = spec.n;
+    toast("Slate paid " + pay);
+    save();
+    return null;
+  }
   function cutWillow(i) {
     var w = state.willows[i];
     if (state.season === 3) return "Winter rest";
@@ -394,6 +458,14 @@
       state.season = (state.season + 1) % 4;
       if (state.season === 0) state.year += 1;
       turned = true;
+      state.slate = { season: state.season, got: 0 };
+    }
+    if (state.day === 4 && state.season !== 3) {
+      var fogged = false;
+      state.beds.forEach(function (b) {
+        if (b.state === "seeded" || b.state === "growing") { b.wet = true; fogged = true; }
+      });
+      if (fogged) lines.push("Creek fog wet the beds.");
     }
     if (turned) {
       state.beds.forEach(function (b) {
@@ -469,11 +541,19 @@
       if (idx < 0) {
         for (k = 0; k < state.beds.length; k++) if (state.beds[k].state === "ready") { idx = k; break; }
       }
+      if (idx < 0) {
+        for (k = 0; k < state.beds.length; k++) {
+          var st = state.beds[k].state;
+          if (st === "wild" || st === "stony" || st === "stubble") { idx = k; break; }
+        }
+      }
       if (idx < 0) return;
       var bed = state.beds[idx];
       if (Math.hypot(c.x - bed.x, c.y - bed.y) > REACH) { c.tx = bed.x; c.ty = bed.y; return; }
       if (c.cool > 0) return;
       if (bed.state === "ready") harvest(idx);
+      else if (bed.state === "wild") bed.state = "stony";
+      else if (bed.state === "stony" || bed.state === "stubble") bed.state = "tilled";
       else bed.wet = true;
       c.cool = 0.55;
     } else if (c.chore === "barn") {
@@ -494,12 +574,17 @@
   }
 
   function hud() {
+    ensure();
     document.getElementById("when").textContent = whenText();
     document.getElementById("clock").textContent = clockText();
     document.getElementById("stones").textContent = state.stones + " creek stones";
     document.getElementById("trough").textContent = "Trough " + state.fodder;
     var mill = state.mill;
     document.getElementById("mill-read").textContent = mill.sack ? ("Mill " + Math.min(100, Math.floor(mill.t / MILL_NEED * 100)) + "%") : "Mill empty";
+    var spec = SLATE[state.season];
+    var got = state.slate && state.slate.got >= spec.n;
+    var have = state.items[spec.key] || 0;
+    document.getElementById("slate").textContent = got ? "Slate filled" : ("Slate " + Math.min(have, spec.n) + "/" + spec.n);
     document.getElementById("btn-chaff").classList.toggle("hidden", state.chaff <= 0);
     var near = nearest(state.player.x, state.player.y, REACH + 8);
     document.getElementById("verb").textContent = near ? verbFor(near) : "Tap the ground to walk. Sleep ends the day.";
@@ -512,9 +597,10 @@
       if (b.state === "tilled") return "Plant";
       if (b.state === "ready") return "Harvest " + (CROP_NAME[b.crop] || "");
       if (b.state === "stubble") return "Clear stubble";
-      if (b.wet) return (CROP_NAME[b.crop] || "Bed") + " is watered";
-      return "Water " + (CROP_NAME[b.crop] || "bed");
+      if (b.wet) return (CROP_NAME[b.crop] || "Bed") + " is watered · " + b.days + " of " + b.need;
+      return "Water " + (CROP_NAME[b.crop] || "bed") + " · " + b.days + " of " + b.need;
     }
+    if (hit.kind === "rack") return state.items.willow >= 3 ? "Tie 3 willow into a bundle" : "Willow rack · " + state.items.willow + " of 3";
     if (hit.kind === "willow") {
       if (state.season === 3) return "Willow is resting";
       if (state.willows[hit.i].days >= 4) return "Cut willow";
@@ -536,6 +622,7 @@
     state.willows.forEach(function (w, i) { consider({ kind: "willow", i: i, x: w.x, y: w.y }); });
     state.grass.forEach(function (g, i) { consider({ kind: "grass", i: i, x: g.x, y: g.y }); });
     consider({ kind: "mill", x: MILLP.x, y: MILLP.y });
+    consider({ kind: "rack", x: RACK.x, y: RACK.y });
     consider({ kind: "moss", x: MOSS.x, y: MOSS.y });
     consider({ kind: "door", x: DOOR.x, y: DOOR.y });
     return best;
@@ -545,6 +632,7 @@
     else if (hit.kind === "willow") { var e = cutWillow(hit.i); if (e) toast(e); }
     else if (hit.kind === "grass") { if (state.grass[hit.i].ready) cutGrass(hit.i); else toast("Cut already"); }
     else if (hit.kind === "mill") { var m = loadMill(); if (m) toast(m); else toast("Sack loaded"); }
+    else if (hit.kind === "rack") { var bundleErr = tieBundle(); if (bundleErr) toast(bundleErr); }
     else if (hit.kind === "moss") openShop();
     else if (hit.kind === "door") endDay();
   }
@@ -619,12 +707,32 @@
       var intro = document.createElement("p");
       intro.textContent = seasonName() + " prices. Meal pays more than a reedbean sack. You store what you do not sell.";
       body.appendChild(intro);
-      ["reedbean", "meal", "beet", "lantern", "willow", "egg", "cream"].forEach(function (key) {
+      var spec = SLATE[state.season];
+      var slateHave = state.items[spec.key] || 0;
+      var slateNote = document.createElement("p");
+      slateNote.textContent = state.slate.got >= spec.n
+        ? "This season's slate is filled."
+        : ("Slate: " + spec.n + " " + spec.name + ". You have " + slateHave + ". The bonus is " + spec.bonus + " stones.");
+      body.appendChild(slateNote);
+      if (state.slate.got < spec.n) {
+        var fill = document.createElement("button");
+        fill.className = "play";
+        fill.type = "button";
+        fill.textContent = "Fill the slate";
+        fill.addEventListener("click", function () {
+          var err = fillSlate();
+          if (err) toast(err);
+          openShop();
+          hud();
+        });
+        body.appendChild(fill);
+      }
+      ["reedbean", "meal", "beet", "lantern", "willow", "bundle", "egg", "cream"].forEach(function (key) {
         var have = state.items[key] || 0;
         var row = document.createElement("div");
         row.className = "row";
         var label = document.createElement("strong");
-        var nm = key === "beet" ? "Pond beet" : key === "lantern" ? "Lanternpod" : key === "reedbean" ? "Reedbean" : key[0].toUpperCase() + key.slice(1);
+        var nm = key === "beet" ? "Pond beet" : key === "lantern" ? "Lanternpod" : key === "reedbean" ? "Reedbean" : key === "bundle" ? "Willow bundle" : key[0].toUpperCase() + key.slice(1);
         label.textContent = nm + " · " + have + " · " + price(key) + " stones";
         row.appendChild(label);
         var btn = document.createElement("button");
@@ -666,7 +774,7 @@
     openSheet("Pack", function (body) {
       var p = document.createElement("p");
       var it = state.items;
-      p.textContent = "Reedbean " + it.reedbean + " · meal " + it.meal + " · beet " + it.beet + " · lanternpod " + it.lantern + " · willow " + it.willow + " · egg " + it.egg + " · cream " + it.cream + " · chaff " + state.chaff + " · seed " + it.seedReed + "/" + it.seedBeet + "/" + it.seedLantern + ".";
+      p.textContent = "Reedbean " + it.reedbean + " · meal " + it.meal + " · beet " + it.beet + " · lanternpod " + it.lantern + " · willow " + it.willow + " · bundle " + (it.bundle || 0) + " · egg " + it.egg + " · cream " + it.cream + " · chaff " + state.chaff + " · seed " + it.seedReed + "/" + it.seedBeet + "/" + it.seedLantern + ".";
       body.appendChild(p);
       var note = document.createElement("p");
       note.className = "fan";
@@ -721,17 +829,17 @@
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
-    viewScale = Math.min((cssW - 8) / VW, (cssH - 8) / VH);
+    viewScale = (cssW - 8) / VW;
     if (!(viewScale > 0)) viewScale = 1;
-    var vwPx = VW * viewScale;
-    var vhPx = VH * viewScale;
-    viewOx = (cssW - vwPx) / 2;
-    var extra = cssH - vhPx;
-    viewOy = extra > 12 ? 4 : extra / 2;
+    viewW = VW;
+    viewH = Math.max(VH, Math.min(cssH / viewScale, 820));
+    if (viewH * viewScale > cssH) viewH = cssH / viewScale;
+    viewOx = (cssW - viewW * viewScale) / 2;
+    viewOy = Math.max(0, (cssH - viewH * viewScale) / 2);
   }
   function clampCam() {
-    camX = Math.max(0, Math.min(WORLD_W - VW, camX));
-    camY = Math.max(0, Math.min(WORLD_H - VH, camY));
+    camX = Math.max(0, Math.min(WORLD_W - viewW, camX));
+    camY = Math.max(0, Math.min(WORLD_H - viewH, camY));
   }
   function worldFromEvent(ev) {
     var rect = canvas.getBoundingClientRect();
@@ -742,65 +850,108 @@
     return { x: vx + camX, y: vy + camY };
   }
 
+  function hash(n) {
+    var x = Math.sin(n * 127.1) * 43758.5453;
+    return x - Math.floor(x);
+  }
   function drawGround() {
-    var sky = ["#8ecae6", "#79c4ea", "#e7b07a", "#d5e2ea"][state.season];
-    var grass = ["#67a44a", "#5c983f", "#c4a15a", "#e4ecee"][state.season];
-    var grass2 = ["#5b9440", "#4f8736", "#b08d45", "#d5e0e4"][state.season];
-    ctx.fillStyle = sky;
+    var sky = ["#8ecae6", "#6eb6e0", "#e7b07a", "#c5d4de"][state.season];
+    var sky2 = ["#d7f0c8", "#c6e7f6", "#f3d7b0", "#e7eef2"][state.season];
+    var grass = ["#5f9a42", "#4f8a38", "#c4a15a", "#d5e2e6"][state.season];
+    var g = ctx.createLinearGradient(0, 0, 0, 420);
+    g.addColorStop(0, sky);
+    g.addColorStop(1, sky2);
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, WORLD_W, 420);
-    ctx.fillStyle = "#1f6f93";
-    ctx.fillRect(0, 250, WORLD_W, 70);
-    ctx.fillStyle = "#16324a";
-    for (var i = 0; i < 18; i++) {
-      var tx = 80 + i * 140;
+    ctx.fillStyle = "#1a6488";
+    ctx.fillRect(0, 248, WORLD_W, 78);
+    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    for (var w = 0; w < 8; w++) {
+      ctx.fillRect(0, 262 + w * 8, WORLD_W, 2);
+    }
+    ctx.fillStyle = "#143044";
+    for (var i = 0; i < 22; i++) {
+      var tx = 40 + i * 116;
+      var th = 70 + hash(i + 3) * 50;
       ctx.beginPath();
       ctx.moveTo(tx, 250);
-      ctx.lineTo(tx + 28, 150);
-      ctx.lineTo(tx + 56, 250);
+      ctx.lineTo(tx + 18, 250 - th);
+      ctx.lineTo(tx + 46, 250);
       ctx.fill();
+      ctx.fillStyle = i % 2 ? "#1d4a32" : "#143044";
     }
+    ctx.fillStyle = "#6b4a2a";
+    ctx.fillRect(0, 318, WORLD_W, 16);
     ctx.fillStyle = grass;
-    ctx.fillRect(0, 320, WORLD_W, WORLD_H);
-    ctx.fillStyle = grass2;
-    for (var y = 340; y < WORLD_H; y += 28) {
-      ctx.fillRect(0, y, WORLD_W, 8);
+    ctx.fillRect(0, 332, WORLD_W, WORLD_H);
+    var x0 = Math.floor(camX / 24) * 24 - 24;
+    var y0 = Math.max(340, Math.floor(camY / 24) * 24 - 24);
+    for (var y = y0; y < camY + viewH + 24; y += 24) {
+      for (var x = x0; x < camX + viewW + 24; x += 24) {
+        var h = hash(x * 13 + y * 3);
+        if (h > 0.62) {
+          ctx.fillStyle = h > 0.82 ? "rgba(255,255,255,0.16)" : "rgba(20,60,20,0.16)";
+          ctx.fillRect(x, y, 10, 4);
+        } else if (h > 0.56 && state.season !== 3) {
+          ctx.fillStyle = h > 0.59 ? "#f2d25a" : "#e07aa8";
+          ctx.fillRect(x + 4, y + 2, 3, 3);
+        }
+      }
     }
-    ctx.strokeStyle = "#c4a06a";
-    ctx.lineWidth = 22;
     ctx.lineCap = "round";
-    ctx.globalAlpha = 0.92;
+    ctx.strokeStyle = "#8d6a40";
+    ctx.lineWidth = 30;
     ctx.beginPath();
-    ctx.moveTo(40, 1210);
-    ctx.lineTo(DOOR.x, 1220);
-    ctx.lineTo(MILLP.x, 1260);
-    ctx.lineTo(MOSS.x, 1300);
+    ctx.moveTo(20, 1216);
+    ctx.lineTo(DOOR.x, 1224);
+    ctx.lineTo(MILLP.x, 1264);
+    ctx.lineTo(MOSS.x, 1304);
     ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "rgba(20,33,15,0.55)";
-    ctx.font = "700 18px Trebuchet MS, sans-serif";
-    ctx.fillText("Far bank", 80, 200);
+    ctx.strokeStyle = "#e4d2ae";
+    ctx.lineWidth = 16;
+    ctx.stroke();
+    var fx0 = Math.max(0, Math.floor(camX / 34) * 34);
+    for (var fx = fx0; fx < camX + viewW + 34; fx += 34) {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(fx, 348, 4, 16);
+      ctx.fillStyle = "#f3ead2";
+      ctx.fillRect(fx - 6, 346, 16, 4);
+    }
+    ctx.fillStyle = "rgba(243,234,210,0.85)";
+    ctx.font = "700 14px Trebuchet MS, sans-serif";
+    ctx.fillText("Far bank", 70, 230);
   }
   function drawPond() {
-    ctx.fillStyle = "#1f6f93";
+    ctx.fillStyle = "#174e68";
+    ctx.beginPath();
+    ctx.ellipse(POND.x, POND.y, POND.rx + 10, POND.ry + 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2f86ad";
     ctx.beginPath();
     ctx.ellipse(POND.x, POND.y, POND.rx, POND.ry, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "rgba(243,234,210,0.45)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.fillStyle = "#f4f7fb";
-    ctx.beginPath();
-    ctx.ellipse(SWAN.x, SWAN.y, 16, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(SWAN.x + 14, SWAN.y - 12, 6, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#e07a3d";
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(SWAN.x + 18, SWAN.y - 12);
-    ctx.lineTo(SWAN.x + 28, SWAN.y - 10);
+    ctx.ellipse(POND.x - 10, POND.y - 8, POND.rx * 0.55, POND.ry * 0.35, 0, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.strokeStyle = "#2f6b32";
+    ctx.lineWidth = 2;
+    for (var r = 0; r < 5; r++) {
+      var rx = POND.x - 70 + r * 28;
+      ctx.beginPath();
+      ctx.moveTo(rx, POND.y + 36);
+      ctx.quadraticCurveTo(rx + 6, POND.y + 10, rx - 4, POND.y - 8);
+      ctx.stroke();
+    }
+    var sy = SWAN.y + Math.sin(anim * 2) * 3;
+    shadow(SWAN.x, sy + 4, 16);
+    if (!blit(world.swan, SWAN.x, sy + 8, 40)) {
+      ctx.fillStyle = "#f4f7fb";
+      ctx.beginPath();
+      ctx.ellipse(SWAN.x, sy, 16, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   function drawBed(b) {
     ctx.save();
@@ -836,18 +987,18 @@
       ctx.stroke();
     }
     if (b.crop && (b.state === "seeded" || b.state === "growing" || b.state === "ready")) {
-      var h = 6 + Math.min(b.days, b.need) * 4;
-      var col = b.crop === "beet" ? "#a33b62" : b.crop === "lantern" ? "#e0a030" : "#2f6b32";
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(0, 8); ctx.lineTo(0, 8 - h);
-      ctx.moveTo(-6, 6); ctx.lineTo(-8, 6 - h * 0.6);
-      ctx.moveTo(6, 6); ctx.lineTo(8, 6 - h * 0.6);
-      ctx.stroke();
-      if (b.state === "ready") {
-        ctx.fillStyle = col;
-        ctx.beginPath(); ctx.arc(0, 6 - h, 4, 0, Math.PI * 2); ctx.fill();
+      var grow = b.state === "ready" ? 1 : Math.max(0.34, (b.days || 0.15) / (b.need || 1));
+      var art = world[b.crop];
+      if (!blit(art, 0, 12, 16 + grow * 30)) {
+        var h = 6 + Math.min(b.days, b.need) * 4;
+        var col = b.crop === "beet" ? "#a33b62" : b.crop === "lantern" ? "#e0a030" : "#2f6b32";
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 8); ctx.lineTo(0, 8 - h);
+        ctx.moveTo(-6, 6); ctx.lineTo(-8, 6 - h * 0.6);
+        ctx.moveTo(6, 6); ctx.lineTo(8, 6 - h * 0.6);
+        ctx.stroke();
       }
     }
     ctx.fillStyle = "#f5c400";
@@ -855,65 +1006,57 @@
     ctx.restore();
   }
   function drawWillow(w) {
+    var grow = Math.max(0.38, Math.min(w.days, 4) / 4);
+    var hh = 26 + grow * 40;
     ctx.save();
-    ctx.translate(w.x, w.y);
-    ctx.fillStyle = "#5c3a1e";
-    ctx.fillRect(-6, -8, 12, 36);
-    ctx.strokeStyle = state.season === 3 ? "#8a93a0" : "#2f6b32";
-    ctx.lineWidth = 2;
-    var len = 10 + Math.min(w.days, 4) * 8;
-    for (var i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * 4, -8);
-      ctx.quadraticCurveTo(i * 10, len * 0.4, i * 6, len);
-      ctx.stroke();
+    if (state.season === 3) ctx.filter = "grayscale(0.85) brightness(1.2)";
+    shadow(w.x, w.y + 4, 16);
+    if (!blit(world.willow, w.x, w.y + 6, hh)) {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(w.x - 6, w.y - 8, 12, 28);
     }
+    ctx.filter = "none";
     ctx.restore();
   }
+  function plank(x, y, text) {
+    ctx.fillStyle = "#5c3a1e";
+    ctx.fillRect(x - 2, y, 4, 16);
+    ctx.fillStyle = "#f3ead2";
+    ctx.fillRect(x - 26, y - 16, 52, 16);
+    ctx.strokeStyle = "#5c3a1e";
+    ctx.strokeRect(x - 26, y - 16, 52, 16);
+    ctx.fillStyle = "#14210f";
+    ctx.font = "700 11px Trebuchet MS, sans-serif";
+    ctx.fillText(text, x - 22, y - 4);
+  }
   function drawBuildings() {
-    ctx.fillStyle = "#8b5a2b";
-    ctx.fillRect(1188, 1104, 116, 80);
-    ctx.fillStyle = "#5c3a1a";
-    ctx.beginPath();
-    ctx.moveTo(1176, 1110); ctx.lineTo(1246, 1064); ctx.lineTo(1316, 1110); ctx.fill();
-    ctx.fillStyle = "#1c140c";
-    ctx.fillRect(1224, 1144, 28, 40);
-    ctx.fillStyle = "#f3ead2";
-    ctx.font = "700 12px Trebuchet MS, sans-serif";
-    ctx.fillText("Lodge", 1210, 1096);
-
-    ctx.fillStyle = "#8c3a32";
-    ctx.fillRect(1368, 1088, 160, 108);
-    ctx.fillStyle = "#f3ead2";
-    ctx.fillRect(1368, 1088, 160, 16);
-    ctx.fillStyle = "#1c140c";
-    ctx.fillRect(1424, 1148, 36, 48);
-    ctx.fillStyle = "#f3ead2";
-    ctx.fillText("Barn", 1424, 1078);
-
-    ctx.fillStyle = "#6b3f22";
-    ctx.fillRect(MILLP.x - 28, MILLP.y - 20, 56, 44);
-    ctx.strokeStyle = "#f3ead2";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(MILLP.x + 22, MILLP.y - 4, 16, 0, Math.PI * 2);
-    ctx.stroke();
+    shadow(1246, 1192, 48);
+    if (!blit(world.lodge, 1246, 1196, 148)) {
+      ctx.fillStyle = "#8b5a2b";
+      ctx.fillRect(1188, 1104, 116, 80);
+    }
+    shadow(1440, 1200, 58);
+    if (!blit(world.barn, 1448, 1204, 158)) {
+      ctx.fillStyle = "#8c3a32";
+      ctx.fillRect(1368, 1088, 160, 108);
+    }
+    shadow(MILLP.x, MILLP.y + 28, 36);
+    if (!blit(world.mill, MILLP.x + 8, MILLP.y + 36, 108)) {
+      ctx.fillStyle = "#6b3f22";
+      ctx.fillRect(MILLP.x - 28, MILLP.y - 20, 56, 44);
+    }
     if (state.mill.sack) {
       ctx.fillStyle = "#e0a030";
-      ctx.fillRect(MILLP.x - 8, MILLP.y - 8, 14, 16);
+      ctx.fillRect(MILLP.x - 8, MILLP.y - 4, 14, 16);
     }
-    ctx.fillStyle = "#f3ead2";
-    ctx.fillText("Mill", MILLP.x - 16, MILLP.y - 28);
-
-    ctx.fillStyle = "#f5c400";
-    ctx.fillRect(MOSS.x - 70, MOSS.y - 78, 120, 14);
-    ctx.fillStyle = "#5c3a1a";
-    ctx.fillRect(MOSS.x - 78, MOSS.y - 64, 8, 48);
-    ctx.fillRect(MOSS.x + 58, MOSS.y - 64, 8, 48);
-    ctx.fillStyle = "#f3ead2";
-    ctx.fillText("Creek market", MOSS.x - 70, MOSS.y - 90);
-
+    shadow(MOSS.x, MOSS.y + 8, 46);
+    if (!blit(world.stall, MOSS.x, MOSS.y + 10, 118)) {
+      ctx.fillStyle = "#f5c400";
+      ctx.fillRect(MOSS.x - 70, MOSS.y - 78, 120, 14);
+    }
+    plank(RACK.x, RACK.y, "Tie 3");
     state.grass.forEach(function (g) {
+      if (g.ready && blit(world.grass, g.x, g.y + 4, 32)) return;
       ctx.strokeStyle = g.ready ? "#21481f" : "#8a937c";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -922,15 +1065,26 @@
       ctx.moveTo(g.x + 6, g.y + 6); ctx.lineTo(g.x + 8, g.y - 6);
       ctx.stroke();
     });
-
-    ctx.fillStyle = "#6b4a2a";
-    ctx.beginPath();
-    ctx.ellipse(PLOD.x, PLOD.y, 22, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#f3ead2";
-    ctx.beginPath();
-    ctx.ellipse(PLOD.x + 4, PLOD.y + 2, 10, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
+    var tx = 1456;
+    var ty = 1236;
+    shadow(tx, ty, 18);
+    if (!blit(world.trough, tx, ty, 36)) {
+      ctx.fillStyle = "#6b3f22";
+      ctx.fillRect(tx - 16, ty - 10, 32, 12);
+    }
+    var px = state.fodder > 0 ? 1472 : 1436;
+    var py = 1308 + Math.sin(anim * 1.4) * 1.5;
+    shadow(px, py, 18);
+    ctx.save();
+    ctx.translate(px, 0);
+    ctx.scale(state.fodder > 0 ? 1 : -1, 1);
+    if (!blit(world.plodder, 0, py, 52)) {
+      ctx.fillStyle = "#6b4a2a";
+      ctx.beginPath();
+      ctx.ellipse(0, py - 10, 18, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
   function drawBober(ent, hat) {
     var im = hat ? imgHat : ((ent.tx != null) ? imgWalk : imgIdle);
@@ -970,7 +1124,7 @@
     ctx.translate(viewOx, viewOy);
     ctx.scale(viewScale, viewScale);
     ctx.beginPath();
-    ctx.rect(0, 0, VW, VH);
+    ctx.rect(0, 0, viewW, viewH);
     ctx.clip();
     ctx.translate(-camX, -camY);
     drawGround();
@@ -978,10 +1132,15 @@
     state.beds.forEach(drawBed);
     state.willows.forEach(drawWillow);
     drawBuildings();
-    drawBober({ x: MOSS.x, y: MOSS.y, face: -1, id: "moss", tx: null }, false);
+    drawBober({ x: MOSS.x - 102, y: MOSS.y + 28, face: 1, id: "moss", tx: null }, false);
     state.crew.forEach(function (c) { drawBober(c, false); });
     drawBober(state.player, true);
     drawSnow();
+    var sun = state.clock / DAY_LEN;
+    if (state.season !== 3 && sun > 0.62) {
+      ctx.fillStyle = "rgba(214, 112, 42, " + ((sun - 0.62) * 0.5) + ")";
+      ctx.fillRect(camX, camY, viewW, viewH);
+    }
     ctx.restore();
   }
 
@@ -990,6 +1149,7 @@
     if (!lastTs) lastTs = ts;
     var dt = Math.min(0.05, (ts - lastTs) / 1000);
     lastTs = ts;
+    anim += dt;
     if (toastTill && ts > toastTill) document.getElementById("toast").classList.add("hidden");
     if (mode === "play") {
       state.clock += dt;
