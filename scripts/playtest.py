@@ -85,6 +85,11 @@ def play_checks() -> list[str]:
         chip = page.locator("#stones").inner_text()
         if chip != "6 $bober":
             errors.append("money chip " + chip)
+        homes = page.evaluate(
+            """() => [[1240,1256],[1040,1340],[1455,1336],[1310,1395]].filter(p => WC.blocked(p[0], p[1]))"""
+        )
+        if homes:
+            errors.append("home blocked " + str(homes))
         shot = ROOT / "scripts" / "_willow_day1.png"
         page.screenshot(path=str(shot))
         info = page.evaluate(
@@ -198,6 +203,31 @@ def play_checks() -> list[str]:
             page.wait_for_function("() => WC.state.player.y > 1380", timeout=8000)
         except Exception as exc:
             errors.append("walk failed " + repr(exc))
+        page.evaluate(
+            """() => {
+              WC.boot();
+              WC.state.player.x = 1440;
+              WC.state.player.y = 1260;
+              WC.state.player.tx = 1440;
+              WC.state.player.ty = 1000;
+              WC.state.player.order = null;
+              WC.state.player.acting = 0;
+            }"""
+        )
+        try:
+            page.wait_for_function(
+                """() => {
+                  const p = WC.state.player;
+                  const inBarn = p.x > 1376 && p.x < 1504 && p.y > 1096 && p.y < 1168;
+                  return !WC.blocked(p.x, p.y) && !inBarn && p.y < 1060;
+                }""",
+                timeout=6000,
+            )
+        except Exception as exc:
+            pos = page.evaluate(
+                "() => ({ x: WC.state.player.x, y: WC.state.player.y, b: WC.blocked(WC.state.player.x, WC.state.player.y) })"
+            )
+            errors.append("barn walk " + str(pos) + " " + repr(exc))
         page.evaluate("WC.boot()")
         world_click(1105, 1365)
         try:
@@ -414,6 +444,32 @@ def play_checks() -> list[str]:
         )
         if filled["level"] != 50 or filled["beds"] < 40 or "50/50" not in filled["job"] or filled["mode"] != "play" or not filled["sheet"]:
             errors.append("acre fill " + str(filled))
+        page.locator("#btn-museum").click()
+        try:
+            page.wait_for_function(
+                "() => document.getElementById('sheet-title').textContent === 'Museum'",
+                timeout=3000,
+            )
+            plates = page.locator(".plate").count()
+            if plates < 60:
+                errors.append("museum plates " + str(plates))
+            art = page.evaluate(
+                """() => {
+                  const imgs = Array.from(document.querySelectorAll('.plate img'));
+                  const hall = imgs.find(im => im.src.indexOf('sites/hall.png') >= 0);
+                  const post = imgs.find(im => im.src.indexOf('sites/post.png') >= 0);
+                  return {
+                    hall: hall ? hall.naturalWidth : 0,
+                    post: post ? post.naturalWidth : 0,
+                    ahead: imgs.some(im => im.parentElement.innerText.indexOf('Ahead') >= 0)
+                  };
+                }"""
+            )
+            if art["hall"] < 20 or art["post"] < 20 or art["ahead"]:
+                errors.append("museum art " + str(art))
+        except Exception as exc:
+            errors.append("museum " + repr(exc))
+        page.locator("#btn-sheet-close").click()
 
         wide = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
         wide.goto(URL, wait_until="domcontentloaded")

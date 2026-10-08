@@ -39,9 +39,23 @@
     }
     #stones { color: var(--yellow); }
     #subrow {
-      display: flex; gap: 8px; padding: 0 8px 6px; background: #14210f;
+      display: flex; gap: 8px; align-items: center; padding: 0 8px 6px; background: #14210f;
       font-size: 12px; font-weight: 800; color: #d5e6c4;
     }
+    #btn-museum {
+      margin-left: auto; border: 2px solid var(--yellow); background: transparent;
+      color: var(--yellow); border-radius: 999px; padding: 2px 8px; font-size: 11px;
+    }
+    .museum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .plate {
+      background: #14210f; border: 2px solid #5c3a1e; border-radius: 12px; padding: 6px;
+    }
+    .plate img {
+      width: 100%; height: 92px; object-fit: contain; background: #3d6b32; border-radius: 8px;
+    }
+    .plate b { display: block; margin-top: 4px; font-size: 13px; color: var(--cream); }
+    .plate i { display: block; font-style: normal; font-size: 10px; letter-spacing: 0.04em; color: var(--yellow); }
+    .plate span { display: block; font-size: 11px; font-weight: 700; color: #d5e6c4; }
     #stage { flex: 1 1 auto; position: relative; min-height: 220px; background: #3d6b32; }
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     #verb, #job {
@@ -123,6 +137,7 @@
       <span id="mill-read">Mill empty</span>
       <span id="slate">Slate 0/2</span>
       <span id="level">Lv 1/50</span>
+      <button id="btn-museum" type="button">MUSEUM</button>
     </div>
     <p id="verb">Tap a thing to read it.</p>
     <button id="job" type="button">Lv 1/50. Water both reedbean shoots.</button>
@@ -147,6 +162,7 @@
           <button class="play" id="btn-start" type="button">START THE YEAR</button>
           <button class="play ghost" id="btn-continue" type="button">CONTINUE</button>
           <button class="play ghost" id="btn-notes" type="button">BANK NOTES</button>
+          <button class="play ghost" id="btn-museum-splash" type="button">MUSEUM</button>
         </div>
       </div>
       <div id="dawn" class="overlay hidden">
@@ -280,6 +296,17 @@
     im.src = "assets/world/" + name + ".png";
     world[name] = im;
   });
+  var SITE_NAMES = ["post","barrel","rick","bench","shed","crib","cistern","basket","coop","rack","annex","scale","row","compost","lease","smoke","field","bunk","shade","gate","path","bin","board","cellar","plot","stick","orchard","stool","pile","nest","dock","cache","kiln","frame","summer","lookout","wind","grand","crates","lamps","hall"];
+  var sites = {};
+  SITE_NAMES.forEach(function (name) {
+    var im = new Image();
+    im.onload = function () { solidKey = ""; };
+    im.src = "assets/sites/" + name + ".png";
+    sites[name] = im;
+  });
+  var BODY = 12;
+  var solidKey = "";
+  var solidList = [];
   function artReady(im) { return !!(im && im.complete && im.naturalWidth); }
   function blit(im, x, footY, h) {
     if (!artReady(im)) return false;
@@ -299,6 +326,7 @@
   }
   function fresh() {
     worldMark = -1;
+    solidKey = "";
     state = {
       year: 1, season: 0, day: 1, clock: 0, stones: 6, fodder: 0, chaff: 0, bucket: 8,
       level: 1, stats: {},
@@ -395,10 +423,10 @@
     if (m.grow === "bed" || wide) {
       for (k = 0; k < cols.length; k++) pushBed(m.x + cols[k], m.y + 76, soil, key + "b" + k);
     }
-    if (m.grow === "grass" || m.grow === "fill") pushGrass(m.x - 62, m.y + 6, key);
+    if (m.grow === "grass" || m.grow === "fill") pushGrass(m.x - 86, m.y + 112, key);
     if (m.grow === "willow" || m.grow === "willow3" || m.grow === "fill") {
-      var ws = (m.grow === "willow" ) ? [48] : [-62, 0, 62];
-      for (k = 0; k < ws.length; k++) pushWillow(m.x + ws[k], m.y - 34, key + "w" + k);
+      var ws = (m.grow === "willow") ? [78] : [-86, 78, 96];
+      for (k = 0; k < ws.length; k++) pushWillow(m.x + ws[k], m.y + 112, key + "w" + k);
     }
   }
   function addFillers() {
@@ -518,6 +546,7 @@
       if (!raw) return false;
       state = JSON.parse(raw);
       worldMark = -1;
+      solidKey = "";
       ensure();
       return true;
     } catch (e) { return false; }
@@ -529,27 +558,111 @@
     markMode();
   }
 
+  function rebuildSolids() {
+    var list = [];
+    list.push({ k: "box", x: 1196, y: 1108, w: 100, h: 72 });
+    list.push({ k: "box", x: 1376, y: 1096, w: 128, h: 72 });
+    list.push({ k: "box", x: 1528, y: 1136, w: 78, h: 58 });
+    list.push({ k: "box", x: 2236, y: 1208, w: 88, h: 62 });
+    list.push({ k: "box", x: 1436, y: 1216, w: 40, h: 16 });
+    list.push({ k: "circle", x: 1466, y: 1294, r: 14 });
+    if (state && state.level) {
+      var i, m, h, im, w, cw;
+      for (i = 0; i < MISSIONS.length; i++) {
+        if (state.level < i + 1) break;
+        m = MISSIONS[i];
+        if (m.shape === "dock") {
+          list.push({ k: "box", x: m.x - 14, y: 352, w: 28, h: Math.max(24, m.y - 340) });
+          continue;
+        }
+        h = siteDrawH(m.shape);
+        im = sites[m.shape];
+        w = im && im.naturalWidth ? im.naturalWidth * (h / im.naturalHeight) : 56;
+        cw = Math.max(22, Math.min(w * 0.62, 96));
+        list.push({ k: "box", x: m.x - cw / 2, y: m.y + 4 - h * 0.9, w: cw, h: h * 0.9 });
+      }
+    }
+    if (state && state.willows) {
+      state.willows.forEach(function (w) {
+        list.push({ k: "circle", x: w.x, y: w.y - 2, r: 10 });
+      });
+    }
+    solidList = list;
+  }
   function blocked(x, y) {
     if (x < 28 || y < 300 || x > WORLD_W - 28 || y > WORLD_H - 28) return true;
-    var nx = (x - POND.x) / (POND.rx * 0.72);
-    var ny = (y - POND.y) / (POND.ry * 0.72);
+    var r = BODY;
+    var nx = (x - POND.x) / (POND.rx * 0.7 + r * 0.8);
+    var ny = (y - POND.y) / (POND.ry * 0.7 + r * 0.8);
     if (nx * nx + ny * ny < 1) return true;
-    if (x > 1368 && x < 1508 && y > 1088 && y < 1172) return true;
-    if (x > 1188 && x < 1304 && y > 1104 && y < 1184) return true;
+    var key = (state && state.level ? state.level : 0) + ":" + (state && state.willows ? state.willows.length : 0);
+    if (key !== solidKey) { solidKey = key; rebuildSolids(); }
+    var i, s;
+    for (i = 0; i < solidList.length; i++) {
+      s = solidList[i];
+      if (s.k === "circle") {
+        if ((x - s.x) * (x - s.x) + (y - s.y) * (y - s.y) < (s.r + r) * (s.r + r)) return true;
+      } else if (x > s.x - r && x < s.x + s.w + r && y > s.y - r && y < s.y + s.h + r) return true;
+    }
     return false;
   }
+  function unstick(ent) {
+    if (!ent || !blocked(ent.x, ent.y)) return;
+    var ring, k, rad, ang, x, y;
+    for (ring = 1; ring <= 8; ring++) {
+      rad = ring * 8;
+      for (k = 0; k < 12; k++) {
+        ang = k / 12 * Math.PI * 2;
+        x = ent.x + Math.cos(ang) * rad;
+        y = ent.y + Math.sin(ang) * rad;
+        if (!blocked(x, y)) { ent.x = x; ent.y = y; ent.tx = null; ent.ty = null; return; }
+      }
+    }
+  }
+  function tryStep(ent, nx, ny) {
+    if (Math.hypot(nx - ent.x, ny - ent.y) < 0.25) return false;
+    if (blocked(nx, ny)) return false;
+    ent.x = nx;
+    ent.y = ny;
+    return true;
+  }
   function moveEnt(ent, dt, pace) {
+    if (blocked(ent.x, ent.y)) unstick(ent);
     if (ent.tx == null) return false;
     var dx = ent.tx - ent.x, dy = ent.ty - ent.y;
     var dist = Math.hypot(dx, dy);
-    if (dist < 5) { ent.x = ent.tx; ent.y = ent.ty; ent.tx = null; ent.ty = null; return true; }
+    if (dist < 6) { ent.tx = null; ent.ty = null; ent.stuck = 0; return true; }
     var step = Math.min(WALK * (pace || 1) * dt, dist);
-    var nx = ent.x + dx / dist * step;
-    var ny = ent.y + dy / dist * step;
-    if (!blocked(nx, ny)) { ent.x = nx; ent.y = ny; }
-    else { ent.tx = null; ent.ty = null; }
+    var nx = ent.x + dx / dist * step, ny = ent.y + dy / dist * step;
+    var moved = tryStep(ent, nx, ny);
+    if (moved) ent.slide = 0;
+    else if (ent.slide && tryStep(ent, ent.x + ent.slide * step, ent.y)) moved = true;
+    else if (tryStep(ent, ent.x + step, ent.y)) { ent.slide = 1; moved = true; }
+    else if (tryStep(ent, ent.x - step, ent.y)) { ent.slide = -1; moved = true; }
+    else if (tryStep(ent, ent.x, ent.y + Math.sign(dy || 1) * step)) moved = true;
+    else ent.slide = 0;
+    if (moved) ent.stuck = 0;
+    else {
+      ent.stuck = (ent.stuck || 0) + dt;
+      if (ent.stuck > 0.45) { ent.tx = null; ent.ty = null; ent.stuck = 0; }
+    }
     ent.face = dx < 0 ? -1 : 1;
     return false;
+  }
+  function standNear(x, y) {
+    if (!blocked(x, y)) return { x: x, y: y };
+    var ring, k, rad, ang, px, py;
+    for (ring = 0; ring < 7; ring++) {
+      rad = 18 + ring * 8;
+      if (rad > REACH - 2) break;
+      for (k = 0; k < 16; k++) {
+        ang = Math.PI / 2 + k / 16 * Math.PI * 2;
+        px = x + Math.cos(ang) * rad;
+        py = y + Math.sin(ang) * rad;
+        if (!blocked(px, py)) return { x: px, y: py };
+      }
+    }
+    return null;
   }
 
   function harvest(i) {
@@ -1072,20 +1185,27 @@
     state.player.order = order;
     state.player.pending = null;
     var dist = Math.hypot(state.player.x - order.x, state.player.y - order.y);
-    if (dist <= REACH) {
+    if (dist <= REACH && !blocked(state.player.x, state.player.y)) {
       state.player.tx = null;
       state.player.ty = null;
       state.player.acting = 0.7;
       return;
     }
-    if (blocked(order.x, order.y)) {
+    var stand = standNear(order.x, order.y);
+    if (!stand) {
       state.player.order = null;
       toast("Can't walk there");
       return;
     }
+    if (Math.hypot(state.player.x - stand.x, state.player.y - stand.y) <= 6) {
+      state.player.tx = null;
+      state.player.ty = null;
+      state.player.acting = 0.7;
+      return;
+    }
     state.player.acting = 0;
-    state.player.tx = order.x;
-    state.player.ty = order.y;
+    state.player.tx = stand.x;
+    state.player.ty = stand.y;
   }
   function describeHit(hit) {
     var actions = [];
@@ -1407,6 +1527,62 @@
         body.appendChild(btn);
       }
     });
+  }
+  function museumPlate(parent, img, name, tag, copy) {
+    var plate = document.createElement("div");
+    plate.className = "plate";
+    var pic = document.createElement("img");
+    pic.src = img;
+    pic.alt = "";
+    plate.appendChild(pic);
+    var title = document.createElement("b");
+    title.textContent = name;
+    plate.appendChild(title);
+    var kind = document.createElement("i");
+    kind.textContent = tag;
+    plate.appendChild(kind);
+    var line = document.createElement("span");
+    line.textContent = copy;
+    plate.appendChild(line);
+    parent.appendChild(plate);
+  }
+  function openMuseum() {
+    sheetBack = document.getElementById("splash").classList.contains("hidden") ? "play" : "splash";
+    mode = "sheet";
+    document.getElementById("sheet-title").textContent = "Museum";
+    var body = document.getElementById("sheet-body");
+    body.innerHTML = "";
+    var intro = document.createElement("p");
+    intro.textContent = "The acre, the crew, and every job on the bank. Ahead means the building is not on the land yet.";
+    body.appendChild(intro);
+    var grid = document.createElement("div");
+    grid.className = "museum-grid";
+    var worldPlates = [
+      ["assets/sprites/bober-player.png", "Bober", "You", "Yellow hat. He walks the acre and works only after you confirm."],
+      ["assets/sprites/bober-full.png", "Nib, Puddle, Twig", "Crew", "Same chore, different beds, different paths."],
+      ["assets/world/lodge.png", "Lodge", "Home", "Sleep at the purple door. Dawn moves the crops."],
+      ["assets/world/barn.png", "Barn", "Home", "The red barn holds the grass cut for the trough."],
+      ["assets/world/mill.png", "Mill", "Work", "One reedbean sack becomes meal and chaff."],
+      ["assets/world/stall.png", "Moss's stall", "Trade", "Every price is in $bober. The dock opens the shop."],
+      ["assets/world/swan.png", "Reedswan", "Yard", "An egg at dawn, if the trough had fodder."],
+      ["assets/world/plodder.png", "Plodder", "Yard", "Cream at dawn, if fodder is left after the swan."],
+      ["assets/world/trough.png", "Trough", "Yard", "Grass cut from the barn goes here."],
+      ["assets/world/willow.png", "Willow stool", "Lease", "Ready after four dawns. Winter rests every stool."],
+      ["assets/world/reedbean.png", "Reedbean", "Spring", "Three watered dawns. The mill wants the sack."],
+      ["assets/world/beet.png", "Pond beet", "Summer", "Five watered dawns, once summer is here."],
+      ["assets/world/lantern.png", "Lanternpod", "Fall", "Four watered dawns. It withers in the wrong season."],
+      ["assets/world/grass.png", "Bank grass", "Yard", "One cut is one fodder. It grows back, except in winter."]
+    ];
+    worldPlates.forEach(function (row) { museumPlate(grid, row[0], row[1], row[2], row[3]); });
+    var level = state && state.level ? state.level : 1;
+    MISSIONS.forEach(function (m, i) {
+      var ahead = level < i + 1;
+      museumPlate(grid, "assets/sites/" + m.shape + ".png", m.name, ahead ? "Ahead" : "On the acre", ahead ? "Opens when this job starts." : m.detail);
+    });
+    body.appendChild(grid);
+    document.getElementById("sheet").classList.remove("hidden");
+    document.getElementById("splash").classList.add("hidden");
+    markMode();
   }
   function openNotes() {
     sheetBack = document.getElementById("splash").classList.contains("hidden") ? "play" : "splash";
@@ -1944,7 +2120,16 @@
       ctx.fillRect(x + 10, y - 48, 6, 14);
     }
   }
+  function siteDrawH(shape) {
+    if (shape === "lookout") return 118;
+    if (shape === "hall" || shape === "grand" || shape === "bunk") return 108;
+    if (shape === "post" || shape === "stick") return 86;
+    if (shape === "dock" || shape === "lamps" || shape === "orchard" || shape === "wind") return 72;
+    if (shape === "path" || shape === "row" || shape === "field") return 48;
+    return 84;
+  }
   function drawLampPost(x, y) {
+    if (blit(sites.post, x, y + 2, 40)) return;
     ctx.fillStyle = "#5c3a1e";
     ctx.fillRect(x - 2, y - 16, 4, 18);
     ctx.fillStyle = "#f5c400";
@@ -1952,23 +2137,23 @@
     ctx.arc(x, y - 18, 4, 0, Math.PI * 2);
     ctx.fill();
   }
-  function drawSites() {
-    var i, m, x, y;
-    for (i = 0; i < MISSIONS.length; i++) {
-      if (state.level < i + 1) break;
-      m = MISSIONS[i];
-      x = m.x;
-      y = m.y;
-      shadow(x, y, 22);
+  function drawOneSite(m) {
+    var x = m.x, y = m.y;
+    shadow(x, y + 2, m.shape === "hall" || m.shape === "grand" ? 34 : 22);
+    if (!blit(sites[m.shape], x, y + 4, siteDrawH(m.shape))) {
       yard(x, y);
       drawAccent(m.shape, x, y);
-      if (state.level === i + 1) {
-        ctx.strokeStyle = "#f5c400";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x - 60, y - 40, 120, 88);
-      }
-      plank(x, y + 48, m.short);
     }
+    if (state.level === MISSIONS.indexOf(m) + 1) {
+      ctx.strokeStyle = "#f5c400";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(x, y + 6, 36, 13, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      plank(x, y + 22, m.short);
+    }
+  }
+  function drawAcreDress() {
     if (state.level < 50) return;
     var lx;
     for (lx = 140; lx < 2460; lx += 200) {
@@ -1997,6 +2182,24 @@
       }
     }
   }
+  function drawSorted() {
+    var batch = [];
+    var i;
+    for (i = 0; i < MISSIONS.length; i++) {
+      if (!state || state.level < i + 1) break;
+      batch.push({ y: MISSIONS[i].y, site: MISSIONS[i] });
+    }
+    batch.push({ y: MOSS.y + 28, moss: true });
+    state.crew.forEach(function (c) { batch.push({ y: c.y, crew: c }); });
+    batch.push({ y: state.player.y, you: true });
+    batch.sort(function (a, b) { return a.y - b.y; });
+    batch.forEach(function (item) {
+      if (item.site) drawOneSite(item.site);
+      else if (item.moss) drawBober({ x: MOSS.x - 102, y: MOSS.y + 28, face: 1, id: "moss", tx: null }, false);
+      else if (item.crew) drawBober(item.crew, false);
+      else drawBober(state.player, true);
+    });
+  }
   function draw() {
     resize();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2016,10 +2219,8 @@
     state.beds.forEach(drawBed);
     state.willows.forEach(drawWillow);
     drawBuildings();
-    drawSites();
-    drawBober({ x: MOSS.x - 102, y: MOSS.y + 28, face: 1, id: "moss", tx: null }, false);
-    state.crew.forEach(function (c) { drawBober(c, false); });
-    drawBober(state.player, true);
+    drawAcreDress();
+    drawSorted();
     drawSnow();
     var sun = state.clock / DAY_LEN;
     if (state.season !== 3 && sun > 0.62) {
@@ -2111,6 +2312,8 @@
     else bootPlay(false);
   });
   document.getElementById("btn-notes").addEventListener("click", openNotes);
+  document.getElementById("btn-museum").addEventListener("click", openMuseum);
+  document.getElementById("btn-museum-splash").addEventListener("click", openMuseum);
   document.getElementById("btn-sheet-close").addEventListener("click", function () { closeSheet(); });
   document.getElementById("btn-work").addEventListener("click", function () {
     document.getElementById("dawn").classList.add("hidden");
@@ -2168,7 +2371,8 @@
     cutWillow: cutWillow,
     setDay: function (d) { state.day = d; },
     mode: function () { return mode; },
-    cam: function () { return { x: camX, y: camY, scale: viewScale, ox: viewOx, oy: viewOy }; }
+    cam: function () { return { x: camX, y: camY, scale: viewScale, ox: viewOx, oy: viewOy }; },
+    blocked: blocked
   };
 })();
   </script>
