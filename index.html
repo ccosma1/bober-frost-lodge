@@ -57,18 +57,31 @@
     }
     #dock button {
       flex: 1 1 0; border: 3px solid var(--yellow); background: var(--yellow); color: var(--ink);
-      border-radius: 14px; padding: 12px 8px; font-size: 15px;
+      border-radius: 14px; padding: 12px 4px; font-size: 14px;
     }
     #btn-sleep { background: var(--cream); }
     #dock button.hidden, .overlay.hidden, .hidden { display: none !important; }
+    #app[data-mode="splash"] #dock,
+    #app[data-mode="splash"] #verb,
+    #app[data-mode="splash"] header,
+    #app[data-mode="splash"] #subrow,
+    #app[data-mode="dawn"] #dock,
+    #app[data-mode="dawn"] #verb,
+    #app[data-mode="sheet"] #dock,
+    #app[data-mode="sheet"] #verb { display: none !important; }
+    #app[data-mode="sheet"] #sheet,
+    #app[data-mode="dawn"] #dawn { top: 76px; }
     .overlay {
-      position: absolute; inset: 0; z-index: 5; background: rgba(20, 33, 15, 0.55);
+      position: absolute; inset: 0; z-index: 8; background: rgba(20, 33, 15, 0.72);
       display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     .card {
       width: min(100%, 380px); background: #1d3a28; border: 3px solid var(--yellow);
-      border-radius: 18px; padding: 16px 14px 14px; max-height: 100%; overflow: auto;
+      border-radius: 18px; padding: 16px 14px 14px; max-height: calc(100dvh - 112px); overflow: auto;
     }
+    #sheet .card { display: flex; flex-direction: column; overflow: hidden; }
+    #sheet-body { overflow: auto; min-height: 0; }
+    #btn-sheet-close { flex: 0 0 auto; }
     h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.02em; color: var(--yellow); line-height: 1.05; }
     h2 { margin: 0 0 8px; font-size: 22px; color: var(--yellow); }
     p { margin: 0 0 8px; font-weight: 700; line-height: 1.35; }
@@ -83,7 +96,7 @@
     .row button { flex: 0 0 auto; border: 2px solid var(--yellow); background: #24381f; color: var(--cream); border-radius: 10px; padding: 8px 8px; font-size: 12px; }
     .row button.on { background: var(--yellow); color: var(--ink); }
     #toast {
-      position: absolute; left: 12px; right: 12px; top: 78px; z-index: 6;
+      position: absolute; left: 12px; right: 12px; top: 78px; z-index: 12;
       background: #14210f; border: 2px solid var(--cream); color: var(--cream);
       border-radius: 12px; padding: 8px 10px; font-weight: 800; text-align: center;
     }
@@ -91,7 +104,7 @@
   </style>
 </head>
 <body>
-  <div id="app">
+  <div id="app" data-mode="splash">
     <header>
       <div class="chip" id="when">SPRING · DAY 1</div>
       <div class="chip" id="clock">6:00</div>
@@ -102,13 +115,19 @@
       <span id="bucket">Bucket 8</span>
       <span id="mill-read">Mill empty</span>
       <span id="slate">Slate 0/2</span>
-      <button id="btn-pack" type="button" style="margin-left:auto;border:0;background:transparent;color:#f5c400;font-weight:900;">PACK</button>
     </div>
     <p id="verb">Tap the ground to walk.</p>
     <div id="stage">
       <canvas id="view" width="420" height="480"></canvas>
-      <div id="toast" class="hidden"></div>
-      <div id="splash" class="overlay">
+    </div>
+    <div id="dock">
+      <button id="btn-chores" type="button">CHORES</button>
+      <button id="btn-shop" type="button">SHOP</button>
+      <button id="btn-pack" type="button">PACK</button>
+      <button id="btn-sleep" type="button">SLEEP</button>
+    </div>
+    <div id="toast" class="hidden"></div>
+    <div id="splash" class="overlay">
         <div class="card">
           <h1>BOBER WILLOW CUT</h1>
           <p>A farm simulator. Four seasons on the bank.</p>
@@ -133,12 +152,6 @@
           <button class="play ghost" id="btn-sheet-close" type="button">CLOSE</button>
         </div>
       </div>
-    </div>
-    <div id="dock">
-      <button id="btn-chores" type="button">CHORES</button>
-      <button id="btn-chaff" type="button" class="hidden">CHAFF</button>
-      <button id="btn-sleep" type="button">SLEEP</button>
-    </div>
   </div>
   <script>
 (function () {
@@ -181,6 +194,8 @@
   var SWAN = { x: 1092, y: 1172 };
   var PLOD = { x: 1408, y: 1240 };
   var FILTER = { nib: "brightness(0.78)", puddle: "brightness(1.12)", twig: "hue-rotate(-16deg)", moss: "hue-rotate(70deg) saturate(0.85)" };
+  var LANE = { nib: -58, puddle: 6, twig: 62 };
+  var PACE = { nib: 0.92, puddle: 1.06, twig: 0.84 };
 
   var canvas = document.getElementById("view");
   var ctx = canvas.getContext("2d");
@@ -311,6 +326,7 @@
     mode = "splash";
     document.getElementById("splash").classList.remove("hidden");
     document.getElementById("btn-continue").classList.toggle("hidden", !localStorage.getItem(KEY));
+    markMode();
   }
 
   function blocked(x, y) {
@@ -322,12 +338,12 @@
     if (x > 1188 && x < 1304 && y > 1104 && y < 1184) return true;
     return false;
   }
-  function moveEnt(ent, dt) {
+  function moveEnt(ent, dt, pace) {
     if (ent.tx == null) return false;
     var dx = ent.tx - ent.x, dy = ent.ty - ent.y;
     var dist = Math.hypot(dx, dy);
     if (dist < 5) { ent.x = ent.tx; ent.y = ent.ty; ent.tx = null; ent.ty = null; return true; }
-    var step = Math.min(WALK * dt, dist);
+    var step = Math.min(WALK * (pace || 1) * dt, dist);
     var nx = ent.x + dx / dist * step;
     var ny = ent.y + dy / dist * step;
     if (!blocked(nx, ny)) { ent.x = nx; ent.y = ny; }
@@ -541,6 +557,8 @@
       c.chore = null;
       c.tx = null;
       c.ty = null;
+      c.aim = null;
+      c.via = null;
       var h = state.home[c.id];
       c.x = h.x; c.y = h.y;
     });
@@ -557,56 +575,163 @@
     save();
   }
 
+  function segmentBlocked(x0, y0, x1, y1) {
+    var s;
+    for (s = 1; s <= 6; s++) {
+      var t = s / 6;
+      if (blocked(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return true;
+    }
+    return false;
+  }
+  function fieldTasks() {
+    var tasks = [];
+    state.beds.forEach(function (b, i) {
+      if ((b.state === "seeded" || b.state === "growing") && !b.wet) tasks.push({ kind: "water", i: i, x: b.x, y: b.y, rank: 0 });
+      else if (b.state === "ready") tasks.push({ kind: "harvest", i: i, x: b.x, y: b.y, rank: 1 });
+      else if (b.state === "wild" || b.state === "stony" || b.state === "stubble") tasks.push({ kind: "clear", i: i, x: b.x, y: b.y, rank: 2 });
+    });
+    tasks.sort(function (a, b) { return a.rank - b.rank || a.i - b.i; });
+    return tasks;
+  }
+  function barnTasks() {
+    var tasks = [];
+    state.grass.forEach(function (g, i) {
+      if (g.ready) tasks.push({ kind: "grass", i: i, x: g.x, y: g.y, rank: 0 });
+    });
+    return tasks;
+  }
+  function millTasks() {
+    var tasks = [];
+    if (state.mill.sack === 0 && state.items.reedbean > 0) tasks.push({ kind: "load", i: 0, x: MILLP.x, y: MILLP.y + 28, rank: 0 });
+    state.beds.forEach(function (b, i) {
+      if (b.state === "ready" && b.crop === "reedbean") tasks.push({ kind: "harvest", i: i, x: b.x, y: b.y, rank: 1 });
+    });
+    return tasks;
+  }
+  function tasksFor(job) {
+    if (job === "field") return fieldTasks();
+    if (job === "barn") return barnTasks();
+    if (job === "mill") return millTasks();
+    return [];
+  }
+  function waitSpot(c) {
+    var lane = LANE[c.id] || 0;
+    if (c.chore === "barn") return { kind: "wait", i: c.id, x: 1324 + lane, y: 1392 };
+    if (c.chore === "mill") return { kind: "wait", i: c.id, x: MILLP.x - 10 + lane, y: MILLP.y + 86 };
+    var h = state.home[c.id];
+    return { kind: "wait", i: c.id, x: h.x, y: h.y + 40 };
+  }
+  function sidePoint(c, x, y) {
+    var lane = LANE[c.id] || 0;
+    var ox = x + (lane >= 0 ? 36 : -36);
+    var oy = y + 28;
+    if (blocked(ox, oy) || segmentBlocked(x, y, ox, oy)) {
+      ox = x + (lane >= 0 ? -32 : 32);
+      oy = y + 18;
+    }
+    if (blocked(ox, oy)) return { x: x, y: y + 8 };
+    return { x: ox, y: oy };
+  }
+  function laneVia(c, dest) {
+    var lane = LANE[c.id] || 0;
+    var dx = dest.x - c.x, dy = dest.y - c.y;
+    var dist = Math.hypot(dx, dy);
+    if (dist < 120 || lane === 0) return null;
+    var nx = -dy / dist, ny = dx / dist;
+    var mx = (c.x + dest.x) / 2 + nx * lane;
+    var my = (c.y + dest.y) / 2 + ny * lane * 0.45;
+    if (blocked(mx, my) || segmentBlocked(c.x, c.y, mx, my) || segmentBlocked(mx, my, dest.x, dest.y)) {
+      mx = (c.x + dest.x) / 2 - nx * lane * 0.6;
+      my = (c.y + dest.y) / 2 - ny * lane * 0.3;
+    }
+    if (blocked(mx, my) || segmentBlocked(c.x, c.y, mx, my)) return null;
+    return { x: mx, y: my };
+  }
+  function assignCrew() {
+    var taken = {};
+    state.crew.forEach(function (c) {
+      if (!c.chore) { c.aim = null; c.via = null; return; }
+      var tasks = tasksFor(c.chore);
+      var pick = null;
+      var n;
+      for (n = 0; n < tasks.length; n++) {
+        var key = tasks[n].kind + ":" + tasks[n].i;
+        if (!taken[key]) { pick = tasks[n]; taken[key] = c.id; break; }
+      }
+      if (!pick) pick = waitSpot(c);
+      var nextKey = pick.kind + ":" + pick.i;
+      var prevKey = c.aim ? c.aim.kind + ":" + c.aim.i : "";
+      if (prevKey !== nextKey) {
+        var stand = sidePoint(c, pick.x, pick.y);
+        c.aim = { kind: pick.kind, i: pick.i, x: pick.x, y: pick.y, sx: stand.x, sy: stand.y };
+        c.via = laneVia(c, stand);
+      }
+    });
+  }
+  function doCrewWork(c) {
+    var aim = c.aim;
+    if (!aim || aim.kind === "wait") return false;
+    if (aim.kind === "water" || aim.kind === "harvest" || aim.kind === "clear") {
+      var b = state.beds[aim.i];
+      if (!b) return false;
+      if (aim.kind === "harvest" && b.state === "ready") { harvest(aim.i); return true; }
+      if (aim.kind === "clear" && b.state === "wild") { b.state = "stony"; return true; }
+      if (aim.kind === "clear" && (b.state === "stony" || b.state === "stubble")) { b.state = "tilled"; return true; }
+      if (aim.kind === "water" && (b.state === "seeded" || b.state === "growing") && !b.wet) { b.wet = true; return true; }
+      return false;
+    }
+    if (aim.kind === "grass" && state.grass[aim.i] && state.grass[aim.i].ready) { cutGrass(aim.i); return true; }
+    if (aim.kind === "load") { var err = loadMill(); return !err; }
+    return false;
+  }
   function crewThink(c, dt) {
     if (c.cool > 0) c.cool -= dt;
     if (!c.chore) {
       var h = state.home[c.id];
-      if (Math.hypot(c.x - h.x, c.y - h.y) > 8) { c.tx = h.x; c.ty = h.y; }
+      if (Math.hypot(c.x - h.x, c.y - h.y) > 10) { c.tx = h.x; c.ty = h.y; }
+      else { c.tx = null; c.ty = null; }
       return;
     }
-    if (c.chore === "field") {
-      var idx = -1, k;
-      for (k = 0; k < state.beds.length; k++) {
-        var b = state.beds[k];
-        if ((b.state === "seeded" || b.state === "growing") && !b.wet) { idx = k; break; }
+    if (!c.aim) return;
+    if (c.via) {
+      if (segmentBlocked(c.x, c.y, c.via.x, c.via.y)) c.via = null;
+      else if (Math.hypot(c.x - c.via.x, c.y - c.via.y) > 16) { c.tx = c.via.x; c.ty = c.via.y; return; }
+      else c.via = null;
+    }
+    var atWork = Math.hypot(c.x - c.aim.x, c.y - c.aim.y) <= REACH;
+    var atSide = Math.hypot(c.x - c.aim.sx, c.y - c.aim.sy) <= 14;
+    if (!atWork && !atSide) { c.tx = c.aim.sx; c.ty = c.aim.sy; return; }
+    if (!atWork) { c.tx = c.aim.x; c.ty = c.aim.y; return; }
+    c.tx = null;
+    c.ty = null;
+    if (c.cool > 0 || c.aim.kind === "wait") return;
+    if (doCrewWork(c)) c.cool = 0.5;
+  }
+  function separateCrew() {
+    var i, j;
+    for (i = 0; i < state.crew.length; i++) {
+      for (j = i + 1; j < state.crew.length; j++) {
+        var a = state.crew[i], b = state.crew[j];
+        var dx = b.x - a.x, dy = b.y - a.y;
+        var dist = Math.hypot(dx, dy);
+        if ((a.tx == null && b.tx == null) || dist >= 96) continue;
+        var push = (96 - dist) / 2;
+        var ux = dist < 1 ? 1 : dx / dist;
+        var uy = dist < 1 ? 0 : dy / dist;
+        var ax = a.x - ux * push, ay = a.y - uy * push;
+        var bx = b.x + ux * push, by = b.y + uy * push;
+        if (!blocked(ax, ay)) { a.x = ax; a.y = ay; }
+        if (!blocked(bx, by)) { b.x = bx; b.y = by; }
       }
-      if (idx < 0) {
-        for (k = 0; k < state.beds.length; k++) if (state.beds[k].state === "ready") { idx = k; break; }
-      }
-      if (idx < 0) {
-        for (k = 0; k < state.beds.length; k++) {
-          var st = state.beds[k].state;
-          if (st === "wild" || st === "stony" || st === "stubble") { idx = k; break; }
-        }
-      }
-      if (idx < 0) return;
-      var bed = state.beds[idx];
-      if (Math.hypot(c.x - bed.x, c.y - bed.y) > REACH) { c.tx = bed.x; c.ty = bed.y; return; }
-      if (c.cool > 0) return;
-      if (bed.state === "ready") harvest(idx);
-      else if (bed.state === "wild") bed.state = "stony";
-      else if (bed.state === "stony" || bed.state === "stubble") bed.state = "tilled";
-      else bed.wet = true;
-      c.cool = 0.55;
-    } else if (c.chore === "barn") {
-      var g = null, gi = -1, gk;
-      for (gk = 0; gk < state.grass.length; gk++) if (state.grass[gk].ready) { g = state.grass[gk]; gi = gk; break; }
-      if (!g) { c.tx = 1360; c.ty = 1248; return; }
-      if (Math.hypot(c.x - g.x, c.y - g.y) > REACH) { c.tx = g.x; c.ty = g.y; return; }
-      if (c.cool > 0) return;
-      cutGrass(gi);
-      c.cool = 0.55;
-    } else if (c.chore === "mill") {
-      if (state.mill.sack > 0 || state.items.reedbean <= 0) { c.tx = MILLP.x; c.ty = MILLP.y + 36; return; }
-      if (Math.hypot(c.x - MILLP.x, c.y - MILLP.y) > REACH) { c.tx = MILLP.x; c.ty = MILLP.y + 36; return; }
-      if (c.cool > 0) return;
-      loadMill();
-      c.cool = 0.4;
     }
   }
 
+  function markMode() {
+    document.getElementById("app").setAttribute("data-mode", mode);
+  }
   function hud() {
     ensure();
+    markMode();
     document.getElementById("when").textContent = whenText();
     document.getElementById("clock").textContent = clockText();
     document.getElementById("stones").textContent = state.stones + " creek stones";
@@ -618,7 +743,6 @@
     var got = state.slate && state.slate.got >= spec.n;
     var have = state.items[spec.key] || 0;
     document.getElementById("slate").textContent = got ? "Slate filled" : ("Slate " + Math.min(have, spec.n) + "/" + spec.n);
-    document.getElementById("btn-chaff").classList.toggle("hidden", state.chaff <= 0);
     var near = nearest(state.player.x, state.player.y, REACH + 8);
     document.getElementById("verb").textContent = near ? verbFor(near) : "Tap the ground to walk. Sleep ends the day.";
   }
@@ -682,11 +806,13 @@
     document.getElementById("sheet").classList.add("hidden");
     if (mode === "sheet") mode = sheetBack;
     if (mode === "splash") document.getElementById("splash").classList.remove("hidden");
+    markMode();
   }
   function openSheet(title, builder) {
     if (mode !== "play" && mode !== "sheet") return;
     sheetBack = "play";
     mode = "sheet";
+    markMode();
     document.getElementById("sheet-title").textContent = title;
     var body = document.getElementById("sheet-body");
     body.innerHTML = "";
@@ -696,7 +822,7 @@
   function openChores() {
     openSheet("Morning chores", function (body) {
       var note = document.createElement("p");
-      note.textContent = "One chore each. They walk to it. You can still do the work yourself.";
+      note.textContent = "Same job, different work. They split the beds and take different paths. You can still do it yourself.";
       body.appendChild(note);
       state.crew.forEach(function (c) {
         var row = document.createElement("div");
@@ -711,6 +837,10 @@
           if (c.chore === job) btn.className = "on";
           btn.addEventListener("click", function () {
             c.chore = c.chore === job ? null : job;
+            c.aim = null;
+            c.via = null;
+            c.tx = null;
+            c.ty = null;
             openChores();
           });
           row.appendChild(btn);
@@ -814,14 +944,55 @@
   }
   function openPack() {
     openSheet("Pack", function (body) {
-      var p = document.createElement("p");
       var it = state.items;
-      p.textContent = "Reedbean " + it.reedbean + " · cress " + (it.cress || 0) + " · meal " + it.meal + " · beet " + it.beet + " · lanternpod " + it.lantern + " · willow " + it.willow + " · bundle " + (it.bundle || 0) + " · egg " + it.egg + " · cream " + it.cream + " · chaff " + state.chaff + " · seed " + it.seedReed + "/" + (it.seedCress || 0) + "/" + it.seedBeet + "/" + it.seedLantern + ".";
-      body.appendChild(p);
+      var lines = [
+        ["Reedbean", it.reedbean],
+        ["Bank cress", it.cress || 0],
+        ["Meal", it.meal],
+        ["Pond beet", it.beet],
+        ["Lanternpod", it.lantern],
+        ["Willow", it.willow],
+        ["Willow bundle", it.bundle || 0],
+        ["Egg", it.egg],
+        ["Cream", it.cream],
+        ["Chaff", state.chaff],
+        ["Reedbean seed", it.seedReed],
+        ["Cress seed", it.seedCress || 0],
+        ["Beet seed", it.seedBeet],
+        ["Lantern seed", it.seedLantern],
+        ["Bucket", state.bucket || 0]
+      ];
+      lines.forEach(function (pair) {
+        var row = document.createElement("div");
+        row.className = "row";
+        var label = document.createElement("strong");
+        label.textContent = pair[0];
+        row.appendChild(label);
+        var count = document.createElement("span");
+        count.textContent = String(pair[1]);
+        row.appendChild(count);
+        body.appendChild(row);
+      });
       var note = document.createElement("p");
       note.className = "fan";
-      note.textContent = "Chaff goes back on a bed and lifts fertility, up to 2. Fertility adds to the next harvest, then drops.";
+      note.textContent = "Chaff goes on the bed you are standing at. It lifts fertility, up to 2.";
       body.appendChild(note);
+      if (state.chaff > 0) {
+        var lay = document.createElement("button");
+        lay.className = "play";
+        lay.type = "button";
+        lay.textContent = "Lay chaff on this bed";
+        lay.addEventListener("click", function () {
+          var hit = nearest(state.player.x, state.player.y, REACH);
+          if (!hit || hit.kind !== "bed") { toast("Stand at a bed"); return; }
+          var err = layChaff(hit.i);
+          if (err) toast(err);
+          else toast("Chaff on the bed");
+          openPack();
+          hud();
+        });
+        body.appendChild(lay);
+      }
     });
   }
   function openNotes() {
@@ -841,6 +1012,7 @@
     body.appendChild(r);
     document.getElementById("sheet").classList.remove("hidden");
     document.getElementById("splash").classList.add("hidden");
+    markMode();
   }
 
   function onTap(x, y) {
@@ -1253,10 +1425,12 @@
         state.player.pending = null;
         doHit(pending);
       }
+      assignCrew();
       state.crew.forEach(function (c) {
         crewThink(c, dt);
-        moveEnt(c, dt);
+        moveEnt(c, dt, PACE[c.id]);
       });
+      separateCrew();
       if (!looking) {
         camX += (state.player.x - VW / 2 - camX) * Math.min(1, dt * 14);
         camY += (state.player.y - VH / 2 - camY) * Math.min(1, dt * 14);
@@ -1285,6 +1459,7 @@
     camY = state.player.y - VH / 2;
     clampCam();
     mode = "play";
+    markMode();
     hud();
   }
 
@@ -1298,18 +1473,12 @@
   document.getElementById("btn-work").addEventListener("click", function () {
     document.getElementById("dawn").classList.add("hidden");
     mode = "play";
+    markMode();
   });
   document.getElementById("btn-chores").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openChores(); });
-  document.getElementById("btn-sleep").addEventListener("click", function () { if (mode === "play") endDay(); });
-  document.getElementById("btn-chaff").addEventListener("click", function () {
-    var hit = nearest(state.player.x, state.player.y, REACH);
-    if (!hit || hit.kind !== "bed") { toast("Stand at a bed"); return; }
-    var err = layChaff(hit.i);
-    if (err) toast(err);
-    else toast("Chaff on the bed");
-    hud();
-  });
+  document.getElementById("btn-shop").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openShop(); });
   document.getElementById("btn-pack").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openPack(); });
+  document.getElementById("btn-sleep").addEventListener("click", function () { if (mode === "play") endDay(); });
 
   canvas.addEventListener("pointerdown", function (ev) {
     if (mode !== "play") return;

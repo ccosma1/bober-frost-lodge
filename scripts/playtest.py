@@ -59,6 +59,10 @@ def play_checks() -> list[str]:
         page.evaluate("localStorage.removeItem('bober-willow-cut-v1')")
         page.reload(wait_until="domcontentloaded")
         page.wait_for_selector("#btn-start")
+        if page.locator("#btn-chores").is_visible() or page.locator("#btn-sleep").is_visible():
+            errors.append("play buttons visible on the menu")
+        if not page.locator("#btn-start").is_visible():
+            errors.append("start hidden on the menu")
         title = page.locator("h1").inner_text()
         if title != "BOBER WILLOW CUT":
             errors.append("splash title " + title)
@@ -251,6 +255,67 @@ def play_checks() -> list[str]:
                 errors.append("sell " + str(sold))
         except Exception as exc:
             errors.append("shop " + repr(exc))
+
+        page.evaluate("WC.boot()")
+        stayed = page.evaluate("() => ({ x: WC.state.player.x, y: WC.state.player.y })")
+        page.locator("#btn-shop").click()
+        try:
+            page.wait_for_function(
+                "() => document.getElementById('sheet-title').textContent.indexOf('Moss') >= 0",
+                timeout=3000,
+            )
+        except Exception as exc:
+            errors.append("dock shop " + repr(exc))
+        shop_stay = page.evaluate(
+            """() => ({
+              x: WC.state.player.x,
+              y: WC.state.player.y,
+              dock: getComputedStyle(document.getElementById('dock')).display
+            })"""
+        )
+        if shop_stay["x"] != stayed["x"] or shop_stay["y"] != stayed["y"]:
+            errors.append("shop moved bober " + str(shop_stay))
+        if shop_stay["dock"] != "none":
+            errors.append("dock visible over shop " + str(shop_stay["dock"]))
+        page.locator("#btn-sheet-close").click()
+        page.locator("#btn-pack").click()
+        try:
+            page.wait_for_function(
+                "() => document.getElementById('sheet-title').textContent === 'Pack'",
+                timeout=3000,
+            )
+        except Exception as exc:
+            errors.append("pack " + repr(exc))
+        if "Reedbean seed" not in page.locator("#sheet-body").inner_text():
+            errors.append("pack list " + page.locator("#sheet-body").inner_text()[:180])
+        page.locator("#btn-sheet-close").click()
+        page.evaluate(
+            """() => {
+              WC.state.crew[0].chore = 'field';
+              WC.state.crew[1].chore = 'field';
+              WC.state.crew[0].aim = null;
+              WC.state.crew[1].aim = null;
+            }"""
+        )
+        try:
+            page.wait_for_function(
+                """() => {
+                  const a = WC.state.crew[0], b = WC.state.crew[1];
+                  return a.aim && b.aim && a.aim.kind === 'water' && b.aim.kind === 'water' && a.aim.i !== b.aim.i;
+                }""",
+                timeout=3000,
+            )
+        except Exception as exc:
+            errors.append("crew split " + repr(exc))
+        page.wait_for_timeout(1200)
+        split = page.evaluate(
+            """() => {
+              const a = WC.state.crew[0], b = WC.state.crew[1];
+              return { d: Math.hypot(a.x - b.x, a.y - b.y), ai: a.aim && a.aim.i, bi: b.aim && b.aim.i };
+            }"""
+        )
+        if split["d"] < 70 or split["ai"] == split["bi"]:
+            errors.append("crew overlapped " + str(split))
 
         page.evaluate("localStorage.removeItem('bober-willow-cut-v1')")
         page.reload(wait_until="domcontentloaded")
