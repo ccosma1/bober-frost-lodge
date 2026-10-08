@@ -99,6 +99,7 @@
     </header>
     <div id="subrow">
       <span id="trough">Trough 0</span>
+      <span id="bucket">Bucket 8</span>
       <span id="mill-read">Mill empty</span>
       <span id="slate">Slate 0/2</span>
       <button id="btn-pack" type="button" style="margin-left:auto;border:0;background:transparent;color:#f5c400;font-weight:900;">PACK</button>
@@ -145,15 +146,16 @@
 
   var KEY = "bober-willow-cut-v1";
   var VW = 420, VH = 480, WORLD_W = 2520, WORLD_H = 2400;
-  var DAY_LEN = 180, MILL_NEED = 72, WALK = 70, REACH = 68;
+  var DAY_LEN = 180, MILL_NEED = 72, WALK = 210, REACH = 68;
   var SEASON = ["SPRING", "SUMMER", "FALL", "WINTER"];
-  var CROP_NAME = { reedbean: "Reedbean", beet: "Pond beet", lantern: "Lanternpod" };
-  var NEED = { reedbean: 3, beet: 5, lantern: 4 };
-  var SEASON_OF = { reedbean: 0, beet: 1, lantern: 2 };
-  var SEED_KEY = { reedbean: "seedReed", beet: "seedBeet", lantern: "seedLantern" };
-  var SEED_COST = { reedbean: 3, beet: 4, lantern: 4 };
+  var CROP_NAME = { reedbean: "Reedbean", cress: "Bank cress", beet: "Pond beet", lantern: "Lanternpod" };
+  var NEED = { reedbean: 3, cress: 2, beet: 5, lantern: 4 };
+  var SEASON_OF = { reedbean: 0, cress: 0, beet: 1, lantern: 2 };
+  var SEED_KEY = { reedbean: "seedReed", cress: "seedCress", beet: "seedBeet", lantern: "seedLantern" };
+  var SEED_COST = { reedbean: 3, cress: 2, beet: 4, lantern: 4 };
   var PRICE = {
     reedbean: [8, 5, 4, 6],
+    cress: [5, 3, 3, 4],
     meal: [16, 12, 10, 14],
     beet: [4, 10, 5, 4],
     lantern: [4, 4, 12, 6],
@@ -162,6 +164,9 @@
     egg: [5, 5, 6, 8],
     cream: [7, 7, 8, 9]
   };
+  var SELL_NAME = { reedbean: "Reedbean", cress: "Bank cress", meal: "Meal", beet: "Pond beet", lantern: "Lanternpod", willow: "Willow", bundle: "Willow bundle", egg: "Egg", cream: "Cream" };
+  var FILL = { x: 1004, y: 1228 };
+  var SHELLS = [{ x: 860, y: 1340 }, { x: 1680, y: 1348 }, { x: 2060, y: 1410 }];
   var SLATE = [
     { key: "reedbean", n: 2, bonus: 12, name: "Reedbean" },
     { key: "beet", n: 2, bonus: 12, name: "Pond beet" },
@@ -186,9 +191,8 @@
   var state;
   var flakes = [];
   var anim = 0;
-  var imgHat = new Image(); imgHat.src = "assets/sprites/bober-hat.png";
-  var imgIdle = new Image(); imgIdle.src = "assets/sprites/bober-idle.png";
-  var imgWalk = new Image(); imgWalk.src = "assets/sprites/bober-walk.png";
+  var imgPlayer = new Image(); imgPlayer.src = "assets/sprites/bober-player.png";
+  var imgFull = new Image(); imgFull.src = "assets/sprites/bober-full.png";
   var world = {};
   ["lodge", "barn", "mill", "stall", "reedbean", "beet", "lantern", "willow", "swan", "plodder", "grass", "trough"].forEach(function (name) {
     var im = new Image();
@@ -214,8 +218,9 @@
   }
   function fresh() {
     state = {
-      year: 1, season: 0, day: 1, clock: 0, stones: 6, fodder: 0, chaff: 0,
-      items: { reedbean: 0, beet: 0, lantern: 0, willow: 0, bundle: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedBeet: 0, seedLantern: 0 },
+      year: 1, season: 0, day: 1, clock: 0, stones: 6, fodder: 0, chaff: 0, bucket: 8,
+      forage: [1, 1, 1],
+      items: { reedbean: 0, cress: 0, beet: 0, lantern: 0, willow: 0, bundle: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedCress: 1, seedBeet: 0, seedLantern: 0 },
       slate: { season: 0, got: 0 },
       mill: { sack: 0, t: 0 },
       beds: [
@@ -248,14 +253,14 @@
       ],
       player: { x: 1240, y: 1256, tx: null, ty: null, face: 1, pending: null },
       crew: [
-        { id: "nib", name: "NIB", x: 1144, y: 1232, tx: null, ty: null, face: 1, chore: null, cool: 0 },
-        { id: "puddle", name: "PUDDLE", x: 1332, y: 1232, tx: null, ty: null, face: -1, chore: null, cool: 0 },
-        { id: "twig", name: "TWIG", x: 1288, y: 1288, tx: null, ty: null, face: 1, chore: null, cool: 0 }
+        { id: "nib", name: "NIB", x: 1040, y: 1340, tx: null, ty: null, face: 1, chore: null, cool: 0 },
+        { id: "puddle", name: "PUDDLE", x: 1455, y: 1336, tx: null, ty: null, face: -1, chore: null, cool: 0 },
+        { id: "twig", name: "TWIG", x: 1310, y: 1395, tx: null, ty: null, face: 1, chore: null, cool: 0 }
       ],
       home: {
-        nib: { x: 1144, y: 1232 },
-        puddle: { x: 1332, y: 1232 },
-        twig: { x: 1288, y: 1288 }
+        nib: { x: 1040, y: 1340 },
+        puddle: { x: 1455, y: 1336 },
+        twig: { x: 1310, y: 1395 }
       }
     };
   }
@@ -263,7 +268,17 @@
   function ensure() {
     if (!state || !state.items) return;
     if (state.items.bundle == null) state.items.bundle = 0;
+    if (state.items.cress == null) state.items.cress = 0;
+    if (state.items.seedCress == null) state.items.seedCress = 0;
+    if (state.bucket == null) state.bucket = 8;
+    if (!state.forage || state.forage.length !== 3) state.forage = [1, 1, 1];
     if (!state.slate || state.slate.season !== state.season) state.slate = { season: state.season, got: 0 };
+  }
+  function seasonCrops() {
+    if (state.season === 0) return ["reedbean", "cress"];
+    if (state.season === 1) return ["beet"];
+    if (state.season === 2) return ["lantern"];
+    return [];
   }
   function price(key) { return PRICE[key][state.season]; }
   function seasonName() { return SEASON[state.season]; }
@@ -339,7 +354,23 @@
     var b = state.beds[i];
     if (b.state !== "seeded" && b.state !== "growing") return "Nothing to water";
     if (b.wet) return "Already watered";
+    if ((state.bucket || 0) <= 0) return "Fill the bucket at the pond.";
+    state.bucket -= 1;
     b.wet = true;
+    save();
+    return null;
+  }
+  function fillBucket() {
+    state.bucket = 8;
+    toast("Bucket filled");
+    save();
+  }
+  function pickShell(i) {
+    if (!state.forage[i]) return "Shell already taken";
+    state.forage[i] = 0;
+    state.stones += 2;
+    toast("Creek shell. 2 stones");
+    save();
     return null;
   }
   function plant(i, crop) {
@@ -505,6 +536,7 @@
         if (g.wait <= 0) g.ready = true;
       });
     }
+    state.forage = [1, 1, 1];
     state.crew.forEach(function (c) {
       c.chore = null;
       c.tx = null;
@@ -579,6 +611,7 @@
     document.getElementById("clock").textContent = clockText();
     document.getElementById("stones").textContent = state.stones + " creek stones";
     document.getElementById("trough").textContent = "Trough " + state.fodder;
+    document.getElementById("bucket").textContent = "Bucket " + (state.bucket || 0);
     var mill = state.mill;
     document.getElementById("mill-read").textContent = mill.sack ? ("Mill " + Math.min(100, Math.floor(mill.t / MILL_NEED * 100)) + "%") : "Mill empty";
     var spec = SLATE[state.season];
@@ -607,6 +640,8 @@
       return "Willow not ready · " + state.willows[hit.i].days + " of 4";
     }
     if (hit.kind === "grass") return state.grass[hit.i].ready ? "Cut grass into the trough" : "Grass cut";
+    if (hit.kind === "fill") return state.bucket >= 8 ? "Bucket is full" : "Fill the bucket";
+    if (hit.kind === "shell") return "Pick the shell";
     if (hit.kind === "mill") return state.mill.sack ? "Mill is stocked" : "Load a reedbean sack";
     if (hit.kind === "moss") return "Moss's stall · " + seasonName().toLowerCase() + " prices";
     if (hit.kind === "door") return "Sleep in the lodge";
@@ -621,6 +656,10 @@
     state.beds.forEach(function (b, i) { consider({ kind: "bed", i: i, x: b.x, y: b.y }); });
     state.willows.forEach(function (w, i) { consider({ kind: "willow", i: i, x: w.x, y: w.y }); });
     state.grass.forEach(function (g, i) { consider({ kind: "grass", i: i, x: g.x, y: g.y }); });
+    consider({ kind: "fill", x: FILL.x, y: FILL.y });
+    state.forage.forEach(function (alive, i) {
+      if (alive) consider({ kind: "shell", i: i, x: SHELLS[i].x, y: SHELLS[i].y });
+    });
     consider({ kind: "mill", x: MILLP.x, y: MILLP.y });
     consider({ kind: "rack", x: RACK.x, y: RACK.y });
     consider({ kind: "moss", x: MOSS.x, y: MOSS.y });
@@ -631,6 +670,8 @@
     if (hit.kind === "bed") workBed(hit.i);
     else if (hit.kind === "willow") { var e = cutWillow(hit.i); if (e) toast(e); }
     else if (hit.kind === "grass") { if (state.grass[hit.i].ready) cutGrass(hit.i); else toast("Cut already"); }
+    else if (hit.kind === "fill") { if (state.bucket >= 8) toast("Bucket is full"); else fillBucket(); }
+    else if (hit.kind === "shell") { var shellErr = pickShell(hit.i); if (shellErr) toast(shellErr); }
     else if (hit.kind === "mill") { var m = loadMill(); if (m) toast(m); else toast("Sack loaded"); }
     else if (hit.kind === "rack") { var bundleErr = tieBundle(); if (bundleErr) toast(bundleErr); }
     else if (hit.kind === "moss") openShop();
@@ -680,26 +721,29 @@
   }
   function openPlant(i) {
     openSheet("Plant this bed", function (body) {
-      var crop = ["reedbean", "beet", "lantern"][state.season];
-      var p = document.createElement("p");
-      if (state.season === 3) {
-        p.textContent = "Winter rests. The beds wait.";
-        body.appendChild(p);
+      var crops = seasonCrops();
+      if (!crops.length) {
+        var winter = document.createElement("p");
+        winter.textContent = "Winter rests. The beds wait.";
+        body.appendChild(winter);
         return;
       }
-      p.textContent = CROP_NAME[crop] + " · " + NEED[crop] + " dawns if you water. Seed in the pack: " + state.items[SEED_KEY[crop]] + ".";
-      body.appendChild(p);
-      var btn = document.createElement("button");
-      btn.className = "play";
-      btn.type = "button";
-      btn.textContent = "Plant " + CROP_NAME[crop];
-      btn.addEventListener("click", function () {
-        var err = plant(i, crop);
-        if (err) toast(err);
-        else toast(CROP_NAME[crop] + " planted");
-        closeSheet();
+      crops.forEach(function (crop) {
+        var p = document.createElement("p");
+        p.textContent = CROP_NAME[crop] + " · " + NEED[crop] + " dawns if you water. Seed in the pack: " + state.items[SEED_KEY[crop]] + ".";
+        body.appendChild(p);
+        var btn = document.createElement("button");
+        btn.className = "play";
+        btn.type = "button";
+        btn.textContent = "Plant " + CROP_NAME[crop];
+        btn.addEventListener("click", function () {
+          var err = plant(i, crop);
+          if (err) toast(err);
+          else toast(CROP_NAME[crop] + " planted");
+          closeSheet();
+        });
+        body.appendChild(btn);
       });
-      body.appendChild(btn);
     });
   }
   function openShop() {
@@ -727,13 +771,12 @@
         });
         body.appendChild(fill);
       }
-      ["reedbean", "meal", "beet", "lantern", "willow", "bundle", "egg", "cream"].forEach(function (key) {
+      ["reedbean", "cress", "meal", "beet", "lantern", "willow", "bundle", "egg", "cream"].forEach(function (key) {
         var have = state.items[key] || 0;
         var row = document.createElement("div");
         row.className = "row";
         var label = document.createElement("strong");
-        var nm = key === "beet" ? "Pond beet" : key === "lantern" ? "Lanternpod" : key === "reedbean" ? "Reedbean" : key === "bundle" ? "Willow bundle" : key[0].toUpperCase() + key.slice(1);
-        label.textContent = nm + " · " + have + " · " + price(key) + " stones";
+        label.textContent = SELL_NAME[key] + " · " + have + " · " + price(key) + " stones";
         row.appendChild(label);
         var btn = document.createElement("button");
         btn.type = "button";
@@ -751,8 +794,7 @@
         row.appendChild(btn);
         body.appendChild(row);
       });
-      if (state.season < 3) {
-        var crop = ["reedbean", "beet", "lantern"][state.season];
+      seasonCrops().forEach(function (crop) {
         var buy = document.createElement("button");
         buy.className = "play";
         buy.type = "button";
@@ -767,14 +809,14 @@
           save();
         });
         body.appendChild(buy);
-      }
+      });
     });
   }
   function openPack() {
     openSheet("Pack", function (body) {
       var p = document.createElement("p");
       var it = state.items;
-      p.textContent = "Reedbean " + it.reedbean + " · meal " + it.meal + " · beet " + it.beet + " · lanternpod " + it.lantern + " · willow " + it.willow + " · bundle " + (it.bundle || 0) + " · egg " + it.egg + " · cream " + it.cream + " · chaff " + state.chaff + " · seed " + it.seedReed + "/" + it.seedBeet + "/" + it.seedLantern + ".";
+      p.textContent = "Reedbean " + it.reedbean + " · cress " + (it.cress || 0) + " · meal " + it.meal + " · beet " + it.beet + " · lanternpod " + it.lantern + " · willow " + it.willow + " · bundle " + (it.bundle || 0) + " · egg " + it.egg + " · cream " + it.cream + " · chaff " + state.chaff + " · seed " + it.seedReed + "/" + (it.seedCress || 0) + "/" + it.seedBeet + "/" + it.seedLantern + ".";
       body.appendChild(p);
       var note = document.createElement("p");
       note.className = "fan";
@@ -792,7 +834,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "Reedbean takes 3 watered dawns in spring. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed.";
+    q.textContent = "Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
@@ -944,6 +986,16 @@
       ctx.quadraticCurveTo(rx + 6, POND.y + 10, rx - 4, POND.y - 8);
       ctx.stroke();
     }
+    ctx.fillStyle = "#c9853a";
+    ctx.fillRect(FILL.x - 9, FILL.y - 18, 18, 14);
+    ctx.strokeStyle = "#14210f";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(FILL.x - 9, FILL.y - 18, 18, 14);
+    ctx.beginPath();
+    ctx.arc(FILL.x, FILL.y - 18, 8, Math.PI, 0);
+    ctx.stroke();
+    ctx.fillStyle = "#2f86ad";
+    ctx.fillRect(FILL.x - 6, FILL.y - 14, 12, 6);
     var sy = SWAN.y + Math.sin(anim * 2) * 3;
     shadow(SWAN.x, sy + 4, 16);
     if (!blit(world.swan, SWAN.x, sy + 8, 40)) {
@@ -988,8 +1040,21 @@
     }
     if (b.crop && (b.state === "seeded" || b.state === "growing" || b.state === "ready")) {
       var grow = b.state === "ready" ? 1 : Math.max(0.34, (b.days || 0.15) / (b.need || 1));
-      var art = world[b.crop];
-      if (!blit(art, 0, 12, 16 + grow * 30)) {
+      if (b.crop === "cress") {
+        var cr = 5 + grow * 9;
+        var leaf;
+        ctx.fillStyle = "#2f8a45";
+        for (leaf = 0; leaf < 6; leaf++) {
+          var ang = leaf / 6 * Math.PI * 2;
+          ctx.beginPath();
+          ctx.ellipse(Math.cos(ang) * cr * 0.55, 2 + Math.sin(ang) * cr * 0.32, cr * 0.42, cr * 0.22, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#d7f0c8";
+        ctx.beginPath();
+        ctx.arc(0, 2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (!blit(world[b.crop], 0, 12, 16 + grow * 30)) {
         var h = 6 + Math.min(b.days, b.need) * 4;
         var col = b.crop === "beet" ? "#a33b62" : b.crop === "lantern" ? "#e0a030" : "#2f6b32";
         ctx.strokeStyle = col;
@@ -1086,22 +1151,49 @@
     }
     ctx.restore();
   }
+  function drawShells() {
+    state.forage.forEach(function (alive, i) {
+      if (!alive) return;
+      var s = SHELLS[i];
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.strokeStyle = "#f3ead2";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      var a;
+      for (a = 0.2; a < Math.PI * 2.6; a += 0.35) {
+        var rr = 1.2 + a * 1.5;
+        var px = Math.cos(a) * rr;
+        var py = Math.sin(a) * rr * 0.62;
+        if (a < 0.4) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.fillStyle = "#f6d36b";
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
   function drawBober(ent, hat) {
-    var im = hat ? imgHat : ((ent.tx != null) ? imgWalk : imgIdle);
+    var im = hat ? imgPlayer : imgFull;
+    shadow(ent.x, ent.y + 2, hat ? 26 : 22);
     if (!im || !im.complete || !im.naturalWidth) {
       ctx.fillStyle = "#8b5a2b";
       ctx.beginPath();
-      ctx.arc(ent.x, ent.y, 14, 0, Math.PI * 2);
+      ctx.arc(ent.x, ent.y - 20, 16, 0, Math.PI * 2);
       ctx.fill();
       return;
     }
-    var h = 54;
+    var h = hat ? 132 : 116;
     var w = im.naturalWidth * (h / im.naturalHeight);
+    var bob = ent.tx != null ? Math.abs(Math.sin(anim * 16)) * 7 : 0;
     ctx.save();
-    ctx.translate(ent.x, ent.y);
+    ctx.translate(ent.x, ent.y - bob);
     ctx.scale(ent.face || 1, 1);
     if (!hat && FILTER[ent.id]) ctx.filter = FILTER[ent.id];
-    ctx.drawImage(im, -w / 2, -h + 6, w, h);
+    ctx.drawImage(im, -w / 2, -h + 4, w, h);
     ctx.filter = "none";
     ctx.restore();
   }
@@ -1129,6 +1221,7 @@
     ctx.translate(-camX, -camY);
     drawGround();
     drawPond();
+    drawShells();
     state.beds.forEach(drawBed);
     state.willows.forEach(drawWillow);
     drawBuildings();
@@ -1165,8 +1258,8 @@
         moveEnt(c, dt);
       });
       if (!looking) {
-        camX += (state.player.x - VW / 2 - camX) * Math.min(1, dt * 4);
-        camY += (state.player.y - VH / 2 - camY) * Math.min(1, dt * 4);
+        camX += (state.player.x - VW / 2 - camX) * Math.min(1, dt * 14);
+        camY += (state.player.y - VH / 2 - camY) * Math.min(1, dt * 14);
         clampCam();
       }
       if (state.clock >= DAY_LEN) endDay();

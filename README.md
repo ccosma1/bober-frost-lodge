@@ -14,14 +14,17 @@ Run `START.bat` or open `index.html` in a browser.
 
 A year is 4 seasons of 7 days. Sleep ends the day. The clock caps near 3 minutes. Crops advance at dawn, not on a real-time timer.
 
-You are Bober, yellow hat. Tap the ground to walk. Drag to look.
+You are Bober, yellow hat, whole head. Tap the ground to walk. Drag to look. The walk crosses the acre in a few seconds.
 
 - **Reedbean** — spring, 3 watered dawns
+- **Bank cress** — spring, 2 watered dawns
 - **Pond beet** — summer, 5 watered dawns
 - **Lanternpod** — fall, 4 watered dawns
 - **Willow** on the lease — cut it, it regrows in 4 dawns, spring through fall. Winter it rests.
 
-Skip a watering and that bed waits. A crop left into the wrong season withers. Fertility falls when you harvest. Chaff from the mill puts it back.
+Skip a watering and that bed waits. The pond bucket holds 8 pours. Fill it on the south shore. The crew still waters a bed when that is their chore. A crop left into the wrong season withers. Fertility falls when you harvest. Chaff from the mill puts it back.
+
+Three creek shells sit on the path. Each is worth 2 stones, once a day. They return at dawn.
 
 Reedswans lay an egg at dawn only if the trough had fodder. Plodders leave cream only if fodder is left after the swan. They do not die.
 
