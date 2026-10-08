@@ -18,6 +18,8 @@ You are Bober, yellow hat. Tap the ground to walk. Tap a bed, the mill, the gras
 
 The scope is one acre and one year. Four seasons of seven days. Each season Moss posts one order. Feed the trough if you want the egg. Cut the willow when the stool is ready. The next year starts on the same land.
 
+Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task, the place, and the count. Finish it and the next job opens. Each job adds a building and more land. Paying jobs wait for a Raise button, so stones are not spent by accident. The fiftieth job fills the map.
+
 - **Reedbean** — spring, 3 watered dawns
 - **Bank cress** — spring, 2 watered dawns
 - **Pond beet** — summer, 5 watered dawns

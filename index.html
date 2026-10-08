@@ -48,7 +48,10 @@
       margin: 0; min-height: 18px; padding: 4px 10px 0; background: #14210f;
       font-size: 13px; font-weight: 800; color: var(--cream);
     }
-    #job { padding-bottom: 6px; color: var(--yellow); font-size: 12px; }
+    #job {
+      display: block; width: 100%; border: 0; border-radius: 0; outline: none;
+      text-align: left; padding-bottom: 6px; color: var(--yellow); font-size: 12px;
+    }
     #dock {
       flex: 0 0 auto; display: flex; gap: 8px; padding: 8px;
       background: #14210f; padding-bottom: calc(8px + env(safe-area-inset-bottom));
@@ -119,9 +122,10 @@
       <span id="bucket">Bucket 8</span>
       <span id="mill-read">Mill empty</span>
       <span id="slate">Slate 0/2</span>
+      <span id="level">Lv 1/50</span>
     </div>
     <p id="verb">Tap a thing to read it.</p>
-    <p id="job">Moss wants 2 Reedbean.</p>
+    <button id="job" type="button">Lv 1/50. Water both reedbean shoots.</button>
     <div id="stage">
       <canvas id="view" width="420" height="480"></canvas>
     </div>
@@ -137,6 +141,7 @@
           <h1>BOBER WILLOW CUT</h1>
           <p>A farm simulator. Four seasons on the bank.</p>
           <p>One acre. Seven days a season. Each season Moss posts one order. Feed the trough. Cut the willow when it grows back. The year turns on the same land.</p>
+          <p>Fifty jobs. Finish one and the next one opens. Each job adds a task, a building, and more of the acre. The last job fills the map.</p>
           <p>The bank Burrow Hop called home is a farm now. Nightfall is still downriver.</p>
           <p class="fan">Fan game by a holder. No wallet. No ads.</p>
           <button class="play" id="btn-start" type="button">START THE YEAR</button>
@@ -202,6 +207,59 @@
   var FILTER = { nib: "brightness(0.78)", puddle: "brightness(1.12)", twig: "hue-rotate(-16deg)", moss: "hue-rotate(70deg) saturate(0.85)" };
   var LANE = { nib: -58, puddle: 6, twig: 62 };
   var PACE = { nib: 0.92, puddle: 1.06, twig: 0.84 };
+  var MISSIONS = [
+    { goal: "wet2", arg: 1, cost: 0, x: 1540, y: 960, vx: 0, vy: 0, name: "Bank post", short: "Post", shape: "post", grow: "bed", soil: "tilled", task: "Water both reedbean shoots.", detail: "Both shoots start the year dry. The wet mark sticks after dawn." },
+    { goal: "dawns", arg: 1, cost: 0, x: 860, y: 960, vx: 0, vy: 0, name: "Rain barrel", short: "Barrel", shape: "barrel", grow: "grass", soil: "wild", task: "Sleep through a dawn.", detail: "Sleep ends the day. One dawn opens the next job." },
+    { goal: "fodderCut", arg: 1, cost: 0, x: 800, y: 1500, vx: 0, vy: 0, name: "Hay rick", short: "Rick", shape: "rick", grow: "grass", soil: "wild", task: "Cut grass into the trough.", detail: "One cut is one fodder. The swan eats first at dawn." },
+    { goal: "planted", arg: 1, cost: 0, x: 1370, y: 720, vx: 0, vy: 0, name: "Seed bench", short: "Bench", shape: "bench", grow: "bed", soil: "tilled", task: "Plant a bed.", detail: "A tilled bed takes a seed for this season." },
+    { goal: "cleared", arg: 1, cost: 0, x: 1760, y: 1500, vx: 0, vy: 0, name: "Tool shed", short: "Shed", shape: "shed", grow: "bed", soil: "wild", task: "Clear brush on a wild bed.", detail: "Brush becomes stones. Stones become tilled soil." },
+    { goal: "tilled", arg: 1, cost: 0, x: 1030, y: 720, vx: 0, vy: 0, name: "Stone crib", short: "Crib", shape: "crib", grow: "bed", soil: "stony", task: "Till a stony bed.", detail: "Pick stones, or clear stubble. Beds that started tilled do not count." },
+    { goal: "fills", arg: 1, cost: 0, x: 680, y: 960, vx: 0, vy: 0, name: "Cistern", short: "Tank", shape: "cistern", grow: "bed", soil: "tilled", task: "Fill the bucket at the pond.", detail: "The bucket starts full. Spend a pour, then fill it on the south shore." },
+    { goal: "shells", arg: 1, cost: 0, x: 800, y: 1780, vx: 0, vy: 0, name: "Shell basket", short: "Basket", shape: "basket", grow: "bed", soil: "wild", task: "Pick a creek shell.", detail: "A shell is 2 stones. Taken shells return at dawn." },
+    { goal: "eggs", arg: 1, cost: 0, x: 1880, y: 960, vx: 0, vy: 0, name: "Swan coop", short: "Coop", shape: "coop", grow: "grass", soil: "wild", task: "Wake to an egg.", detail: "The swan lays at dawn only if the trough had fodder." },
+    { goal: "harvests", arg: 1, cost: 0, x: 1710, y: 720, vx: 0, vy: 0, name: "Drying rack", short: "Rack", shape: "rack", grow: "bed", soil: "wild", task: "Harvest a crop.", detail: "A watered crop finishes at dawn, then you pick it." },
+    { goal: "loads", arg: 1, cost: 0, x: 1760, y: 1780, vx: 0, vy: 0, name: "Mill annex", short: "Annex", shape: "annex", grow: "bed", soil: "tilled", task: "Load a reedbean sack into the mill.", detail: "One sack goes in the hopper. Meal comes after the run." },
+    { goal: "sold", arg: 1, cost: 0, x: 500, y: 1280, vx: 0, vy: 0, name: "Creek scale", short: "Scale", shape: "scale", grow: "bed", soil: "wild", task: "Sell something at the stall.", detail: "SHOP opens Moss without the walk. Selling is still your choice." },
+    { goal: "cress", arg: 1, cost: 0, x: 690, y: 720, vx: 0, vy: 0, name: "Cress row", short: "Cress", shape: "row", grow: "beds3", soil: "tilled", task: "Plant bank cress.", detail: "Bank cress is a spring seed. It takes 2 watered dawns." },
+    { goal: "chaff", arg: 1, cost: 0, x: 2420, y: 1200, vx: 0, vy: 0, name: "Compost", short: "Chaff", shape: "compost", grow: "bed", soil: "tilled", task: "Lay chaff on a bed.", detail: "The mill leaves chaff with the meal. Chaff lifts fertility, up to 2." },
+    { goal: "willows", arg: 1, cost: 0, x: 520, y: 960, vx: 0, vy: 0, name: "Lease shed", short: "Lease", shape: "lease", grow: "willow", soil: "wild", task: "Cut a willow stool.", detail: "A stool is ready after 4 dawns, spring through fall." },
+    { goal: "raise", arg: 4, cost: 4, x: 500, y: 1560, vx: 0, vy: 0, name: "Smokehouse", short: "Smoke", shape: "smoke", grow: "bed", soil: "wild", task: "Raise the smokehouse.", detail: "Pay the stones from the job. The shed is the next piece of the bank." },
+    { goal: "harvests", arg: 2, cost: 0, x: 2420, y: 900, vx: 0, vy: 0, name: "Field row", short: "Field", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a second crop.", detail: "The second pick can be the same bed on another day." },
+    { goal: "dawns", arg: 5, cost: 0, x: 1100, y: 2100, vx: 0, vy: 0, name: "Bunk shed", short: "Bunk", shape: "bunk", grow: "grass", soil: "wild", task: "See five dawns.", detail: "Five sleeps. The year is still seven days a season." },
+    { goal: "fodderCut", arg: 3, cost: 0, x: 860, y: 480, vx: 0, vy: 0, name: "Plodder shade", short: "Shade", shape: "shade", grow: "grass", soil: "wild", task: "Cut grass three times.", detail: "Three cuts in all. Grass grows back after two dawns, except in winter." },
+    { goal: "raise", arg: 6, cost: 6, x: 1440, y: 2100, vx: 0, vy: 0, name: "South gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the south gate.", detail: "Pay 6 stones. The gate opens the south of the acre." },
+    { goal: "visit", arg: 1, cost: 0, x: 1440, y: 2260, vx: 1440, vy: 2100, name: "Gate path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the south gate.", detail: "Go stand at the gate you just raised." },
+    { goal: "meals", arg: 1, cost: 0, x: 2100, y: 1100, vx: 0, vy: 0, name: "Meal bin", short: "Bin", shape: "bin", grow: "bed", soil: "tilled", task: "Let the mill finish a meal.", detail: "A stocked mill becomes meal and chaff overnight." },
+    { goal: "slates", arg: 1, cost: 0, x: 800, y: 2060, vx: 0, vy: 0, name: "Order board", short: "Board", shape: "board", grow: "bed", soil: "wild", task: "Fill Moss's season slate.", detail: "Two of the season crop, or two eggs in winter, plus the bonus." },
+    { goal: "raise", arg: 8, cost: 8, x: 500, y: 1840, vx: 0, vy: 0, name: "Root cellar", short: "Cellar", shape: "cellar", grow: "bed", soil: "wild", task: "Raise the root cellar.", detail: "Pay 8 stones. The cellar is the west store." },
+    { goal: "cleared", arg: 3, cost: 0, x: 1760, y: 2060, vx: 0, vy: 0, name: "East plot", short: "Plot", shape: "plot", grow: "beds3", soil: "wild", task: "Clear brush three times.", detail: "Three brush clears in all. The east plot starts wild." },
+    { goal: "planted", arg: 3, cost: 0, x: 2050, y: 720, vx: 0, vy: 0, name: "Planting stick", short: "Stick", shape: "stick", grow: "bed", soil: "tilled", task: "Plant three beds.", detail: "Three plantings in all, any season crop." },
+    { goal: "visit", arg: 1, cost: 0, x: 500, y: 2120, vx: 500, vy: 1840, name: "Cellar path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the root cellar.", detail: "Go stand at the cellar on the west plot." },
+    { goal: "raise", arg: 8, cost: 8, x: 1880, y: 480, vx: 0, vy: 0, name: "Orchard stools", short: "Orchard", shape: "orchard", grow: "willow3", soil: "wild", task: "Raise the orchard stools.", detail: "Pay 8 stones. Three new stools join the lease." },
+    { goal: "willows", arg: 2, cost: 0, x: 1100, y: 2260, vx: 0, vy: 0, name: "Second stool", short: "Stool", shape: "stool", grow: "willow", soil: "wild", task: "Cut a second willow.", detail: "Two cuts in all. Winter still rests every stool." },
+    { goal: "raise", arg: 10, cost: 10, x: 2220, y: 960, vx: 0, vy: 0, name: "Wood pile", short: "Pile", shape: "pile", grow: "bed", soil: "wild", task: "Raise the wood pile.", detail: "Pay 10 stones. The pile holds the cut willow." },
+    { goal: "eggs", arg: 2, cost: 0, x: 2100, y: 1620, vx: 0, vy: 0, name: "Second nest", short: "Nest", shape: "nest", grow: "grass", soil: "wild", task: "Wake to a second egg.", detail: "Two eggs in all. Each one needs fodder the night before." },
+    { goal: "raise", arg: 10, cost: 10, x: 1200, y: 480, vx: 0, vy: 0, name: "Creek pier", short: "Pier", shape: "dock", grow: "bed", soil: "wild", task: "Raise the creek pier.", detail: "Pay 10 stones. The pier runs north to the water." },
+    { goal: "visit", arg: 1, cost: 0, x: 1540, y: 480, vx: 1200, vy: 480, name: "Pier walk", short: "Walk", shape: "path", grow: "grass", soil: "wild", task: "Walk to the creek pier.", detail: "Go stand on the pier." },
+    { goal: "shells", arg: 3, cost: 0, x: 1270, y: 2200, vx: 0, vy: 0, name: "Shell cache", short: "Cache", shape: "cache", grow: "bed", soil: "wild", task: "Pick three creek shells.", detail: "Three shells in all. They come back each dawn." },
+    { goal: "harvests", arg: 3, cost: 0, x: 180, y: 1680, vx: 0, vy: 0, name: "Far field", short: "Field", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a third crop.", detail: "Three harvests in all." },
+    { goal: "raise", arg: 10, cost: 10, x: 2100, y: 1900, vx: 0, vy: 0, name: "Clay kiln", short: "Kiln", shape: "kiln", grow: "bed", soil: "wild", task: "Raise the clay kiln.", detail: "Pay 10 stones. The kiln sits on the east bank." },
+    { goal: "visit", arg: 1, cost: 0, x: 2100, y: 2180, vx: 2100, vy: 1900, name: "Kiln path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the clay kiln.", detail: "Go stand at the kiln." },
+    { goal: "fodderCut", arg: 5, cost: 0, x: 800, y: 2260, vx: 0, vy: 0, name: "Second rick", short: "Rick", shape: "rick", grow: "grass", soil: "wild", task: "Cut grass five times.", detail: "Five cuts in all." },
+    { goal: "raise", arg: 12, cost: 12, x: 350, y: 720, vx: 0, vy: 0, name: "Cold frame", short: "Frame", shape: "frame", grow: "bed", soil: "tilled", task: "Raise the cold frame.", detail: "Pay 12 stones. The frame keeps one more bed." },
+    { goal: "planted", arg: 5, cost: 0, x: 520, y: 480, vx: 0, vy: 0, name: "Fifth row", short: "Rows", shape: "row", grow: "beds3", soil: "tilled", task: "Plant five beds.", detail: "Five plantings in all." },
+    { goal: "season", arg: 1, cost: 0, x: 2220, y: 480, vx: 0, vy: 0, name: "Summer shed", short: "Summer", shape: "summer", grow: "bed", soil: "wild", task: "Reach summer.", detail: "Sleep out the spring. Day 7 rolls into summer." },
+    { goal: "raise", arg: 12, cost: 12, x: 180, y: 1960, vx: 0, vy: 0, name: "Lookout", short: "Watch", shape: "lookout", grow: "grass", soil: "wild", task: "Raise the lookout.", detail: "Pay 12 stones. The watch stands on the west edge." },
+    { goal: "visit", arg: 1, cost: 0, x: 180, y: 2240, vx: 180, vy: 1960, name: "Lookout path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the lookout.", detail: "Go stand at the watch." },
+    { goal: "willows", arg: 3, cost: 0, x: 1760, y: 2260, vx: 0, vy: 0, name: "Windbreak", short: "Wind", shape: "wind", grow: "willow3", soil: "wild", task: "Cut a third willow.", detail: "Three cuts in all. The windbreak is three more stools." },
+    { goal: "raise", arg: 14, cost: 14, x: 2390, y: 720, vx: 0, vy: 0, name: "Grand annex", short: "Grand", shape: "grand", grow: "beds3", soil: "wild", task: "Raise the grand annex.", detail: "Pay 14 stones. The annex adds another field." },
+    { goal: "harvests", arg: 4, cost: 0, x: 180, y: 480, vx: 0, vy: 0, name: "Fourth pick", short: "Pick", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a fourth crop.", detail: "Four harvests in all." },
+    { goal: "sold", arg: 3, cost: 0, x: 2420, y: 1620, vx: 0, vy: 0, name: "Market crates", short: "Crates", shape: "crates", grow: "bed", soil: "wild", task: "Sell three times.", detail: "Three sales in all. Each SELL at the stall counts as one." },
+    { goal: "raise", arg: 16, cost: 16, x: 2420, y: 1900, vx: 0, vy: 0, name: "Creek gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the creek gate.", detail: "Pay 16 stones. The east gate closes the bank." },
+    { goal: "dawns", arg: 10, cost: 0, x: 180, y: 960, vx: 0, vy: 0, name: "Festival lamps", short: "Lamps", shape: "lamps", grow: "grass", soil: "wild", task: "See ten dawns.", detail: "Ten sleeps. The lamps line the north meadow." },
+    { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 stones. The hall finishes the acre and the rest of the map fills in." }
+  ];
+  var FILLERS = [360,500,680,500,1000,500,200,660,520,660,840,660,1160,660,200,820,520,820,840,820,1160,820,1480,820,1800,820,1960,820,2280,820,1000,980,1160,980,1320,980,520,1140,680,1140,840,1140,1800,1140,1960,1140,680,1300,2280,1460,360,1620,680,1620,1000,1620,1640,1620,1960,1620,2280,1620,360,1780,1960,1780,2280,1780,360,1940,680,1940,1640,1940,1960,1940,2280,1940,200,2100,360,2100,1960,2100,2280,2100,360,2260,520,2260,1960,2260,2280,2260];
 
   var canvas = document.getElementById("view");
   var ctx = canvas.getContext("2d");
@@ -210,6 +268,8 @@
   var camX = 0, camY = 0, looking = false;
   var ptr = null, mode = "splash", sheetBack = "play", toastTill = 0, lastTs = 0;
   var state;
+  var worldMark = -1;
+  var missionHold = 0;
   var flakes = [];
   var anim = 0;
   var imgPlayer = new Image(); imgPlayer.src = "assets/sprites/bober-player.png";
@@ -238,8 +298,10 @@
     return { x: x, y: y, state: st, crop: crop || null, days: days || 0, need: crop ? NEED[crop] : 0, wet: false, fert: fert || 0 };
   }
   function fresh() {
+    worldMark = -1;
     state = {
       year: 1, season: 0, day: 1, clock: 0, stones: 6, fodder: 0, chaff: 0, bucket: 8,
+      level: 1, stats: {},
       forage: [1, 1, 1],
       items: { reedbean: 0, cress: 0, beet: 0, lantern: 0, willow: 0, bundle: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedCress: 1, seedBeet: 0, seedLantern: 0 },
       slate: { season: 0, got: 0 },
@@ -294,6 +356,136 @@
     if (state.bucket == null) state.bucket = 8;
     if (!state.forage || state.forage.length !== 3) state.forage = [1, 1, 1];
     if (!state.slate || state.slate.season !== state.season) state.slate = { season: state.season, got: 0 };
+    if (state.level == null || state.level < 1) state.level = 1;
+    if (!state.stats) state.stats = {};
+    if (state.player && state.player.order == null) state.player.order = null;
+    if (state.player && state.player.acting == null) state.player.acting = 0;
+    syncWorld();
+  }
+  function bump(key, n) {
+    ensure();
+    state.stats[key] = (state.stats[key] || 0) + (n || 1);
+  }
+  function pushBed(x, y, soil, tag) {
+    var i;
+    for (i = 0; i < state.beds.length; i++) if (state.beds[i].site === tag) return;
+    if (blocked(x, y)) return;
+    var b = bed(x, y, soil || "wild", null, 0, 0);
+    b.site = tag;
+    state.beds.push(b);
+  }
+  function pushGrass(x, y, tag) {
+    var i;
+    for (i = 0; i < state.grass.length; i++) if (state.grass[i].site === tag) return;
+    if (blocked(x, y)) return;
+    state.grass.push({ x: x, y: y, ready: true, wait: 0, site: tag });
+  }
+  function pushWillow(x, y, tag) {
+    var i;
+    for (i = 0; i < state.willows.length; i++) if (state.willows[i].site === tag) return;
+    if (blocked(x, y)) return;
+    state.willows.push({ x: x, y: y, days: 0, site: tag });
+  }
+  function addGrow(m, n) {
+    var key = "s" + n;
+    var soil = m.soil || "wild";
+    var wide = m.grow === "beds3" || m.grow === "fill";
+    var cols = wide ? [-78, 0, 78] : [0];
+    var k;
+    if (m.grow === "bed" || wide) {
+      for (k = 0; k < cols.length; k++) pushBed(m.x + cols[k], m.y + 76, soil, key + "b" + k);
+    }
+    if (m.grow === "grass" || m.grow === "fill") pushGrass(m.x - 62, m.y + 6, key);
+    if (m.grow === "willow" || m.grow === "willow3" || m.grow === "fill") {
+      var ws = (m.grow === "willow" ) ? [48] : [-62, 0, 62];
+      for (k = 0; k < ws.length; k++) pushWillow(m.x + ws[k], m.y - 34, key + "w" + k);
+    }
+  }
+  function addFillers() {
+    var i, x, y, tag, n;
+    for (i = 0; i < FILLERS.length; i += 2) {
+      x = FILLERS[i];
+      y = FILLERS[i + 1];
+      tag = "f" + (i / 2);
+      if (blocked(x, y)) continue;
+      var taken = false;
+      for (n = 0; n < state.beds.length; n++) {
+        if (state.beds[n].site === tag || Math.hypot(state.beds[n].x - x, state.beds[n].y - y) < 46) taken = true;
+      }
+      if (taken) continue;
+      pushBed(x, y, "wild", tag);
+    }
+  }
+  function syncWorld() {
+    if (!state || !state.beds || worldMark === state.level) return;
+    var n;
+    for (n = 0; n < MISSIONS.length && state.level >= n + 1; n++) addGrow(MISSIONS[n], n + 1);
+    if (state.level >= 50) addFillers();
+    worldMark = state.level;
+  }
+  function noteProgress() {
+    if (!state || !state.stats || !state.beds) return;
+    var changed = false;
+    if (state.beds[0] && state.beds[0].wet && !state.stats.wet0) { state.stats.wet0 = 1; changed = true; }
+    if (state.beds[1] && state.beds[1].wet && !state.stats.wet1) { state.stats.wet1 = 1; changed = true; }
+    if (changed) save();
+  }
+  function goalMet(m) {
+    var st = state.stats;
+    if (m.goal === "wet2") return !!(st.wet0 && st.wet1);
+    if (m.goal === "raise") return st["r" + state.level] === 1;
+    if (m.goal === "visit") return Math.hypot(state.player.x - m.vx, state.player.y - m.vy) <= 96;
+    if (m.goal === "season") return state.season >= m.arg || state.year > 1;
+    return (st[m.goal] || 0) >= m.arg;
+  }
+  function checkMission() {
+    if (!state || !state.stats) return;
+    noteProgress();
+    if (missionHold > 0) return;
+    if (state.level > MISSIONS.length) return;
+    var m = MISSIONS[state.level - 1];
+    if (!m || !goalMet(m)) return;
+    var done = state.level;
+    state.level += 1;
+    worldMark = -1;
+    syncWorld();
+    missionHold = 0.75;
+    if (state.level > MISSIONS.length) toast("The acre is full.");
+    else toast("Lv " + done + " done. Next: " + MISSIONS[state.level - 1].name);
+    save();
+  }
+  function missionLine() {
+    if (!state || !state.level || state.level > MISSIONS.length) return "Lv 50/50. The acre is full.";
+    return "Lv " + state.level + "/50. " + MISSIONS[state.level - 1].task;
+  }
+  function placeHint(m) {
+    var dx = m.x - 1240;
+    var dy = m.y - 1200;
+    var ns = dy < -80 ? "north" : dy > 80 ? "south" : "";
+    var ew = dx < -80 ? "west" : dx > 80 ? "east" : "";
+    var dir = ns && ew ? ns + "-" + ew : (ns || ew || "beside the lodge");
+    return m.name + " is " + dir + " of the lodge.";
+  }
+  function progressText(m) {
+    if (m.goal === "wet2") return ((state.stats.wet0 ? 1 : 0) + (state.stats.wet1 ? 1 : 0)) + " of 2 shoots watered.";
+    if (m.goal === "raise") {
+      if (state.stats["r" + state.level]) return "Raised.";
+      return "Costs " + m.cost + " creek stones. You have " + state.stones + ".";
+    }
+    if (m.goal === "visit") return "Walk up to it.";
+    if (m.goal === "season") return "Now " + seasonName().toLowerCase() + ", year " + state.year + ".";
+    return (state.stats[m.goal] || 0) + " of " + m.arg + ".";
+  }
+  function raiseCurrent() {
+    if (!state || state.level > MISSIONS.length) return;
+    var m = MISSIONS[state.level - 1];
+    if (!m || m.goal !== "raise" || state.stats["r" + state.level]) return;
+    if (state.stones < m.cost) { toast("Not enough stones"); return; }
+    state.stones -= m.cost;
+    state.stats["r" + state.level] = 1;
+    closeSheet();
+    save();
+    hud();
   }
   function seasonCrops() {
     if (state.season === 0) return ["reedbean", "cress"];
@@ -324,6 +516,7 @@
       var raw = localStorage.getItem(KEY);
       if (!raw) return false;
       state = JSON.parse(raw);
+      worldMark = -1;
       ensure();
       return true;
     } catch (e) { return false; }
@@ -369,6 +562,7 @@
     b.days = 0;
     b.wet = false;
     b.need = 0;
+    bump("harvests");
     toast("Harvest " + n);
     save();
   }
@@ -384,6 +578,7 @@
   }
   function fillBucket() {
     state.bucket = 8;
+    bump("fills");
     toast("Bucket filled");
     save();
   }
@@ -391,6 +586,7 @@
     if (!state.forage[i]) return "Shell already taken";
     state.forage[i] = 0;
     state.stones += 2;
+    bump("shells");
     toast("Creek shell. 2 stones");
     save();
     return null;
@@ -407,6 +603,8 @@
     b.days = 0;
     b.need = NEED[crop];
     b.wet = false;
+    bump("planted");
+    if (crop === "cress") bump("cress");
     save();
     return null;
   }
@@ -417,6 +615,7 @@
     if ((b.fert || 0) >= 2) return "Soil is full";
     state.chaff -= 1;
     b.fert = (b.fert || 0) + 1;
+    bump("chaff");
     save();
     return null;
   }
@@ -426,6 +625,7 @@
     g.ready = false;
     g.wait = 2;
     state.fodder += 1;
+    bump("fodderCut");
     save();
   }
   function loadMill() {
@@ -434,6 +634,7 @@
     state.items.reedbean -= 1;
     state.mill.sack = 1;
     state.mill.t = 0;
+    bump("loads");
     save();
     return null;
   }
@@ -441,6 +642,7 @@
     if (state.items.willow < 3) return "Need 3 willow";
     state.items.willow -= 3;
     state.items.bundle += 1;
+    bump("bundles");
     toast("Bundle tied");
     save();
     return null;
@@ -454,6 +656,7 @@
     var pay = spec.n * price(spec.key) + spec.bonus;
     state.stones += pay;
     state.slate.got = spec.n;
+    bump("slates");
     toast("Slate paid " + pay);
     save();
     return null;
@@ -464,6 +667,7 @@
     if (w.days < 4) return "Not ready to cut";
     w.days = 0;
     state.items.willow += 1;
+    bump("willows");
     toast("Willow cut");
     save();
     return null;
@@ -471,9 +675,9 @@
 
   function workBed(i) {
     var b = state.beds[i];
-    if (b.state === "wild") { b.state = "stony"; toast("Brush cleared"); return; }
-    if (b.state === "stony") { b.state = "tilled"; toast("Stones picked"); return; }
-    if (b.state === "stubble") { b.state = "tilled"; toast("Stubble cleared"); return; }
+    if (b.state === "wild") { b.state = "stony"; bump("cleared"); toast("Brush cleared"); return; }
+    if (b.state === "stony") { b.state = "tilled"; bump("tilled"); toast("Stones picked"); return; }
+    if (b.state === "stubble") { b.state = "tilled"; bump("tilled"); toast("Stubble cleared"); return; }
     if (b.state === "tilled") { openPlant(i); return; }
     if (b.state === "ready") { harvest(i); return; }
     var err = waterBed(i);
@@ -488,6 +692,7 @@
       state.mill.t = 0;
       state.items.meal += 1;
       state.chaff += 1;
+      bump("meals");
       lines.push("The mill made meal and left chaff.");
     } else if (state.mill.sack > 0) {
       lines.push("The mill is still working.");
@@ -495,6 +700,7 @@
     if (state.fodder > 0) {
       state.fodder -= 1;
       state.items.egg += 1;
+      bump("eggs");
       lines.push("The reedswan left an egg.");
     } else {
       lines.push("No egg. The trough was empty.");
@@ -502,8 +708,10 @@
     if (state.fodder > 0) {
       state.fodder -= 1;
       state.items.cream += 1;
+      bump("creams");
       lines.push("The plodder left cream.");
     }
+    bump("dawns");
     state.day += 1;
     var turned = false;
     if (state.day > 7) {
@@ -534,6 +742,7 @@
         }
       });
     }
+    noteProgress();
     state.beds.forEach(function (b) {
       if (b.state !== "seeded" && b.state !== "growing") return;
       if (b.wet && b.crop && SEASON_OF[b.crop] === state.season) {
@@ -552,7 +761,8 @@
     });
     var willowReady = state.willows.some(function (w) { return w.days >= 4; });
     lines.push(willowReady ? "A willow stool is ready to cut." : "Willow is not ready to cut.");
-    lines.unshift(jobLine());
+    checkMission();
+    lines.unshift(missionLine());
     if (state.season !== 3) {
       state.grass.forEach(function (g) {
         if (g.ready) return;
@@ -685,8 +895,8 @@
       var b = state.beds[aim.i];
       if (!b) return false;
       if (aim.kind === "harvest" && b.state === "ready") { harvest(aim.i); return true; }
-      if (aim.kind === "clear" && b.state === "wild") { b.state = "stony"; return true; }
-      if (aim.kind === "clear" && (b.state === "stony" || b.state === "stubble")) { b.state = "tilled"; return true; }
+      if (aim.kind === "clear" && b.state === "wild") { b.state = "stony"; bump("cleared"); return true; }
+      if (aim.kind === "clear" && (b.state === "stony" || b.state === "stubble")) { b.state = "tilled"; bump("tilled"); return true; }
       if (aim.kind === "water" && (b.state === "seeded" || b.state === "growing") && !b.wet) { b.wet = true; return true; }
       return false;
     }
@@ -736,7 +946,7 @@
     }
   }
 
-  function jobLine() {
+  function orderLine() {
     var spec = SLATE[state.season];
     var have = state.items[spec.key] || 0;
     var filled = state.slate && state.slate.got >= spec.n;
@@ -765,7 +975,8 @@
     var got = state.slate && state.slate.got >= spec.n;
     var have = state.items[spec.key] || 0;
     document.getElementById("slate").textContent = got ? "Slate filled" : ("Slate " + Math.min(have, spec.n) + "/" + spec.n);
-    document.getElementById("job").textContent = jobLine();
+    document.getElementById("level").textContent = state.level > 50 ? "Lv 50/50" : ("Lv " + state.level + "/50");
+    document.getElementById("job").textContent = missionLine();
     if (state.player.acting > 0) document.getElementById("verb").textContent = "Working...";
     else {
       var near = nearest(state.player.x, state.player.y, REACH + 8);
@@ -795,6 +1006,10 @@
     if (hit.kind === "mill") return state.mill.sack ? "Mill is stocked" : "Load a reedbean sack";
     if (hit.kind === "moss") return "Moss's stall · " + seasonName().toLowerCase() + " prices";
     if (hit.kind === "door") return "Sleep in the lodge";
+    if (hit.kind === "site") {
+      var site = MISSIONS[hit.i];
+      return state.level === hit.i + 1 ? site.task : site.name;
+    }
     return "";
   }
   function nearest(x, y, maxR) {
@@ -814,6 +1029,10 @@
     consider({ kind: "rack", x: RACK.x, y: RACK.y });
     consider({ kind: "moss", x: MOSS.x, y: MOSS.y });
     consider({ kind: "door", x: DOOR.x, y: DOOR.y });
+    var s;
+    for (s = 0; s < MISSIONS.length && state.level >= s + 1; s++) {
+      consider({ kind: "site", i: s, x: MISSIONS[s].x, y: MISSIONS[s].y });
+    }
     return best;
   }
   function applyOrder(order) {
@@ -922,7 +1141,14 @@
       return { title: "Pond bucket", status: full ? "Full." : ((state.bucket || 0) + " of 8."), detail: "Each watering spends 1. The crew does not use this bucket.", actions: full ? [] : [{ label: "Fill the bucket", order: { kind: "fill", i: 0, x: hit.x, y: hit.y } }] };
     }
     if (hit.kind === "shell") return { title: "Creek shell", status: "Here today.", detail: "Worth 2 stones. Taken shells come back at dawn.", actions: [{ label: "Pick up the shell", order: { kind: "shell", i: hit.i, x: hit.x, y: hit.y } }] };
-    if (hit.kind === "moss") return { title: "Moss's stall", status: seasonName() + " prices are posted.", detail: jobLine() + " Selling is a choice. Seed for this season is here.", actions: [{ label: "Open the stall", order: null, shop: true }] };
+    if (hit.kind === "moss") return { title: "Moss's stall", status: seasonName() + " prices are posted.", detail: orderLine() + " Selling is a choice. Seed for this season is here.", actions: [{ label: "Open the stall", order: null, shop: true }] };
+    if (hit.kind === "site") {
+      var site = MISSIONS[hit.i];
+      var current = state.level === hit.i + 1;
+      var siteActions = [];
+      if (current && site.goal === "raise" && !state.stats["r" + state.level]) siteActions.push({ label: "Raise it · " + site.cost, raise: true });
+      return { title: site.name, status: current ? "This job." : "Built.", detail: site.task + " " + site.detail + " " + placeHint(site) + " " + (current ? progressText(site) : ""), actions: siteActions };
+    }
     if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Beds, the swan, the plodder, and the mill resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
     return { title: "Thing", status: "", detail: "", actions: actions };
   }
@@ -942,6 +1168,7 @@
         btn.textContent = act.label;
         btn.addEventListener("click", function () {
           if (act.shop) { openShop(); return; }
+          if (act.raise) { raiseCurrent(); return; }
           queueAct(act.order);
         });
         body.appendChild(btn);
@@ -1061,9 +1288,12 @@
         btn.disabled = have <= 0;
         btn.addEventListener("click", function () {
           var n = state.items[key];
-          state.stones += n * price(key);
-          state.items[key] = 0;
-          toast("Sold for " + (n * price(key)));
+          if (n > 0) {
+            state.stones += n * price(key);
+            state.items[key] = 0;
+            bump("sold");
+            toast("Sold for " + (n * price(key)));
+          }
           openShop();
           hud();
           save();
@@ -1142,6 +1372,41 @@
       }
     });
   }
+  function openMission() {
+    if (mode !== "play" && mode !== "sheet") return;
+    ensure();
+    if (state.level > MISSIONS.length) {
+      openSheet("The acre is full", function (body) {
+        var p = document.createElement("p");
+        p.textContent = "Fifty jobs are done. The bank is built. The year still turns on this acre.";
+        body.appendChild(p);
+      });
+      return;
+    }
+    var m = MISSIONS[state.level - 1];
+    openSheet("Lv " + state.level + " · " + m.name, function (body) {
+      var task = document.createElement("p");
+      task.textContent = m.task;
+      body.appendChild(task);
+      var where = document.createElement("p");
+      where.textContent = placeHint(m);
+      body.appendChild(where);
+      var prog = document.createElement("p");
+      prog.textContent = progressText(m);
+      body.appendChild(prog);
+      var detail = document.createElement("p");
+      detail.textContent = m.detail;
+      body.appendChild(detail);
+      if (m.goal === "raise" && !state.stats["r" + state.level]) {
+        var btn = document.createElement("button");
+        btn.className = "play";
+        btn.type = "button";
+        btn.textContent = "Raise it · " + m.cost + " stones";
+        btn.addEventListener("click", raiseCurrent);
+        body.appendChild(btn);
+      }
+    });
+  }
   function openNotes() {
     sheetBack = document.getElementById("splash").classList.contains("hidden") ? "play" : "splash";
     mode = "sheet";
@@ -1152,7 +1417,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "The game is one acre for a year. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
+    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job adds a task, a building, and more land. The fiftieth job fills the map. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
@@ -1536,6 +1801,201 @@
       ctx.fillRect(f.x, f.y, 2, 2);
     });
   }
+  function yard(x, y) {
+    ctx.strokeStyle = "#5c3a1e";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x - 54, y - 34, 108, 76);
+    ctx.fillStyle = "#f3ead2";
+    var posts = [[-54, -34], [54, -34], [-54, 42], [54, 42]];
+    var p;
+    for (p = 0; p < posts.length; p++) ctx.fillRect(x + posts[p][0] - 2, y + posts[p][1] - 2, 5, 10);
+  }
+  function house(x, y, roof, wall, wide) {
+    var w = wide ? 40 : 22;
+    ctx.fillStyle = wall;
+    ctx.fillRect(x - w, y - 18, w * 2, 26);
+    ctx.fillStyle = roof;
+    ctx.beginPath();
+    ctx.moveTo(x - w - 8, y - 16);
+    ctx.lineTo(x, y - (wide ? 48 : 40));
+    ctx.lineTo(x + w + 8, y - 16);
+    ctx.fill();
+    ctx.fillStyle = "#f3ead2";
+    ctx.fillRect(x - 6, y - 6, 12, 14);
+  }
+  function drawAccent(shape, x, y) {
+    if (shape === "post" || shape === "stick" || shape === "lookout") {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(x - 3, y - (shape === "lookout" ? 64 : 28), 6, shape === "lookout" ? 66 : 30);
+      ctx.fillStyle = "#f5c400";
+      ctx.beginPath();
+      ctx.arc(x, y - (shape === "lookout" ? 66 : 30), shape === "lookout" ? 8 : 5, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    if (shape === "barrel" || shape === "cistern") {
+      ctx.fillStyle = "#1f6f93";
+      ctx.fillRect(x - 14, y - 28, 28, 30);
+      ctx.strokeStyle = "#f3ead2";
+      ctx.strokeRect(x - 14, y - 28, 28, 30);
+      ctx.fillStyle = "#8ecae6";
+      ctx.fillRect(x - 10, y - 22, 20, 8);
+      return;
+    }
+    if (shape === "rick" || shape === "compost" || shape === "pile" || shape === "shade") {
+      ctx.fillStyle = shape === "compost" ? "#6b3f22" : shape === "pile" ? "#8b5a2b" : "#e0a030";
+      ctx.beginPath();
+      ctx.ellipse(x, y - 8, 24, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (shape === "shade") {
+        ctx.fillStyle = "#2f6b32";
+        ctx.fillRect(x - 26, y - 26, 52, 6);
+        ctx.fillRect(x - 2, y - 26, 4, 26);
+      }
+      return;
+    }
+    if (shape === "bench" || shape === "rack" || shape === "scale" || shape === "board") {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(x - 18, y - 8, 36, 6);
+      ctx.fillRect(x - 16, y - 8, 4, 16);
+      ctx.fillRect(x + 12, y - 8, 4, 16);
+      if (shape === "scale" || shape === "board") {
+        ctx.fillStyle = "#f3ead2";
+        ctx.fillRect(x - 16, y - 28, 32, 16);
+      }
+      return;
+    }
+    if (shape === "basket" || shape === "cache" || shape === "crates" || shape === "nest" || shape === "bin") {
+      ctx.fillStyle = shape === "bin" ? "#e0a030" : "#c9853a";
+      ctx.fillRect(x - 16, y - 16, 32, 18);
+      ctx.strokeStyle = "#5c3a1e";
+      ctx.strokeRect(x - 16, y - 16, 32, 18);
+      return;
+    }
+    if (shape === "gate" || shape === "path") {
+      ctx.fillStyle = "#f3ead2";
+      ctx.fillRect(x - 22, y - 28, 6, 30);
+      ctx.fillRect(x + 16, y - 28, 6, 30);
+      ctx.fillStyle = "#f5c400";
+      ctx.fillRect(x - 22, y - 22, 44, 5);
+      return;
+    }
+    if (shape === "dock") {
+      ctx.fillStyle = "#1a6488";
+      ctx.fillRect(x - 46, 328, 92, 12);
+      ctx.fillStyle = "#e4d2ae";
+      ctx.fillRect(x - 12, 336, 24, y - 330);
+      ctx.fillStyle = "#6b3f22";
+      ctx.fillRect(x - 16, y - 8, 32, 8);
+      return;
+    }
+    if (shape === "frame") {
+      ctx.fillStyle = "rgba(142, 202, 230, 0.55)";
+      ctx.fillRect(x - 24, y - 16, 48, 22);
+      ctx.strokeStyle = "#f3ead2";
+      ctx.strokeRect(x - 24, y - 16, 48, 22);
+      return;
+    }
+    if (shape === "kiln" || shape === "cellar") {
+      ctx.fillStyle = "#8c3a32";
+      ctx.beginPath();
+      ctx.arc(x, y - 6, 16, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(x - 16, y - 6, 32, 14);
+      ctx.fillStyle = "#f6d36b";
+      ctx.fillRect(x - 4, y - 4, 8, 8);
+      return;
+    }
+    if (shape === "orchard" || shape === "stool" || shape === "wind") {
+      var t;
+      for (t = -1; t <= 1; t++) {
+        ctx.fillStyle = "#5c3a1e";
+        ctx.fillRect(x + t * 16 - 2, y - 16, 4, 16);
+        ctx.fillStyle = "#2f6b32";
+        ctx.beginPath();
+        ctx.arc(x + t * 16, y - 20, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return;
+    }
+    if (shape === "lamps") {
+      var lamp;
+      for (lamp = -2; lamp <= 2; lamp++) {
+        ctx.fillStyle = "#5c3a1e";
+        ctx.fillRect(x + lamp * 16 - 1, y - 24, 3, 24);
+        ctx.fillStyle = "#f5c400";
+        ctx.beginPath();
+        ctx.arc(x + lamp * 16, y - 26, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return;
+    }
+    if (shape === "row" || shape === "field" || shape === "plot") {
+      ctx.fillStyle = "#6b3f22";
+      ctx.fillRect(x - 28, y - 8, 56, 14);
+      return;
+    }
+    var roof = shape === "coop" ? "#f4f7fb" : shape === "smoke" ? "#8c3a32" : shape === "grand" || shape === "hall" ? "#a33b32" : "#8b5a2b";
+    var wall = shape === "summer" ? "#e7b07a" : "#6b4a2a";
+    house(x, y, roof, wall, shape === "grand" || shape === "hall" || shape === "bunk");
+    if (shape === "smoke" || shape === "hall") {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(x + 10, y - 48, 6, 14);
+    }
+  }
+  function drawLampPost(x, y) {
+    ctx.fillStyle = "#5c3a1e";
+    ctx.fillRect(x - 2, y - 16, 4, 18);
+    ctx.fillStyle = "#f5c400";
+    ctx.beginPath();
+    ctx.arc(x, y - 18, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawSites() {
+    var i, m, x, y;
+    for (i = 0; i < MISSIONS.length; i++) {
+      if (state.level < i + 1) break;
+      m = MISSIONS[i];
+      x = m.x;
+      y = m.y;
+      shadow(x, y, 22);
+      yard(x, y);
+      drawAccent(m.shape, x, y);
+      if (state.level === i + 1) {
+        ctx.strokeStyle = "#f5c400";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x - 60, y - 40, 120, 88);
+      }
+      plank(x, y + 48, m.short);
+    }
+    if (state.level < 50) return;
+    var lx;
+    for (lx = 140; lx < 2460; lx += 200) {
+      drawLampPost(lx, 400);
+      drawLampPost(lx, 2320);
+    }
+    var ly;
+    for (ly = 520; ly < 2280; ly += 200) {
+      drawLampPost(110, ly);
+      drawLampPost(2440, ly);
+    }
+    var fy, fx;
+    for (fy = 420; fy < 2360; fy += 28) {
+      for (fx = 70; fx < 2480; fx += 28) {
+        var nx = (fx - POND.x) / 160;
+        var ny = (fy - POND.y) / 110;
+        if (nx * nx + ny * ny < 1) continue;
+        if (fx > 1100 && fx < 1680 && fy > 1020 && fy < 1320) continue;
+        if (fy < 400) continue;
+        ctx.fillStyle = "rgba(92, 52, 22, 0.42)";
+        ctx.fillRect(fx, fy, 20, 8);
+        if ((Math.floor(fx / 28) + Math.floor(fy / 28)) % 2 === 0) {
+          ctx.fillStyle = "#2f6b32";
+          ctx.fillRect(fx + 8, fy - 7, 3, 8);
+        }
+      }
+    }
+  }
   function draw() {
     resize();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1555,6 +2015,7 @@
     state.beds.forEach(drawBed);
     state.willows.forEach(drawWillow);
     drawBuildings();
+    drawSites();
     drawBober({ x: MOSS.x - 102, y: MOSS.y + 28, face: 1, id: "moss", tx: null }, false);
     state.crew.forEach(function (c) { drawBober(c, false); });
     drawBober(state.player, true);
@@ -1574,6 +2035,7 @@
     lastTs = ts;
     anim += dt;
     if (toastTill && ts > toastTill) document.getElementById("toast").classList.add("hidden");
+    if (missionHold > 0) missionHold -= dt;
     if (mode === "play") {
       state.clock += dt;
       if (state.mill.sack > 0) state.mill.t += dt;
@@ -1613,6 +2075,7 @@
         camY += (state.player.y - VH / 2 - camY) * Math.min(1, dt * 14);
         clampCam();
       }
+      checkMission();
       if (state.clock >= DAY_LEN) endDay();
     }
     if (state.season === 3) {
@@ -1626,6 +2089,7 @@
 
   function bootPlay(fromSave) {
     sheetBack = "play";
+    missionHold = 0;
     mode = "play";
     document.getElementById("splash").classList.add("hidden");
     document.getElementById("dawn").classList.add("hidden");
@@ -1656,6 +2120,7 @@
   document.getElementById("btn-shop").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openShop(); });
   document.getElementById("btn-pack").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openPack(); });
   document.getElementById("btn-sleep").addEventListener("click", function () { if (mode === "play") endDay(); });
+  document.getElementById("job").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openMission(); });
 
   canvas.addEventListener("pointerdown", function (ev) {
     if (mode !== "play") return;

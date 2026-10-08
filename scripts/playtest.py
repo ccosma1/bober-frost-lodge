@@ -73,6 +73,15 @@ def play_checks() -> list[str]:
         when = page.locator("#when").inner_text()
         if when != "SPRING · DAY 1":
             errors.append("open when " + when)
+        mission = page.evaluate(
+            """() => ({
+              level: WC.state.level,
+              job: document.getElementById('job').textContent,
+              mode: WC.mode()
+            })"""
+        )
+        if mission["level"] != 1 or "1/50" not in mission["job"] or mission["mode"] != "play":
+            errors.append("mission start " + str(mission))
         shot = ROOT / "scripts" / "_willow_day1.png"
         page.screenshot(path=str(shot))
         info = page.evaluate(
@@ -370,6 +379,35 @@ def play_checks() -> list[str]:
         page.locator("#btn-work").click()
         if page.evaluate("() => WC.mode()") != "play":
             errors.append("work did not resume")
+
+        page.evaluate(
+            """() => {
+              WC.boot();
+              WC.state.beds[0].wet = true;
+              WC.state.beds[1].wet = true;
+            }"""
+        )
+        try:
+            page.wait_for_function(
+                "() => WC.state.level === 2 && WC.mode() === 'play' && document.getElementById('sheet').classList.contains('hidden')",
+                timeout=4000,
+            )
+        except Exception as exc:
+            errors.append("unlock " + repr(exc))
+
+        page.evaluate("() => { WC.boot(); WC.state.level = 50; }")
+        page.wait_for_timeout(500)
+        filled = page.evaluate(
+            """() => ({
+              beds: WC.state.beds.length,
+              level: WC.state.level,
+              mode: WC.mode(),
+              job: document.getElementById('job').textContent,
+              sheet: document.getElementById('sheet').classList.contains('hidden')
+            })"""
+        )
+        if filled["level"] != 50 or filled["beds"] < 40 or "50/50" not in filled["job"] or filled["mode"] != "play" or not filled["sheet"]:
+            errors.append("acre fill " + str(filled))
 
         wide = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
         wide.goto(URL, wait_until="domcontentloaded")
