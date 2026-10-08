@@ -44,10 +44,11 @@
     }
     #stage { flex: 1 1 auto; position: relative; min-height: 220px; background: #3d6b32; }
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    #verb {
+    #verb, #job {
       margin: 0; min-height: 18px; padding: 4px 10px 0; background: #14210f;
       font-size: 13px; font-weight: 800; color: var(--cream);
     }
+    #job { padding-bottom: 6px; color: var(--yellow); font-size: 12px; }
     #dock {
       flex: 0 0 auto; display: flex; gap: 8px; padding: 8px;
       background: #14210f; padding-bottom: calc(8px + env(safe-area-inset-bottom));
@@ -63,12 +64,15 @@
     #dock button.hidden, .overlay.hidden, .hidden { display: none !important; }
     #app[data-mode="splash"] #dock,
     #app[data-mode="splash"] #verb,
+    #app[data-mode="splash"] #job,
     #app[data-mode="splash"] header,
     #app[data-mode="splash"] #subrow,
     #app[data-mode="dawn"] #dock,
     #app[data-mode="dawn"] #verb,
+    #app[data-mode="dawn"] #job,
     #app[data-mode="sheet"] #dock,
-    #app[data-mode="sheet"] #verb { display: none !important; }
+    #app[data-mode="sheet"] #verb,
+    #app[data-mode="sheet"] #job { display: none !important; }
     #app[data-mode="sheet"] #sheet,
     #app[data-mode="dawn"] #dawn { top: 76px; }
     .overlay {
@@ -116,7 +120,8 @@
       <span id="mill-read">Mill empty</span>
       <span id="slate">Slate 0/2</span>
     </div>
-    <p id="verb">Tap the ground to walk.</p>
+    <p id="verb">Tap a thing to read it.</p>
+    <p id="job">Moss wants 2 Reedbean.</p>
     <div id="stage">
       <canvas id="view" width="420" height="480"></canvas>
     </div>
@@ -131,6 +136,7 @@
         <div class="card">
           <h1>BOBER WILLOW CUT</h1>
           <p>A farm simulator. Four seasons on the bank.</p>
+          <p>One acre. Seven days a season. Each season Moss posts one order. Feed the trough. Cut the willow when it grows back. The year turns on the same land.</p>
           <p>The bank Burrow Hop called home is a farm now. Nightfall is still downriver.</p>
           <p class="fan">Fan game by a holder. No wallet. No ads.</p>
           <button class="play" id="btn-start" type="button">START THE YEAR</button>
@@ -266,7 +272,7 @@
         { x: 1510, y: 1348, ready: true, wait: 0 },
         { x: 1364, y: 1396, ready: true, wait: 0 }
       ],
-      player: { x: 1240, y: 1256, tx: null, ty: null, face: 1, pending: null },
+      player: { x: 1240, y: 1256, tx: null, ty: null, face: 1, pending: null, order: null, acting: 0 },
       crew: [
         { id: "nib", name: "NIB", x: 1040, y: 1340, tx: null, ty: null, face: 1, chore: null, cool: 0 },
         { id: "puddle", name: "PUDDLE", x: 1455, y: 1336, tx: null, ty: null, face: -1, chore: null, cool: 0 },
@@ -505,6 +511,7 @@
       state.season = (state.season + 1) % 4;
       if (state.season === 0) state.year += 1;
       turned = true;
+      if (state.season === 0) lines.push("Year " + state.year + " starts on the same acre.");
       state.slate = { season: state.season, got: 0 };
     }
     if (state.day === 4 && state.season !== 3) {
@@ -545,6 +552,7 @@
     });
     var willowReady = state.willows.some(function (w) { return w.days >= 4; });
     lines.push(willowReady ? "A willow stool is ready to cut." : "Willow is not ready to cut.");
+    lines.unshift(jobLine());
     if (state.season !== 3) {
       state.grass.forEach(function (g) {
         if (g.ready) return;
@@ -565,6 +573,8 @@
     state.player.tx = null;
     state.player.ty = null;
     state.player.pending = null;
+    state.player.order = null;
+    state.player.acting = 0;
     state.clock = 0;
     mode = "dawn";
     closeSheet();
@@ -726,6 +736,18 @@
     }
   }
 
+  function jobLine() {
+    var spec = SLATE[state.season];
+    var have = state.items[spec.key] || 0;
+    var filled = state.slate && state.slate.got >= spec.n;
+    var order = filled
+      ? ("Moss's " + spec.name + " order is filled.")
+      : ("Moss wants " + spec.n + " " + spec.name + ". You have " + have + ".");
+    var willow = state.season === 3
+      ? "Willow rests until spring."
+      : (state.willows.some(function (w) { return w.days >= 4; }) ? "A willow is ready to cut." : "Willow is still growing.");
+    return order + " " + willow + " Feed the trough if you want an egg at dawn.";
+  }
   function markMode() {
     document.getElementById("app").setAttribute("data-mode", mode);
   }
@@ -743,8 +765,12 @@
     var got = state.slate && state.slate.got >= spec.n;
     var have = state.items[spec.key] || 0;
     document.getElementById("slate").textContent = got ? "Slate filled" : ("Slate " + Math.min(have, spec.n) + "/" + spec.n);
-    var near = nearest(state.player.x, state.player.y, REACH + 8);
-    document.getElementById("verb").textContent = near ? verbFor(near) : "Tap the ground to walk. Sleep ends the day.";
+    document.getElementById("job").textContent = jobLine();
+    if (state.player.acting > 0) document.getElementById("verb").textContent = "Working...";
+    else {
+      var near = nearest(state.player.x, state.player.y, REACH + 8);
+      document.getElementById("verb").textContent = near ? verbFor(near) : "Tap a thing to read it. Tap the ground to walk.";
+    }
   }
   function verbFor(hit) {
     if (hit.kind === "bed") {
@@ -790,16 +816,137 @@
     consider({ kind: "door", x: DOOR.x, y: DOOR.y });
     return best;
   }
-  function doHit(hit) {
-    if (hit.kind === "bed") workBed(hit.i);
-    else if (hit.kind === "willow") { var e = cutWillow(hit.i); if (e) toast(e); }
-    else if (hit.kind === "grass") { if (state.grass[hit.i].ready) cutGrass(hit.i); else toast("Cut already"); }
-    else if (hit.kind === "fill") { if (state.bucket >= 8) toast("Bucket is full"); else fillBucket(); }
-    else if (hit.kind === "shell") { var shellErr = pickShell(hit.i); if (shellErr) toast(shellErr); }
-    else if (hit.kind === "mill") { var m = loadMill(); if (m) toast(m); else toast("Sack loaded"); }
-    else if (hit.kind === "rack") { var bundleErr = tieBundle(); if (bundleErr) toast(bundleErr); }
-    else if (hit.kind === "moss") openShop();
-    else if (hit.kind === "door") endDay();
+  function applyOrder(order) {
+    if (!order) return;
+    if (order.kind === "bed") workBed(order.i);
+    else if (order.kind === "plant") {
+      var err = plant(order.i, order.crop);
+      if (err) toast(err);
+      else toast(CROP_NAME[order.crop] + " planted");
+    } else if (order.kind === "water") {
+      var werr = waterBed(order.i);
+      if (werr) toast(werr);
+    } else if (order.kind === "willow") {
+      var e = cutWillow(order.i);
+      if (e) toast(e);
+    } else if (order.kind === "grass") {
+      if (state.grass[order.i] && state.grass[order.i].ready) cutGrass(order.i);
+      else toast("Cut already");
+    } else if (order.kind === "fill") {
+      if (state.bucket >= 8) toast("Bucket is full");
+      else fillBucket();
+    } else if (order.kind === "shell") {
+      var shellErr = pickShell(order.i);
+      if (shellErr) toast(shellErr);
+    } else if (order.kind === "mill") {
+      var m = loadMill();
+      if (m) toast(m);
+      else toast("Sack loaded");
+    } else if (order.kind === "rack") {
+      var bundleErr = tieBundle();
+      if (bundleErr) toast(bundleErr);
+    } else if (order.kind === "door") endDay();
+  }
+  function queueAct(order) {
+    closeSheet();
+    state.player.order = order;
+    state.player.pending = null;
+    var dist = Math.hypot(state.player.x - order.x, state.player.y - order.y);
+    if (dist <= REACH) {
+      state.player.tx = null;
+      state.player.ty = null;
+      state.player.acting = 0.7;
+      return;
+    }
+    if (blocked(order.x, order.y)) {
+      state.player.order = null;
+      toast("Can't walk there");
+      return;
+    }
+    state.player.acting = 0;
+    state.player.tx = order.x;
+    state.player.ty = order.y;
+  }
+  function describeHit(hit) {
+    var actions = [];
+    if (hit.kind === "bed") {
+      var b = state.beds[hit.i];
+      if (b.state === "wild") return { title: "Brush", status: "Wild.", detail: "Clear the brush. The bed becomes stony, then you can pick it down to tilled soil.", actions: [{ label: "Clear the brush", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      if (b.state === "stony") return { title: "Stones", status: "Stony.", detail: "Pick the stones and the bed is tilled, ready to plant.", actions: [{ label: "Pick the stones", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      if (b.state === "stubble") return { title: "Stubble", status: "Cut.", detail: "Clear the stubble and the bed is tilled again.", actions: [{ label: "Clear the stubble", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      if (b.state === "tilled") {
+        var crops = seasonCrops();
+        var plantActions = crops.map(function (crop) {
+          return { label: "Plant " + CROP_NAME[crop], order: { kind: "plant", i: hit.i, crop: crop, x: hit.x, y: hit.y } };
+        });
+        var seedLine = crops.length
+          ? crops.map(function (crop) { return CROP_NAME[crop] + " seed " + (state.items[SEED_KEY[crop]] || 0); }).join(". ") + "."
+          : "Winter rests. The beds wait.";
+        return { title: "Empty bed", status: "Tilled. Fertility " + (b.fert || 0) + ".", detail: seedLine, actions: plantActions };
+      }
+      if (b.state === "ready") return { title: CROP_NAME[b.crop] || "Bed", status: "Ready.", detail: "Harvest pays " + (1 + (b.fert || 0)) + ". Fertility then drops by 1.", actions: [{ label: "Harvest", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      var wet = b.wet ? "Watered." : "Dry.";
+      var waterActions = [];
+      var waterDetail = CROP_NAME[b.crop] + " advances at dawn only if it was watered. Bucket " + (state.bucket || 0) + " of 8.";
+      if (!b.wet && (state.bucket || 0) > 0) waterActions.push({ label: "Water", order: { kind: "water", i: hit.i, x: hit.x, y: hit.y } });
+      else if (!b.wet) waterDetail += " Fill the bucket at the pond.";
+      else waterDetail = "Watered. It grows at the next dawn if the season still matches. " + b.days + " of " + b.need + ".";
+      return { title: CROP_NAME[b.crop] || "Bed", status: wet + " " + b.days + " of " + b.need + ".", detail: waterDetail, actions: waterActions };
+    }
+    if (hit.kind === "mill") {
+      if (state.mill.sack > 0) {
+        var pct = Math.min(100, Math.floor(state.mill.t / MILL_NEED * 100));
+        return { title: "Mill", status: "Full stocked. " + pct + "%.", detail: "One reedbean is in the hopper. It becomes meal and chaff after a full run. An empty mill does nothing.", actions: [] };
+      }
+      if (state.items.reedbean > 0) return { title: "Mill", status: "Empty.", detail: "You have " + state.items.reedbean + " reedbean. Meal sells for more than the sack. Loading spends one sack.", actions: [{ label: "Load a reedbean sack", order: { kind: "mill", i: 0, x: hit.x, y: hit.y } }] };
+      return { title: "Mill", status: "Empty.", detail: "The mill needs a reedbean sack. The pack has none.", actions: [] };
+    }
+    if (hit.kind === "grass") {
+      var g = state.grass[hit.i];
+      if (g.ready) return { title: "Grass", status: "Ready.", detail: "One cut adds 1 fodder. The trough is " + state.fodder + ". The swan eats first at dawn, then the plodder.", actions: [{ label: "Cut into the trough", order: { kind: "grass", i: hit.i, x: hit.x, y: hit.y } }] };
+      return { title: "Grass", status: "Cut.", detail: "Back in " + g.wait + " dawns. It does not grow in winter. Trough is " + state.fodder + ".", actions: [] };
+    }
+    if (hit.kind === "willow") {
+      var w = state.willows[hit.i];
+      if (state.season === 3) return { title: "Willow stool", status: "Resting.", detail: "Winter rest. It does not grow and it cannot be cut.", actions: [] };
+      if (w.days >= 4) return { title: "Willow stool", status: "Ready to cut.", detail: "A cut is one willow. Three willow tie into a bundle at the lease rack. It then starts the 4 dawns again.", actions: [{ label: "Cut the willow", order: { kind: "willow", i: hit.i, x: hit.x, y: hit.y } }] };
+      return { title: "Willow stool", status: w.days + " of 4.", detail: "Not ready. It regrows in 4 dawns from spring through fall.", actions: [] };
+    }
+    if (hit.kind === "rack") {
+      var held = state.items.willow || 0;
+      var rackActions = held >= 3 ? [{ label: "Tie a bundle", order: { kind: "rack", i: 0, x: hit.x, y: hit.y } }] : [];
+      return { title: "Willow rack", status: held + " of 3.", detail: "Three cuts become one bundle. A bundle pays more than loose willow.", actions: rackActions };
+    }
+    if (hit.kind === "fill") {
+      var full = (state.bucket || 0) >= 8;
+      return { title: "Pond bucket", status: full ? "Full." : ((state.bucket || 0) + " of 8."), detail: "Each watering spends 1. The crew does not use this bucket.", actions: full ? [] : [{ label: "Fill the bucket", order: { kind: "fill", i: 0, x: hit.x, y: hit.y } }] };
+    }
+    if (hit.kind === "shell") return { title: "Creek shell", status: "Here today.", detail: "Worth 2 stones. Taken shells come back at dawn.", actions: [{ label: "Pick up the shell", order: { kind: "shell", i: hit.i, x: hit.x, y: hit.y } }] };
+    if (hit.kind === "moss") return { title: "Moss's stall", status: seasonName() + " prices are posted.", detail: jobLine() + " Selling is a choice. Seed for this season is here.", actions: [{ label: "Open the stall", order: null, shop: true }] };
+    if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Beds, the swan, the plodder, and the mill resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
+    return { title: "Thing", status: "", detail: "", actions: actions };
+  }
+  function openInspect(hit) {
+    var card = describeHit(hit);
+    openSheet(card.title, function (body) {
+      var status = document.createElement("p");
+      status.textContent = card.status;
+      body.appendChild(status);
+      var detail = document.createElement("p");
+      detail.textContent = card.detail;
+      body.appendChild(detail);
+      card.actions.forEach(function (act) {
+        var btn = document.createElement("button");
+        btn.className = "play";
+        btn.type = "button";
+        btn.textContent = act.label;
+        btn.addEventListener("click", function () {
+          if (act.shop) { openShop(); return; }
+          queueAct(act.order);
+        });
+        body.appendChild(btn);
+      });
+    });
   }
 
   function closeSheet() {
@@ -1005,7 +1152,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
+    q.textContent = "The game is one acre for a year. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
@@ -1019,18 +1166,21 @@
     if (mode !== "play") return;
     looking = false;
     var hit = nearest(x, y, 42);
-    if (hit && Math.hypot(state.player.x - hit.x, state.player.y - hit.y) <= REACH) {
-      state.player.pending = null;
-      doHit(hit);
+    if (hit) {
+      state.player.tx = null;
+      state.player.ty = null;
+      state.player.order = null;
+      state.player.acting = 0;
+      openInspect(hit);
       hud();
       return;
     }
-    var tx = hit ? hit.x : x;
-    var ty = hit ? hit.y : y;
-    if (blocked(tx, ty)) { toast("Can't walk there"); return; }
-    state.player.tx = tx;
-    state.player.ty = ty;
-    state.player.pending = hit;
+    state.player.order = null;
+    state.player.acting = 0;
+    if (blocked(x, y)) { toast("Can't walk there"); return; }
+    state.player.tx = x;
+    state.player.ty = y;
+    state.player.pending = null;
   }
 
   function resize() {
@@ -1350,7 +1500,7 @@
   }
   function drawBober(ent, hat) {
     var im = hat ? imgPlayer : imgFull;
-    shadow(ent.x, ent.y + 2, hat ? 26 : 22);
+    shadow(ent.x, ent.y + 2, hat ? 16 : 14);
     if (!im || !im.complete || !im.naturalWidth) {
       ctx.fillStyle = "#8b5a2b";
       ctx.beginPath();
@@ -1358,14 +1508,22 @@
       ctx.fill();
       return;
     }
-    var h = hat ? 132 : 116;
+    var h = hat ? 74 : 64;
     var w = im.naturalWidth * (h / im.naturalHeight);
-    var bob = ent.tx != null ? Math.abs(Math.sin(anim * 16)) * 7 : 0;
+    var working = (hat && state.player.acting > 0) || (!hat && ent.cool > 0 && ent.tx == null);
+    var bob = (ent.tx != null || working) ? Math.abs(Math.sin(anim * (working ? 22 : 16))) * (working ? 6 : 4) : 0;
     ctx.save();
     ctx.translate(ent.x, ent.y - bob);
     ctx.scale(ent.face || 1, 1);
     if (!hat && FILTER[ent.id]) ctx.filter = FILTER[ent.id];
     ctx.drawImage(im, -w / 2, -h + 4, w, h);
+    if (working) {
+      ctx.strokeStyle = "#f6d36b";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(18, -18, 9, anim * 14, anim * 14 + 1.3);
+      ctx.stroke();
+    }
     ctx.filter = "none";
     ctx.restore();
   }
@@ -1419,11 +1577,30 @@
     if (mode === "play") {
       state.clock += dt;
       if (state.mill.sack > 0) state.mill.t += dt;
-      var arrived = moveEnt(state.player, dt);
-      if (arrived && state.player.pending && Math.hypot(state.player.x - state.player.pending.x, state.player.y - state.player.pending.y) <= REACH + 6) {
-        var pending = state.player.pending;
-        state.player.pending = null;
-        doHit(pending);
+      if (state.player.acting > 0) {
+        state.player.acting -= dt;
+        state.player.tx = null;
+        state.player.ty = null;
+        if (state.player.order) {
+          var face = state.player.order.x - state.player.x;
+          if (face) state.player.face = face < 0 ? -1 : 1;
+        }
+        if (state.player.acting <= 0) {
+          var done = state.player.order;
+          state.player.order = null;
+          state.player.acting = 0;
+          applyOrder(done);
+        }
+      } else {
+        var arrived = moveEnt(state.player, dt);
+        if (state.player.order) {
+          var left = Math.hypot(state.player.x - state.player.order.x, state.player.y - state.player.order.y);
+          if (arrived || left <= REACH) state.player.acting = 0.7;
+          else if (state.player.tx == null) {
+            state.player.order = null;
+            toast("Can't reach it");
+          }
+        }
       }
       assignCrew();
       state.crew.forEach(function (c) {

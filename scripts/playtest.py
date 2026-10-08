@@ -194,6 +194,10 @@ def play_checks() -> list[str]:
                 timeout=8000,
             )
             page.locator("#sheet-body button", has_text="Plant Reedbean").click()
+            page.wait_for_function(
+                "() => WC.state.beds[2].state === 'seeded' && WC.state.beds[2].crop === 'reedbean'",
+                timeout=8000,
+            )
             planted = page.evaluate(
                 "() => ({ st: WC.state.beds[2].state, crop: WC.state.beds[2].crop, seed: WC.state.items.seedReed })"
             )
@@ -203,6 +207,7 @@ def play_checks() -> list[str]:
             errors.append("plant click " + repr(exc))
         try:
             world_click(1105, 1275)
+            page.locator("#sheet-body button", has_text="Water").click()
             page.wait_for_function("() => WC.state.beds[0].wet === true", timeout=8000)
         except Exception as exc:
             errors.append("water click " + repr(exc))
@@ -249,6 +254,7 @@ def play_checks() -> list[str]:
                 "() => document.getElementById('sheet-title').textContent.indexOf('Moss') >= 0",
                 timeout=8000,
             )
+            page.locator("#sheet-body button", has_text="Open the stall").click()
             page.locator("#sheet-body .row", has_text="Egg").locator("button").click()
             sold = page.evaluate("() => ({ stones: WC.state.stones, egg: WC.state.items.egg })")
             if sold["stones"] != 11 or sold["egg"] != 0:

@@ -14,7 +14,9 @@ Run `START.bat` or open `index.html` in a browser.
 
 A year is 4 seasons of 7 days. Sleep ends the day. The clock caps near 3 minutes. Crops advance at dawn, not on a real-time timer.
 
-You are Bober, yellow hat, whole head. Tap the ground to walk. Drag to look. The walk crosses the acre in a few seconds.
+You are Bober, yellow hat. Tap the ground to walk. Tap a bed, the mill, the grass, a willow, or the lodge to read its status, then confirm. Bober walks over and the work plays out. Drag to look.
+
+The scope is one acre and one year. Four seasons of seven days. Each season Moss posts one order. Feed the trough if you want the egg. Cut the willow when the stool is ready. The next year starts on the same land.
 
 - **Reedbean** — spring, 3 watered dawns
 - **Bank cress** — spring, 2 watered dawns
