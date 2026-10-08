@@ -18,7 +18,7 @@ You are Bober, yellow hat. Tap the ground to walk. Tap a bed, the mill, the gras
 
 The scope is one acre and one year. Four seasons of seven days. Each season Moss posts one order. Feed the trough if you want the egg. Cut the willow when the stool is ready. The next year starts on the same land.
 
-Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task, the place, and the count. Finish it and the next job opens. Each job adds a building and more land. Paying jobs wait for a Raise button, so stones are not spent by accident. The fiftieth job fills the map.
+Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task, the place, and the count. Finish it and the next job opens. Each job adds a building and more land. Paying jobs wait for a Raise button, so $bober is not spent by accident. The fiftieth job fills the map.
 
 - **Reedbean** — spring, 3 watered dawns
 - **Bank cress** — spring, 2 watered dawns
@@ -28,13 +28,13 @@ Fifty jobs open in order. The yellow line under the field is the current job. Ta
 
 Skip a watering and that bed waits. The pond bucket holds 8 pours. Fill it on the south shore. The crew still waters a bed when that is their chore. A crop left into the wrong season withers. Fertility falls when you harvest. Chaff from the mill puts it back.
 
-Three creek shells sit on the path. Each is worth 2 stones, once a day. They return at dawn.
+Three creek shells sit on the path. Each is worth 2 $bober, once a day. They return at dawn.
 
 Reedswans lay an egg at dawn only if the trough had fodder. Plodders leave cream only if fodder is left after the swan. They do not die.
 
 The mill takes one reedbean sack. When it has run, the sack becomes meal plus chaff. Meal sells for more than the sack. An empty mill does nothing.
 
-Creek stones are the money. SHOP opens Moss's stall from the dock. PACK opens the inventory. You do not have to walk there. Selling is a choice. Seed is bought at the stall.
+$bober is the money. SHOP opens Moss's stall from the dock. PACK opens the inventory. You do not have to walk there. Selling is a choice. Seed is bought at the stall. Every price is in $bober.
 
 Moss also posts a slate: two of the season's crop, or two eggs in winter. Filling it pays the stall price plus a bonus.
 

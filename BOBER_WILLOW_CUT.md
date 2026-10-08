@@ -62,7 +62,7 @@ Animals, and they do not die:
 
 The mill is a building, not a hut upgrade. One reedbean sack becomes meal only while the mill is stocked. Meal sells for more than the sack. The mill also leaves chaff, which is how fertility returns. A mill that is empty does nothing.
 
-Money is creek stones. Moss's stall posts a price per season. You sell there, and you buy seed there. Storing a crop is allowed. Selling is not automatic.
+Money is $bober. Moss's stall posts a price per season. You sell there, and you buy seed there. Storing a crop is allowed. Selling is not automatic.
 
 ## First ten minutes
 

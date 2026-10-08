@@ -24,7 +24,7 @@ def static_checks(text: str) -> list[str]:
         "Lanternpod",
         "reedswan",
         "plodder",
-        "creek stones",
+        "$bober",
         "bober-willow-cut-v1",
         "No egg. The trough was empty.",
         "The mill made meal",
@@ -82,6 +82,9 @@ def play_checks() -> list[str]:
         )
         if mission["level"] != 1 or "1/50" not in mission["job"] or mission["mode"] != "play":
             errors.append("mission start " + str(mission))
+        chip = page.locator("#stones").inner_text()
+        if chip != "6 $bober":
+            errors.append("money chip " + chip)
         shot = ROOT / "scripts" / "_willow_day1.png"
         page.screenshot(path=str(shot))
         info = page.evaluate(
@@ -264,6 +267,9 @@ def play_checks() -> list[str]:
                 timeout=8000,
             )
             page.locator("#sheet-body button", has_text="Open the stall").click()
+            shop_text = page.locator("#sheet-body").inner_text()
+            if "$bober" not in shop_text or "creek stones" in shop_text:
+                errors.append("shop money " + shop_text[:180])
             page.locator("#sheet-body .row", has_text="Egg").locator("button").click()
             sold = page.evaluate("() => ({ stones: WC.state.stones, egg: WC.state.items.egg })")
             if sold["stones"] != 11 or sold["egg"] != 0:

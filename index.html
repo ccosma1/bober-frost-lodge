@@ -115,7 +115,7 @@
     <header>
       <div class="chip" id="when">SPRING · DAY 1</div>
       <div class="chip" id="clock">6:00</div>
-      <div class="chip" id="stones">6 creek stones</div>
+      <div class="chip" id="stones">6 $bober</div>
     </header>
     <div id="subrow">
       <span id="trough">Trough 0</span>
@@ -215,7 +215,7 @@
     { goal: "cleared", arg: 1, cost: 0, x: 1760, y: 1500, vx: 0, vy: 0, name: "Tool shed", short: "Shed", shape: "shed", grow: "bed", soil: "wild", task: "Clear brush on a wild bed.", detail: "Brush becomes stones. Stones become tilled soil." },
     { goal: "tilled", arg: 1, cost: 0, x: 1030, y: 720, vx: 0, vy: 0, name: "Stone crib", short: "Crib", shape: "crib", grow: "bed", soil: "stony", task: "Till a stony bed.", detail: "Pick stones, or clear stubble. Beds that started tilled do not count." },
     { goal: "fills", arg: 1, cost: 0, x: 680, y: 960, vx: 0, vy: 0, name: "Cistern", short: "Tank", shape: "cistern", grow: "bed", soil: "tilled", task: "Fill the bucket at the pond.", detail: "The bucket starts full. Spend a pour, then fill it on the south shore." },
-    { goal: "shells", arg: 1, cost: 0, x: 800, y: 1780, vx: 0, vy: 0, name: "Shell basket", short: "Basket", shape: "basket", grow: "bed", soil: "wild", task: "Pick a creek shell.", detail: "A shell is 2 stones. Taken shells return at dawn." },
+    { goal: "shells", arg: 1, cost: 0, x: 800, y: 1780, vx: 0, vy: 0, name: "Shell basket", short: "Basket", shape: "basket", grow: "bed", soil: "wild", task: "Pick a creek shell.", detail: "A shell is 2 $bober. Taken shells return at dawn." },
     { goal: "eggs", arg: 1, cost: 0, x: 1880, y: 960, vx: 0, vy: 0, name: "Swan coop", short: "Coop", shape: "coop", grow: "grass", soil: "wild", task: "Wake to an egg.", detail: "The swan lays at dawn only if the trough had fodder." },
     { goal: "harvests", arg: 1, cost: 0, x: 1710, y: 720, vx: 0, vy: 0, name: "Drying rack", short: "Rack", shape: "rack", grow: "bed", soil: "wild", task: "Harvest a crop.", detail: "A watered crop finishes at dawn, then you pick it." },
     { goal: "loads", arg: 1, cost: 0, x: 1760, y: 1780, vx: 0, vy: 0, name: "Mill annex", short: "Annex", shape: "annex", grow: "bed", soil: "tilled", task: "Load a reedbean sack into the mill.", detail: "One sack goes in the hopper. Meal comes after the run." },
@@ -223,41 +223,41 @@
     { goal: "cress", arg: 1, cost: 0, x: 690, y: 720, vx: 0, vy: 0, name: "Cress row", short: "Cress", shape: "row", grow: "beds3", soil: "tilled", task: "Plant bank cress.", detail: "Bank cress is a spring seed. It takes 2 watered dawns." },
     { goal: "chaff", arg: 1, cost: 0, x: 2420, y: 1200, vx: 0, vy: 0, name: "Compost", short: "Chaff", shape: "compost", grow: "bed", soil: "tilled", task: "Lay chaff on a bed.", detail: "The mill leaves chaff with the meal. Chaff lifts fertility, up to 2." },
     { goal: "willows", arg: 1, cost: 0, x: 520, y: 960, vx: 0, vy: 0, name: "Lease shed", short: "Lease", shape: "lease", grow: "willow", soil: "wild", task: "Cut a willow stool.", detail: "A stool is ready after 4 dawns, spring through fall." },
-    { goal: "raise", arg: 4, cost: 4, x: 500, y: 1560, vx: 0, vy: 0, name: "Smokehouse", short: "Smoke", shape: "smoke", grow: "bed", soil: "wild", task: "Raise the smokehouse.", detail: "Pay the stones from the job. The shed is the next piece of the bank." },
+    { goal: "raise", arg: 4, cost: 4, x: 500, y: 1560, vx: 0, vy: 0, name: "Smokehouse", short: "Smoke", shape: "smoke", grow: "bed", soil: "wild", task: "Raise the smokehouse.", detail: "Pay the $bober from the job. The shed is the next piece of the bank." },
     { goal: "harvests", arg: 2, cost: 0, x: 2420, y: 900, vx: 0, vy: 0, name: "Field row", short: "Field", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a second crop.", detail: "The second pick can be the same bed on another day." },
     { goal: "dawns", arg: 5, cost: 0, x: 1100, y: 2100, vx: 0, vy: 0, name: "Bunk shed", short: "Bunk", shape: "bunk", grow: "grass", soil: "wild", task: "See five dawns.", detail: "Five sleeps. The year is still seven days a season." },
     { goal: "fodderCut", arg: 3, cost: 0, x: 860, y: 480, vx: 0, vy: 0, name: "Plodder shade", short: "Shade", shape: "shade", grow: "grass", soil: "wild", task: "Cut grass three times.", detail: "Three cuts in all. Grass grows back after two dawns, except in winter." },
-    { goal: "raise", arg: 6, cost: 6, x: 1440, y: 2100, vx: 0, vy: 0, name: "South gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the south gate.", detail: "Pay 6 stones. The gate opens the south of the acre." },
+    { goal: "raise", arg: 6, cost: 6, x: 1440, y: 2100, vx: 0, vy: 0, name: "South gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the south gate.", detail: "Pay 6 $bober. The gate opens the south of the acre." },
     { goal: "visit", arg: 1, cost: 0, x: 1440, y: 2260, vx: 1440, vy: 2100, name: "Gate path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the south gate.", detail: "Go stand at the gate you just raised." },
     { goal: "meals", arg: 1, cost: 0, x: 2100, y: 1100, vx: 0, vy: 0, name: "Meal bin", short: "Bin", shape: "bin", grow: "bed", soil: "tilled", task: "Let the mill finish a meal.", detail: "A stocked mill becomes meal and chaff overnight." },
     { goal: "slates", arg: 1, cost: 0, x: 800, y: 2060, vx: 0, vy: 0, name: "Order board", short: "Board", shape: "board", grow: "bed", soil: "wild", task: "Fill Moss's season slate.", detail: "Two of the season crop, or two eggs in winter, plus the bonus." },
-    { goal: "raise", arg: 8, cost: 8, x: 500, y: 1840, vx: 0, vy: 0, name: "Root cellar", short: "Cellar", shape: "cellar", grow: "bed", soil: "wild", task: "Raise the root cellar.", detail: "Pay 8 stones. The cellar is the west store." },
+    { goal: "raise", arg: 8, cost: 8, x: 500, y: 1840, vx: 0, vy: 0, name: "Root cellar", short: "Cellar", shape: "cellar", grow: "bed", soil: "wild", task: "Raise the root cellar.", detail: "Pay 8 $bober. The cellar is the west store." },
     { goal: "cleared", arg: 3, cost: 0, x: 1760, y: 2060, vx: 0, vy: 0, name: "East plot", short: "Plot", shape: "plot", grow: "beds3", soil: "wild", task: "Clear brush three times.", detail: "Three brush clears in all. The east plot starts wild." },
     { goal: "planted", arg: 3, cost: 0, x: 2050, y: 720, vx: 0, vy: 0, name: "Planting stick", short: "Stick", shape: "stick", grow: "bed", soil: "tilled", task: "Plant three beds.", detail: "Three plantings in all, any season crop." },
     { goal: "visit", arg: 1, cost: 0, x: 500, y: 2120, vx: 500, vy: 1840, name: "Cellar path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the root cellar.", detail: "Go stand at the cellar on the west plot." },
-    { goal: "raise", arg: 8, cost: 8, x: 1880, y: 480, vx: 0, vy: 0, name: "Orchard stools", short: "Orchard", shape: "orchard", grow: "willow3", soil: "wild", task: "Raise the orchard stools.", detail: "Pay 8 stones. Three new stools join the lease." },
+    { goal: "raise", arg: 8, cost: 8, x: 1880, y: 480, vx: 0, vy: 0, name: "Orchard stools", short: "Orchard", shape: "orchard", grow: "willow3", soil: "wild", task: "Raise the orchard stools.", detail: "Pay 8 $bober. Three new stools join the lease." },
     { goal: "willows", arg: 2, cost: 0, x: 1100, y: 2260, vx: 0, vy: 0, name: "Second stool", short: "Stool", shape: "stool", grow: "willow", soil: "wild", task: "Cut a second willow.", detail: "Two cuts in all. Winter still rests every stool." },
-    { goal: "raise", arg: 10, cost: 10, x: 2220, y: 960, vx: 0, vy: 0, name: "Wood pile", short: "Pile", shape: "pile", grow: "bed", soil: "wild", task: "Raise the wood pile.", detail: "Pay 10 stones. The pile holds the cut willow." },
+    { goal: "raise", arg: 10, cost: 10, x: 2220, y: 960, vx: 0, vy: 0, name: "Wood pile", short: "Pile", shape: "pile", grow: "bed", soil: "wild", task: "Raise the wood pile.", detail: "Pay 10 $bober. The pile holds the cut willow." },
     { goal: "eggs", arg: 2, cost: 0, x: 2100, y: 1620, vx: 0, vy: 0, name: "Second nest", short: "Nest", shape: "nest", grow: "grass", soil: "wild", task: "Wake to a second egg.", detail: "Two eggs in all. Each one needs fodder the night before." },
-    { goal: "raise", arg: 10, cost: 10, x: 1200, y: 480, vx: 0, vy: 0, name: "Creek pier", short: "Pier", shape: "dock", grow: "bed", soil: "wild", task: "Raise the creek pier.", detail: "Pay 10 stones. The pier runs north to the water." },
+    { goal: "raise", arg: 10, cost: 10, x: 1200, y: 480, vx: 0, vy: 0, name: "Creek pier", short: "Pier", shape: "dock", grow: "bed", soil: "wild", task: "Raise the creek pier.", detail: "Pay 10 $bober. The pier runs north to the water." },
     { goal: "visit", arg: 1, cost: 0, x: 1540, y: 480, vx: 1200, vy: 480, name: "Pier walk", short: "Walk", shape: "path", grow: "grass", soil: "wild", task: "Walk to the creek pier.", detail: "Go stand on the pier." },
     { goal: "shells", arg: 3, cost: 0, x: 1270, y: 2200, vx: 0, vy: 0, name: "Shell cache", short: "Cache", shape: "cache", grow: "bed", soil: "wild", task: "Pick three creek shells.", detail: "Three shells in all. They come back each dawn." },
     { goal: "harvests", arg: 3, cost: 0, x: 180, y: 1680, vx: 0, vy: 0, name: "Far field", short: "Field", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a third crop.", detail: "Three harvests in all." },
-    { goal: "raise", arg: 10, cost: 10, x: 2100, y: 1900, vx: 0, vy: 0, name: "Clay kiln", short: "Kiln", shape: "kiln", grow: "bed", soil: "wild", task: "Raise the clay kiln.", detail: "Pay 10 stones. The kiln sits on the east bank." },
+    { goal: "raise", arg: 10, cost: 10, x: 2100, y: 1900, vx: 0, vy: 0, name: "Clay kiln", short: "Kiln", shape: "kiln", grow: "bed", soil: "wild", task: "Raise the clay kiln.", detail: "Pay 10 $bober. The kiln sits on the east bank." },
     { goal: "visit", arg: 1, cost: 0, x: 2100, y: 2180, vx: 2100, vy: 1900, name: "Kiln path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the clay kiln.", detail: "Go stand at the kiln." },
     { goal: "fodderCut", arg: 5, cost: 0, x: 800, y: 2260, vx: 0, vy: 0, name: "Second rick", short: "Rick", shape: "rick", grow: "grass", soil: "wild", task: "Cut grass five times.", detail: "Five cuts in all." },
-    { goal: "raise", arg: 12, cost: 12, x: 350, y: 720, vx: 0, vy: 0, name: "Cold frame", short: "Frame", shape: "frame", grow: "bed", soil: "tilled", task: "Raise the cold frame.", detail: "Pay 12 stones. The frame keeps one more bed." },
+    { goal: "raise", arg: 12, cost: 12, x: 350, y: 720, vx: 0, vy: 0, name: "Cold frame", short: "Frame", shape: "frame", grow: "bed", soil: "tilled", task: "Raise the cold frame.", detail: "Pay 12 $bober. The frame keeps one more bed." },
     { goal: "planted", arg: 5, cost: 0, x: 520, y: 480, vx: 0, vy: 0, name: "Fifth row", short: "Rows", shape: "row", grow: "beds3", soil: "tilled", task: "Plant five beds.", detail: "Five plantings in all." },
     { goal: "season", arg: 1, cost: 0, x: 2220, y: 480, vx: 0, vy: 0, name: "Summer shed", short: "Summer", shape: "summer", grow: "bed", soil: "wild", task: "Reach summer.", detail: "Sleep out the spring. Day 7 rolls into summer." },
-    { goal: "raise", arg: 12, cost: 12, x: 180, y: 1960, vx: 0, vy: 0, name: "Lookout", short: "Watch", shape: "lookout", grow: "grass", soil: "wild", task: "Raise the lookout.", detail: "Pay 12 stones. The watch stands on the west edge." },
+    { goal: "raise", arg: 12, cost: 12, x: 180, y: 1960, vx: 0, vy: 0, name: "Lookout", short: "Watch", shape: "lookout", grow: "grass", soil: "wild", task: "Raise the lookout.", detail: "Pay 12 $bober. The watch stands on the west edge." },
     { goal: "visit", arg: 1, cost: 0, x: 180, y: 2240, vx: 180, vy: 1960, name: "Lookout path", short: "Path", shape: "path", grow: "grass", soil: "wild", task: "Walk to the lookout.", detail: "Go stand at the watch." },
     { goal: "willows", arg: 3, cost: 0, x: 1760, y: 2260, vx: 0, vy: 0, name: "Windbreak", short: "Wind", shape: "wind", grow: "willow3", soil: "wild", task: "Cut a third willow.", detail: "Three cuts in all. The windbreak is three more stools." },
-    { goal: "raise", arg: 14, cost: 14, x: 2390, y: 720, vx: 0, vy: 0, name: "Grand annex", short: "Grand", shape: "grand", grow: "beds3", soil: "wild", task: "Raise the grand annex.", detail: "Pay 14 stones. The annex adds another field." },
+    { goal: "raise", arg: 14, cost: 14, x: 2390, y: 720, vx: 0, vy: 0, name: "Grand annex", short: "Grand", shape: "grand", grow: "beds3", soil: "wild", task: "Raise the grand annex.", detail: "Pay 14 $bober. The annex adds another field." },
     { goal: "harvests", arg: 4, cost: 0, x: 180, y: 480, vx: 0, vy: 0, name: "Fourth pick", short: "Pick", shape: "field", grow: "beds3", soil: "wild", task: "Harvest a fourth crop.", detail: "Four harvests in all." },
     { goal: "sold", arg: 3, cost: 0, x: 2420, y: 1620, vx: 0, vy: 0, name: "Market crates", short: "Crates", shape: "crates", grow: "bed", soil: "wild", task: "Sell three times.", detail: "Three sales in all. Each SELL at the stall counts as one." },
-    { goal: "raise", arg: 16, cost: 16, x: 2420, y: 1900, vx: 0, vy: 0, name: "Creek gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the creek gate.", detail: "Pay 16 stones. The east gate closes the bank." },
+    { goal: "raise", arg: 16, cost: 16, x: 2420, y: 1900, vx: 0, vy: 0, name: "Creek gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the creek gate.", detail: "Pay 16 $bober. The east gate closes the bank." },
     { goal: "dawns", arg: 10, cost: 0, x: 180, y: 960, vx: 0, vy: 0, name: "Festival lamps", short: "Lamps", shape: "lamps", grow: "grass", soil: "wild", task: "See ten dawns.", detail: "Ten sleeps. The lamps line the north meadow." },
-    { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 stones. The hall finishes the acre and the rest of the map fills in." }
+    { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 $bober. The hall finishes the acre and the rest of the map fills in." }
   ];
   var FILLERS = [360,500,680,500,1000,500,200,660,520,660,840,660,1160,660,200,820,520,820,840,820,1160,820,1480,820,1800,820,1960,820,2280,820,1000,980,1160,980,1320,980,520,1140,680,1140,840,1140,1800,1140,1960,1140,680,1300,2280,1460,360,1620,680,1620,1000,1620,1640,1620,1960,1620,2280,1620,360,1780,1960,1780,2280,1780,360,1940,680,1940,1640,1940,1960,1940,2280,1940,200,2100,360,2100,1960,2100,2280,2100,360,2260,520,2260,1960,2260,2280,2260];
 
@@ -470,7 +470,7 @@
     if (m.goal === "wet2") return ((state.stats.wet0 ? 1 : 0) + (state.stats.wet1 ? 1 : 0)) + " of 2 shoots watered.";
     if (m.goal === "raise") {
       if (state.stats["r" + state.level]) return "Raised.";
-      return "Costs " + m.cost + " creek stones. You have " + state.stones + ".";
+      return "Costs " + coins(m.cost) + ". You have " + coins(state.stones) + ".";
     }
     if (m.goal === "visit") return "Walk up to it.";
     if (m.goal === "season") return "Now " + seasonName().toLowerCase() + ", year " + state.year + ".";
@@ -480,7 +480,7 @@
     if (!state || state.level > MISSIONS.length) return;
     var m = MISSIONS[state.level - 1];
     if (!m || m.goal !== "raise" || state.stats["r" + state.level]) return;
-    if (state.stones < m.cost) { toast("Not enough stones"); return; }
+    if (state.stones < m.cost) { toast("Not enough $bober"); return; }
     state.stones -= m.cost;
     state.stats["r" + state.level] = 1;
     closeSheet();
@@ -494,6 +494,7 @@
     return [];
   }
   function price(key) { return PRICE[key][state.season]; }
+  function coins(n) { return n + " $bober"; }
   function seasonName() { return SEASON[state.season]; }
   function whenText() { return seasonName() + " · DAY " + state.day; }
   function clockText() {
@@ -587,7 +588,7 @@
     state.forage[i] = 0;
     state.stones += 2;
     bump("shells");
-    toast("Creek shell. 2 stones");
+    toast("Creek shell. 2 $bober");
     save();
     return null;
   }
@@ -657,7 +658,7 @@
     state.stones += pay;
     state.slate.got = spec.n;
     bump("slates");
-    toast("Slate paid " + pay);
+    toast("Slate paid " + coins(pay));
     save();
     return null;
   }
@@ -966,7 +967,7 @@
     markMode();
     document.getElementById("when").textContent = whenText();
     document.getElementById("clock").textContent = clockText();
-    document.getElementById("stones").textContent = state.stones + " creek stones";
+    document.getElementById("stones").textContent = coins(state.stones);
     document.getElementById("trough").textContent = "Trough " + state.fodder;
     document.getElementById("bucket").textContent = "Bucket " + (state.bucket || 0);
     var mill = state.mill;
@@ -1140,13 +1141,13 @@
       var full = (state.bucket || 0) >= 8;
       return { title: "Pond bucket", status: full ? "Full." : ((state.bucket || 0) + " of 8."), detail: "Each watering spends 1. The crew does not use this bucket.", actions: full ? [] : [{ label: "Fill the bucket", order: { kind: "fill", i: 0, x: hit.x, y: hit.y } }] };
     }
-    if (hit.kind === "shell") return { title: "Creek shell", status: "Here today.", detail: "Worth 2 stones. Taken shells come back at dawn.", actions: [{ label: "Pick up the shell", order: { kind: "shell", i: hit.i, x: hit.x, y: hit.y } }] };
+    if (hit.kind === "shell") return { title: "Creek shell", status: "Here today.", detail: "Worth 2 $bober. Taken shells come back at dawn.", actions: [{ label: "Pick up the shell", order: { kind: "shell", i: hit.i, x: hit.x, y: hit.y } }] };
     if (hit.kind === "moss") return { title: "Moss's stall", status: seasonName() + " prices are posted.", detail: orderLine() + " Selling is a choice. Seed for this season is here.", actions: [{ label: "Open the stall", order: null, shop: true }] };
     if (hit.kind === "site") {
       var site = MISSIONS[hit.i];
       var current = state.level === hit.i + 1;
       var siteActions = [];
-      if (current && site.goal === "raise" && !state.stats["r" + state.level]) siteActions.push({ label: "Raise it · " + site.cost, raise: true });
+      if (current && site.goal === "raise" && !state.stats["r" + state.level]) siteActions.push({ label: "Raise it · " + coins(site.cost), raise: true });
       return { title: site.name, status: current ? "This job." : "Built.", detail: site.task + " " + site.detail + " " + placeHint(site) + " " + (current ? progressText(site) : ""), actions: siteActions };
     }
     if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Beds, the swan, the plodder, and the mill resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
@@ -1260,7 +1261,7 @@
       var slateNote = document.createElement("p");
       slateNote.textContent = state.slate.got >= spec.n
         ? "This season's slate is filled."
-        : ("Slate: " + spec.n + " " + spec.name + ". You have " + slateHave + ". The bonus is " + spec.bonus + " stones.");
+        : ("Slate: " + spec.n + " " + spec.name + ". You have " + slateHave + ". The bonus is " + coins(spec.bonus) + ".");
       body.appendChild(slateNote);
       if (state.slate.got < spec.n) {
         var fill = document.createElement("button");
@@ -1280,7 +1281,7 @@
         var row = document.createElement("div");
         row.className = "row";
         var label = document.createElement("strong");
-        label.textContent = SELL_NAME[key] + " · " + have + " · " + price(key) + " stones";
+        label.textContent = SELL_NAME[key] + " · " + have + " · " + coins(price(key));
         row.appendChild(label);
         var btn = document.createElement("button");
         btn.type = "button";
@@ -1292,7 +1293,7 @@
             state.stones += n * price(key);
             state.items[key] = 0;
             bump("sold");
-            toast("Sold for " + (n * price(key)));
+            toast("Sold for " + coins(n * price(key)));
           }
           openShop();
           hud();
@@ -1305,9 +1306,9 @@
         var buy = document.createElement("button");
         buy.className = "play";
         buy.type = "button";
-        buy.textContent = "Buy " + CROP_NAME[crop] + " seed · " + SEED_COST[crop];
+        buy.textContent = "Buy " + CROP_NAME[crop] + " seed · " + coins(SEED_COST[crop]);
         buy.addEventListener("click", function () {
-          if (state.stones < SEED_COST[crop]) { toast("Not enough stones"); return; }
+          if (state.stones < SEED_COST[crop]) { toast("Not enough $bober"); return; }
           state.stones -= SEED_COST[crop];
           state.items[SEED_KEY[crop]] += 1;
           toast("Seed bought");
@@ -1401,7 +1402,7 @@
         var btn = document.createElement("button");
         btn.className = "play";
         btn.type = "button";
-        btn.textContent = "Raise it · " + m.cost + " stones";
+        btn.textContent = "Raise it · " + coins(m.cost);
         btn.addEventListener("click", raiseCurrent);
         body.appendChild(btn);
       }
@@ -1417,7 +1418,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job adds a task, a building, and more land. The fiftieth job fills the map. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 stones and return at dawn.";
+    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job adds a task, a building, and more land. The fiftieth job fills the map. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 $bober and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
