@@ -186,7 +186,7 @@
   "use strict";
 
   var KEY = "bober-willow-cut-v1";
-  var VW = 420, VH = 480, WORLD_W = 2520, WORLD_H = 2400;
+  var VW = 840, VH = 960, WORLD_W = 2520, WORLD_H = 2400;
   var DAY_LEN = 180, MILL_NEED = 72, WALK = 210, REACH = 68;
   var SEASON = ["SPRING", "SUMMER", "FALL", "WINTER"];
   var CROP_NAME = { reedbean: "Reedbean", cress: "Bank cress", beet: "Pond beet", lantern: "Lanternpod" };
@@ -2022,7 +2022,7 @@
     viewScale = (cssW - 8) / VW;
     if (!(viewScale > 0)) viewScale = 1;
     viewW = VW;
-    viewH = Math.max(VH, Math.min(cssH / viewScale, 820));
+    viewH = Math.max(VH, Math.min(cssH / viewScale, 1700));
     if (viewH * viewScale > cssH) viewH = cssH / viewScale;
     viewOx = (cssW - viewW * viewScale) / 2;
     viewOy = Math.max(0, (cssH - viewH * viewScale) / 2);
@@ -2669,8 +2669,8 @@
       });
       separateCrew();
       if (!looking) {
-        camX += (state.player.x - VW / 2 - camX) * Math.min(1, dt * 14);
-        camY += (state.player.y - VH / 2 - camY) * Math.min(1, dt * 14);
+        camX += (state.player.x - viewW / 2 - camX) * Math.min(1, dt * 14);
+        camY += (state.player.y - viewH / 2 - camY) * Math.min(1, dt * 14);
         clampCam();
       }
       checkMission();
@@ -2694,8 +2694,8 @@
     document.getElementById("sheet").classList.add("hidden");
     if (!fromSave) fresh();
     looking = false;
-    camX = state.player.x - VW / 2;
-    camY = state.player.y - VH / 2;
+    camX = state.player.x - viewW / 2;
+    camY = state.player.y - viewH / 2;
     clampCam();
     mode = "play";
     markMode();
@@ -2783,7 +2783,7 @@
     cutWillow: cutWillow,
     setDay: function (d) { state.day = d; },
     mode: function () { return mode; },
-    cam: function () { return { x: camX, y: camY, scale: viewScale, ox: viewOx, oy: viewOy }; },
+    cam: function () { return { x: camX, y: camY, w: viewW, h: viewH, scale: viewScale, ox: viewOx, oy: viewOy }; },
     blocked: blocked,
     bedSize: bedMetrics,
     bedPitch: bedPitch,

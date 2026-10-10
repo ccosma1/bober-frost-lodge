@@ -95,9 +95,8 @@ def play_checks() -> list[str]:
         info = page.evaluate(
             """() => {
               const s = WC.state;
-              const camX = s.player.x - 210;
-              const camY = s.player.y - 240;
-              const inside = (x, y) => x > camX + 4 && x < camX + 416 && y > camY + 4 && y < camY + 476;
+              const c = WC.cam();
+              const inside = (x, y) => x > c.x + 8 && x < c.x + c.w - 8 && y > c.y + 8 && y < c.y + c.h - 8;
               const lodgeBottom = 1184;
               return {
                 beds: s.beds.slice(0, 4).map(b => b.state + ':' + (b.crop || '') + ':' + b.days),
@@ -109,8 +108,9 @@ def play_checks() -> list[str]:
                 shoots: inside(s.beds[0].x, s.beds[0].y) && inside(s.beds[1].x, s.beds[1].y),
                 tilled: inside(s.beds[2].x, s.beds[2].y) && inside(s.beds[3].x, s.beds[3].y),
                 swan: inside(1092, 1172),
-                barnCut: 1368 < camX + 420 && 1528 > camX + 420,
-                willowOff: s.willows[0].x < camX,
+                barnOn: inside(1448, 1160),
+                wide: c.w >= 800,
+                willowOff: s.willows[0].x < c.x,
                 crewOut: s.crew.every(c => c.y > lodgeBottom)
               };
             }"""
@@ -123,7 +123,7 @@ def play_checks() -> list[str]:
             errors.append("meal does not pay more")
         if not info["shoots"] or not info["tilled"]:
             errors.append("first screen beds off view " + str(info))
-        if not info["swan"] or not info["barnCut"] or not info["willowOff"] or not info["crewOut"]:
+        if not info["swan"] or not info["barnOn"] or not info["wide"] or not info["willowOff"] or not info["crewOut"]:
             errors.append("first screen frame " + str(info))
         page.evaluate("WC.sleep()")
         page.wait_for_timeout(200)
@@ -332,7 +332,11 @@ def play_checks() -> list[str]:
             }"""
         )
         page.wait_for_function(
-            "() => Math.abs(WC.cam().x - (WC.state.player.x - 210)) < 40",
+            """() => {
+              const c = WC.cam();
+              const want = Math.max(0, Math.min(2520 - c.w, WC.state.player.x - c.w / 2));
+              return Math.abs(c.x - want) < 40;
+            }""",
             timeout=4000,
         )
         world_click(2280, 1288)
