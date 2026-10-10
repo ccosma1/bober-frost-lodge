@@ -14,13 +14,13 @@ Run `START.bat` or open `index.html` in a browser.
 
 A year is 4 seasons of 7 days. Sleep ends the day. The clock caps near 3 minutes. Crops advance at dawn, not on a real-time timer.
 
-You are Bober, yellow hat. Tap the ground to walk. Tap a bed, the mill, the grass, a willow, or the lodge to read its status, then confirm. Bober walks over and the work plays out. Drag to look. The lodge, barn, mill, stall, trees, pond, and job buildings are solid. Bober walks around them.
+You are Bober, yellow hat. Tap the ground to walk. Tap a bed, the mill, the grass, a willow, or the lodge to read its status, then confirm. Bober walks over and the work plays out. Drag to look. The lodge, barn, mill, stall, trees, pond, and the buildings you place are solid. Bober walks around them. Beds are not solid, so a row can sit tight.
 
-MUSEUM is on the title and in the play bar. It shows the acre and every job. Ahead means that building is not on the land yet.
+MUSEUM is on the title and in the play bar. It shows the acre and every building. Ahead means the job has not opened. Blueprint means you can place it. Tier means it is already on the land.
 
 The scope is one acre and one year. Four seasons of seven days. Each season Moss posts one order. Feed the trough if you want the egg. Cut the willow when the stool is ready. The next year starts on the same land.
 
-Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task, the place, and the count. Finish it and the next job opens. Each job adds a building and more land. Paying jobs wait for a Raise button, so $bober is not spent by accident. The fiftieth job fills the map.
+Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task and the count. Finish it and the next job opens. BUILD buys a bed or an unlocked building, then you tap the ground to set it down. Beds snap into rows. A placed building can be moved or upgraded, up to tier 3, and the upgrade is paid in $bober. Paying jobs wait until you place them, so $bober is not spent by accident. The fiftieth job is the hall, placed where you want it.
 
 - **Reedbean** — spring, 3 watered dawns
 - **Bank cress** — spring, 2 watered dawns

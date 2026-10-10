@@ -229,7 +229,52 @@ def play_checks() -> list[str]:
             )
             errors.append("barn walk " + str(pos) + " " + repr(exc))
         page.evaluate("WC.boot()")
-        world_click(1105, 1365)
+        page.locator("#btn-build").click()
+        build_text = page.locator("#sheet-body").inner_text()
+        if "Tilled bed" not in build_text or "$bober" not in build_text or "Wild bed" not in build_text:
+            errors.append("build sheet " + build_text[:180])
+        page.locator("#btn-sheet-close").click()
+        laid = page.evaluate(
+            """() => {
+              WC.state.stones = 30;
+              const a = WC.placeBed(1700, 1700, 'tilled');
+              const b = WC.placeBed(1700 + WC.bedPitch().x, 1700, 'tilled');
+              const plot = WC.placePlot(0, 1900, 1600);
+              WC.state.player.x = 1900;
+              WC.state.player.y = 1900;
+              WC.state.player.tx = 1900;
+              WC.state.player.ty = 1400;
+              WC.state.player.order = null;
+              WC.state.player.acting = 0;
+              WC.state.player.goalKey = '';
+              return { a: a, b: b, plot: plot, stones: WC.state.stones, dx: b.ok && a.ok ? b.x - a.x : -1 };
+            }"""
+        )
+        if not laid["a"]["ok"] or not laid["b"]["ok"] or not laid["plot"]["ok"]:
+            errors.append("place " + str(laid))
+        else:
+            width = page.evaluate("() => WC.bedPitch().x")
+            if abs(laid["dx"] - width) > 2:
+                errors.append("beds not packed " + str(laid) + " w " + str(width))
+        if laid["stones"] != 26:
+            errors.append("place cost " + str(laid["stones"]))
+        try:
+            page.wait_for_function(
+                """() => {
+                  const p = WC.state.player;
+                  const foot = WC.state.plots[0];
+                  const inside = foot && p.x > foot.x - 40 && p.x < foot.x + 40 && p.y > foot.y - 80 && p.y < foot.y + 16;
+                  return !WC.blocked(p.x, p.y) && !inside && p.y < 1480;
+                }""",
+                timeout=8000,
+            )
+        except Exception as exc:
+            pos = page.evaluate(
+                "() => ({ x: WC.state.player.x, y: WC.state.player.y, b: WC.blocked(WC.state.player.x, WC.state.player.y), tx: WC.state.player.tx })"
+            )
+            errors.append("plot walk " + str(pos) + " " + repr(exc))
+        page.evaluate("WC.boot()")
+        world_click(1110, 1395)
         try:
             page.wait_for_function(
                 "() => !document.getElementById('sheet').classList.contains('hidden')",
@@ -248,7 +293,7 @@ def play_checks() -> list[str]:
         except Exception as exc:
             errors.append("plant click " + repr(exc))
         try:
-            world_click(1105, 1275)
+            world_click(1110, 1360)
             page.locator("#sheet-body button", has_text="Water").click()
             page.wait_for_function("() => WC.state.beds[0].wet === true", timeout=8000)
         except Exception as exc:
@@ -436,13 +481,14 @@ def play_checks() -> list[str]:
         filled = page.evaluate(
             """() => ({
               beds: WC.state.beds.length,
+              plots: WC.state.plots.length,
               level: WC.state.level,
               mode: WC.mode(),
               job: document.getElementById('job').textContent,
               sheet: document.getElementById('sheet').classList.contains('hidden')
             })"""
         )
-        if filled["level"] != 50 or filled["beds"] < 40 or "50/50" not in filled["job"] or filled["mode"] != "play" or not filled["sheet"]:
+        if filled["level"] != 50 or filled["beds"] != 6 or filled["plots"] != 0 or "50/50" not in filled["job"] or filled["mode"] != "play" or not filled["sheet"]:
             errors.append("acre fill " + str(filled))
         page.locator("#btn-museum").click()
         try:

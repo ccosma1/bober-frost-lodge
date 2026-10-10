@@ -75,7 +75,7 @@
     }
     #dock button {
       flex: 1 1 0; border: 3px solid var(--yellow); background: var(--yellow); color: var(--ink);
-      border-radius: 14px; padding: 12px 4px; font-size: 14px;
+      border-radius: 14px; padding: 12px 2px; font-size: 12px;
     }
     #btn-sleep { background: var(--cream); }
     #dock button.hidden, .overlay.hidden, .hidden { display: none !important; }
@@ -146,6 +146,7 @@
     </div>
     <div id="dock">
       <button id="btn-chores" type="button">CHORES</button>
+      <button id="btn-build" type="button">BUILD</button>
       <button id="btn-shop" type="button">SHOP</button>
       <button id="btn-pack" type="button">PACK</button>
       <button id="btn-sleep" type="button">SLEEP</button>
@@ -156,7 +157,7 @@
           <h1>BOBER WILLOW CUT</h1>
           <p>A farm simulator. Four seasons on the bank.</p>
           <p>One acre. Seven days a season. Each season Moss posts one order. Feed the trough. Cut the willow when it grows back. The year turns on the same land.</p>
-          <p>Fifty jobs. Finish one and the next one opens. Each job adds a task, a building, and more of the acre. The last job fills the map.</p>
+          <p>Fifty jobs. Finish one and the next one opens. BUILD is where you buy a piece, set it down, and upgrade it. Beds pack edge to edge into whatever farm you want.</p>
           <p>The bank Burrow Hop called home is a farm now. Nightfall is still downriver.</p>
           <p class="fan">Fan game by a holder. No wallet. No ads.</p>
           <button class="play" id="btn-start" type="button">START THE YEAR</button>
@@ -273,9 +274,9 @@
     { goal: "sold", arg: 3, cost: 0, x: 2420, y: 1620, vx: 0, vy: 0, name: "Market crates", short: "Crates", shape: "crates", grow: "bed", soil: "wild", task: "Sell three times.", detail: "Three sales in all. Each SELL at the stall counts as one." },
     { goal: "raise", arg: 16, cost: 16, x: 2420, y: 1900, vx: 0, vy: 0, name: "Creek gate", short: "Gate", shape: "gate", grow: "bed", soil: "wild", task: "Raise the creek gate.", detail: "Pay 16 $bober. The east gate closes the bank." },
     { goal: "dawns", arg: 10, cost: 0, x: 180, y: 960, vx: 0, vy: 0, name: "Festival lamps", short: "Lamps", shape: "lamps", grow: "grass", soil: "wild", task: "See ten dawns.", detail: "Ten sleeps. The lamps line the north meadow." },
-    { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 $bober. The hall finishes the acre and the rest of the map fills in." }
+    { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 $bober and place the hall where you want it. That finishes the fifty jobs." }
   ];
-  var FILLERS = [360,500,680,500,1000,500,200,660,520,660,840,660,1160,660,200,820,520,820,840,820,1160,820,1480,820,1800,820,1960,820,2280,820,1000,980,1160,980,1320,980,520,1140,680,1140,840,1140,1800,1140,1960,1140,680,1300,2280,1460,360,1620,680,1620,1000,1620,1640,1620,1960,1620,2280,1620,360,1780,1960,1780,2280,1780,360,1940,680,1940,1640,1940,1960,1940,2280,1940,200,2100,360,2100,1960,2100,2280,2100,360,2260,520,2260,1960,2260,2280,2260];
+  var BED_STEP = 61;
 
   var canvas = document.getElementById("view");
   var ctx = canvas.getContext("2d");
@@ -283,6 +284,8 @@
   var viewW = VW, viewH = VH;
   var camX = 0, camY = 0, looking = false;
   var ptr = null, mode = "splash", sheetBack = "play", toastTill = 0, lastTs = 0;
+  var placeKind = null, placeSoil = "tilled", placeMi = 0, placeMove = -1, placeHover = null, pathEpoch = 1;
+  var BED_COST = 1, BED_DRAW_H = 72;
   var state;
   var worldMark = -1;
   var missionHold = 0;
@@ -291,7 +294,7 @@
   var imgPlayer = new Image(); imgPlayer.src = "assets/sprites/bober-player.png";
   var imgFull = new Image(); imgFull.src = "assets/sprites/bober-full.png";
   var world = {};
-  ["lodge", "barn", "mill", "stall", "reedbean", "beet", "lantern", "willow", "swan", "plodder", "grass", "trough"].forEach(function (name) {
+  ["lodge", "barn", "mill", "stall", "reedbean", "beet", "lantern", "willow", "swan", "plodder", "grass", "trough", "bed-tilled", "bed-wild", "bed-stony"].forEach(function (name) {
     var im = new Image();
     im.src = "assets/world/" + name + ".png";
     world[name] = im;
@@ -334,19 +337,14 @@
       items: { reedbean: 0, cress: 0, beet: 0, lantern: 0, willow: 0, bundle: 0, meal: 0, egg: 0, cream: 0, seedReed: 2, seedCress: 1, seedBeet: 0, seedLantern: 0 },
       slate: { season: 0, got: 0 },
       mill: { sack: 0, t: 0 },
+      plots: [],
       beds: [
-        bed(1105, 1275, "growing", "reedbean", 1, 1),
-        bed(1195, 1335, "growing", "reedbean", 1, 1),
-        bed(1105, 1365, "tilled", null, 0, 1),
-        bed(1195, 1425, "tilled", null, 0, 1),
-        bed(1320, 1560, "stony", null, 0, 0),
-        bed(1420, 1620, "stony", null, 0, 0),
-        bed(1200, 1700, "wild", null, 0, 0),
-        bed(1320, 1760, "wild", null, 0, 0),
-        bed(1040, 1880, "wild", null, 0, 0),
-        bed(1160, 1880, "stony", null, 0, 0),
-        bed(1280, 1880, "wild", null, 0, 0),
-        bed(1400, 1880, "stony", null, 0, 0)
+        bed(1110, 1360, "growing", "reedbean", 1, 1),
+        bed(1171, 1360, "growing", "reedbean", 1, 1),
+        bed(1110, 1395, "tilled", null, 0, 1),
+        bed(1171, 1395, "tilled", null, 0, 1),
+        bed(1232, 1360, "wild", null, 0, 0),
+        bed(1232, 1395, "stony", null, 0, 0)
       ],
       willows: [
         { x: 180, y: 1160, days: 0 },
@@ -394,62 +392,68 @@
     ensure();
     state.stats[key] = (state.stats[key] || 0) + (n || 1);
   }
-  function pushBed(x, y, soil, tag) {
-    var i;
-    for (i = 0; i < state.beds.length; i++) if (state.beds[i].site === tag) return;
-    if (blocked(x, y)) return;
-    var b = bed(x, y, soil || "wild", null, 0, 0);
-    b.site = tag;
-    state.beds.push(b);
-  }
-  function pushGrass(x, y, tag) {
-    var i;
-    for (i = 0; i < state.grass.length; i++) if (state.grass[i].site === tag) return;
-    if (blocked(x, y)) return;
-    state.grass.push({ x: x, y: y, ready: true, wait: 0, site: tag });
-  }
-  function pushWillow(x, y, tag) {
-    var i;
-    for (i = 0; i < state.willows.length; i++) if (state.willows[i].site === tag) return;
-    if (blocked(x, y)) return;
-    state.willows.push({ x: x, y: y, days: 0, site: tag });
-  }
-  function addGrow(m, n) {
-    var key = "s" + n;
-    var soil = m.soil || "wild";
-    var wide = m.grow === "beds3" || m.grow === "fill";
-    var cols = wide ? [-78, 0, 78] : [0];
-    var k;
-    if (m.grow === "bed" || wide) {
-      for (k = 0; k < cols.length; k++) pushBed(m.x + cols[k], m.y + 76, soil, key + "b" + k);
-    }
-    if (m.grow === "grass" || m.grow === "fill") pushGrass(m.x - 86, m.y + 112, key);
-    if (m.grow === "willow" || m.grow === "willow3" || m.grow === "fill") {
-      var ws = (m.grow === "willow") ? [78] : [-86, 78, 96];
-      for (k = 0; k < ws.length; k++) pushWillow(m.x + ws[k], m.y + 112, key + "w" + k);
-    }
-  }
-  function addFillers() {
-    var i, x, y, tag, n;
-    for (i = 0; i < FILLERS.length; i += 2) {
-      x = FILLERS[i];
-      y = FILLERS[i + 1];
-      tag = "f" + (i / 2);
-      if (blocked(x, y)) continue;
-      var taken = false;
-      for (n = 0; n < state.beds.length; n++) {
-        if (state.beds[n].site === tag || Math.hypot(state.beds[n].x - x, state.beds[n].y - y) < 46) taken = true;
-      }
-      if (taken) continue;
-      pushBed(x, y, "wild", tag);
-    }
-  }
   function syncWorld() {
-    if (!state || !state.beds || worldMark === state.level) return;
-    var n;
-    for (n = 0; n < MISSIONS.length && state.level >= n + 1; n++) addGrow(MISSIONS[n], n + 1);
-    if (state.level >= 50) addFillers();
-    worldMark = state.level;
+    if (!state) return;
+    if (!state.plots) state.plots = [];
+    if (!state.beds) return;
+    var keep = [], i;
+    for (i = 0; i < state.beds.length; i++) if (!state.beds[i].site) keep.push(state.beds[i]);
+    if (keep.length !== state.beds.length) state.beds = keep;
+  }
+  function bedMetrics() {
+    var im = world["bed-tilled"];
+    var h = BED_DRAW_H;
+    var w = im && im.naturalWidth ? im.naturalWidth * (h / im.naturalHeight) : BED_STEP;
+    return { w: w, h: h };
+  }
+  function bedPitch() {
+    var m = bedMetrics();
+    return { x: Math.round(m.w * 0.72), y: Math.round(m.h * 0.48) };
+  }
+  function bedRect(x, y) {
+    var pitch = bedPitch();
+    return { x: x - pitch.x / 2, y: y + 6 - pitch.y, w: pitch.x, h: pitch.y };
+  }
+  function rectsOverlap(a, b, pad) {
+    pad = pad || 0;
+    return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+  }
+  function plotOf(mi) {
+    var i;
+    if (!state || !state.plots) return null;
+    for (i = 0; i < state.plots.length; i++) if (state.plots[i].mi === mi) return state.plots[i];
+    return null;
+  }
+  function buildCost(m) { return m.cost > 0 ? m.cost : 2; }
+  function upgradeCost(p) {
+    var tier = p.tier || 1;
+    return Math.max(2, buildCost(MISSIONS[p.mi])) * tier;
+  }
+  function plotFoot(p) {
+    var m = MISSIONS[p.mi];
+    var h = siteDrawH(m.shape) * (1 + ((p.tier || 1) - 1) * 0.08);
+    var im = sites[m.shape];
+    var w = im && im.naturalWidth ? im.naturalWidth * (h / im.naturalHeight) : 64;
+    var cw = Math.max(34, Math.min(w * 0.5, 72));
+    var ch = Math.max(30, Math.min(h * 0.72, 90));
+    return { x: p.x - cw / 2, y: p.y - ch + 4, w: cw, h: ch };
+  }
+  function snapBed(x, y) {
+    var best = null, bestD = 36, i, spots, s, d;
+    for (i = 0; i < state.beds.length; i++) {
+      var pitch = bedPitch();
+      spots = [
+        { x: state.beds[i].x + pitch.x, y: state.beds[i].y },
+        { x: state.beds[i].x - pitch.x, y: state.beds[i].y },
+        { x: state.beds[i].x, y: state.beds[i].y + pitch.y },
+        { x: state.beds[i].x, y: state.beds[i].y - pitch.y }
+      ];
+      for (s = 0; s < spots.length; s++) {
+        d = Math.hypot(spots[s].x - x, spots[s].y - y);
+        if (d < bestD) { bestD = d; best = spots[s]; }
+      }
+    }
+    return best || { x: x, y: y };
   }
   function noteProgress() {
     if (!state || !state.stats || !state.beds) return;
@@ -458,11 +462,21 @@
     if (state.beds[1] && state.beds[1].wet && !state.stats.wet1) { state.stats.wet1 = 1; changed = true; }
     if (changed) save();
   }
+  function visitPlot(m) {
+    var i;
+    for (i = 0; i < MISSIONS.length; i++) {
+      if (MISSIONS[i].x === m.vx && MISSIONS[i].y === m.vy) return plotOf(i);
+    }
+    return null;
+  }
   function goalMet(m) {
     var st = state.stats;
     if (m.goal === "wet2") return !!(st.wet0 && st.wet1);
-    if (m.goal === "raise") return st["r" + state.level] === 1;
-    if (m.goal === "visit") return Math.hypot(state.player.x - m.vx, state.player.y - m.vy) <= 96;
+    if (m.goal === "raise") return st["r" + state.level] === 1 || !!plotOf(state.level - 1);
+    if (m.goal === "visit") {
+      var placed = visitPlot(m);
+      return !!placed && Math.hypot(state.player.x - placed.x, state.player.y - placed.y) <= 96;
+    }
     if (m.goal === "season") return state.season >= m.arg || state.year > 1;
     return (st[m.goal] || 0) >= m.arg;
   }
@@ -487,33 +501,27 @@
     return "Lv " + state.level + "/50. " + MISSIONS[state.level - 1].task;
   }
   function placeHint(m) {
-    var dx = m.x - 1240;
-    var dy = m.y - 1200;
-    var ns = dy < -80 ? "north" : dy > 80 ? "south" : "";
-    var ew = dx < -80 ? "west" : dx > 80 ? "east" : "";
-    var dir = ns && ew ? ns + "-" + ew : (ns || ew || "beside the lodge");
-    return m.name + " is " + dir + " of the lodge.";
+    var i = MISSIONS.indexOf(m);
+    var p = plotOf(i);
+    if (p) return m.name + " is where you set it. Tier " + (p.tier || 1) + " of 3.";
+    if (!state || state.level < i + 1) return m.name + " is still ahead.";
+    return "Place " + m.name + " from BUILD. It costs " + coins(buildCost(m)) + ".";
   }
   function progressText(m) {
     if (m.goal === "wet2") return ((state.stats.wet0 ? 1 : 0) + (state.stats.wet1 ? 1 : 0)) + " of 2 shoots watered.";
     if (m.goal === "raise") {
-      if (state.stats["r" + state.level]) return "Raised.";
-      return "Costs " + coins(m.cost) + ". You have " + coins(state.stones) + ".";
+      if (state.stats["r" + state.level] || plotOf(state.level - 1)) return "Placed.";
+      return "Place it for " + coins(m.cost) + ". You have " + coins(state.stones) + ".";
     }
-    if (m.goal === "visit") return "Walk up to it.";
+    if (m.goal === "visit") return visitPlot(m) ? "Walk up to the one you placed." : "Place that building first.";
     if (m.goal === "season") return "Now " + seasonName().toLowerCase() + ", year " + state.year + ".";
     return (state.stats[m.goal] || 0) + " of " + m.arg + ".";
   }
   function raiseCurrent() {
     if (!state || state.level > MISSIONS.length) return;
     var m = MISSIONS[state.level - 1];
-    if (!m || m.goal !== "raise" || state.stats["r" + state.level]) return;
-    if (state.stones < m.cost) { toast("Not enough $bober"); return; }
-    state.stones -= m.cost;
-    state.stats["r" + state.level] = 1;
-    closeSheet();
-    save();
-    hud();
+    if (!m || m.goal !== "raise" || state.stats["r" + state.level] || plotOf(state.level - 1)) return;
+    beginPlacePlot(state.level - 1);
   }
   function seasonCrops() {
     if (state.season === 0) return ["reedbean", "cress"];
@@ -558,6 +566,18 @@
     markMode();
   }
 
+  function solidSig() {
+    var s = (state && state.willows ? state.willows.length : 0) + ":e" + pathEpoch;
+    s += ":mv" + (placeKind === "move" ? placeMove : "-");
+    if (!state || !state.plots) return s;
+    var i, p;
+    for (i = 0; i < state.plots.length; i++) {
+      if (placeKind === "move" && i === placeMove) continue;
+      p = state.plots[i];
+      s += "|" + p.mi + "," + Math.round(p.x) + "," + Math.round(p.y) + "," + (p.tier || 1);
+    }
+    return s;
+  }
   function rebuildSolids() {
     var list = [];
     list.push({ k: "box", x: 1196, y: 1108, w: 100, h: 72 });
@@ -566,21 +586,12 @@
     list.push({ k: "box", x: 2236, y: 1208, w: 88, h: 62 });
     list.push({ k: "box", x: 1436, y: 1216, w: 40, h: 16 });
     list.push({ k: "circle", x: 1466, y: 1294, r: 14 });
-    if (state && state.level) {
-      var i, m, h, im, w, cw;
-      for (i = 0; i < MISSIONS.length; i++) {
-        if (state.level < i + 1) break;
-        m = MISSIONS[i];
-        if (m.shape === "dock") {
-          list.push({ k: "box", x: m.x - 14, y: 352, w: 28, h: Math.max(24, m.y - 340) });
-          continue;
-        }
-        h = siteDrawH(m.shape);
-        im = sites[m.shape];
-        w = im && im.naturalWidth ? im.naturalWidth * (h / im.naturalHeight) : 56;
-        cw = Math.max(22, Math.min(w * 0.62, 96));
-        list.push({ k: "box", x: m.x - cw / 2, y: m.y + 4 - h * 0.9, w: cw, h: h * 0.9 });
-      }
+    if (state && state.plots) {
+      state.plots.forEach(function (p, i) {
+        if (placeKind === "move" && i === placeMove) return;
+        var f = plotFoot(p);
+        list.push({ k: "box", x: f.x, y: f.y, w: f.w, h: f.h });
+      });
     }
     if (state && state.willows) {
       state.willows.forEach(function (w) {
@@ -595,7 +606,7 @@
     var nx = (x - POND.x) / (POND.rx * 0.7 + r * 0.8);
     var ny = (y - POND.y) / (POND.ry * 0.7 + r * 0.8);
     if (nx * nx + ny * ny < 1) return true;
-    var key = (state && state.level ? state.level : 0) + ":" + (state && state.willows ? state.willows.length : 0);
+    var key = solidSig();
     if (key !== solidKey) { solidKey = key; rebuildSolids(); }
     var i, s;
     for (i = 0; i < solidList.length; i++) {
@@ -609,13 +620,13 @@
   function unstick(ent) {
     if (!ent || !blocked(ent.x, ent.y)) return;
     var ring, k, rad, ang, x, y;
-    for (ring = 1; ring <= 8; ring++) {
+    for (ring = 1; ring <= 10; ring++) {
       rad = ring * 8;
       for (k = 0; k < 12; k++) {
         ang = k / 12 * Math.PI * 2;
         x = ent.x + Math.cos(ang) * rad;
         y = ent.y + Math.sin(ang) * rad;
-        if (!blocked(x, y)) { ent.x = x; ent.y = y; ent.tx = null; ent.ty = null; return; }
+        if (!blocked(x, y)) { ent.x = x; ent.y = y; ent.goalKey = ""; return; }
       }
     }
   }
@@ -626,27 +637,73 @@
     ent.y = ny;
     return true;
   }
+  function lineClear(x0, y0, x1, y1) {
+    var dist = Math.hypot(x1 - x0, y1 - y0);
+    var steps = Math.max(1, Math.ceil(dist / 8));
+    var i, t;
+    for (i = 1; i <= steps; i++) {
+      t = i / steps;
+      if (blocked(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return false;
+    }
+    return true;
+  }
   function moveEnt(ent, dt, pace) {
     if (blocked(ent.x, ent.y)) unstick(ent);
+    if (ent.epoch !== pathEpoch) { ent.epoch = pathEpoch; ent.goalKey = ""; }
     if (ent.tx == null) return false;
-    var dx = ent.tx - ent.x, dy = ent.ty - ent.y;
-    var dist = Math.hypot(dx, dy);
-    if (dist < 6) { ent.tx = null; ent.ty = null; ent.stuck = 0; return true; }
-    var step = Math.min(WALK * (pace || 1) * dt, dist);
-    var nx = ent.x + dx / dist * step, ny = ent.y + dy / dist * step;
-    var moved = tryStep(ent, nx, ny);
-    if (moved) ent.slide = 0;
-    else if (ent.slide && tryStep(ent, ent.x + ent.slide * step, ent.y)) moved = true;
-    else if (tryStep(ent, ent.x + step, ent.y)) { ent.slide = 1; moved = true; }
-    else if (tryStep(ent, ent.x - step, ent.y)) { ent.slide = -1; moved = true; }
-    else if (tryStep(ent, ent.x, ent.y + Math.sign(dy || 1) * step)) moved = true;
-    else ent.slide = 0;
-    if (moved) ent.stuck = 0;
-    else {
-      ent.stuck = (ent.stuck || 0) + dt;
-      if (ent.stuck > 0.45) { ent.tx = null; ent.ty = null; ent.stuck = 0; }
+    var key = Math.round(ent.tx) + ":" + Math.round(ent.ty);
+    if (ent.goalKey !== key || !ent.path) {
+      ent.goalKey = key;
+      ent.path = route(ent.x, ent.y, ent.tx, ent.ty);
+      ent.wi = 0;
     }
-    ent.face = dx < 0 ? -1 : 1;
+    var path = ent.path && ent.path.length ? ent.path : [{ x: ent.tx, y: ent.ty }];
+    while (ent.wi < path.length - 1 && Math.hypot(path[ent.wi].x - ent.x, path[ent.wi].y - ent.y) < 10) ent.wi++;
+    var wp = path[Math.min(ent.wi, path.length - 1)];
+    var dx = wp.x - ent.x, dy = wp.y - ent.y;
+    var dist = Math.hypot(dx, dy);
+    if (Math.hypot(ent.tx - ent.x, ent.ty - ent.y) < 6) {
+      ent.tx = null; ent.ty = null; ent.path = null; ent.goalKey = ""; ent.stuck = 0; ent.repaths = 0;
+      return true;
+    }
+    var step = Math.min(WALK * (pace || 1) * dt, Math.max(dist, 0.3));
+    if (dist > 0.1 && tryStep(ent, ent.x + dx / dist * step, ent.y + dy / dist * step)) {
+      ent.stuck = 0;
+      ent.repaths = 0;
+      ent.face = dx < 0 ? -1 : 1;
+      return false;
+    }
+    var best = null, bestScore = -1e9, any = null, anyScore = 1e9;
+    var k, ang, nx, ny, nd, score, cdx, cdy;
+    for (k = 0; k < 16; k++) {
+      ang = k / 16 * Math.PI * 2;
+      cdx = Math.cos(ang);
+      cdy = Math.sin(ang);
+      nx = ent.x + cdx * step;
+      ny = ent.y + cdy * step;
+      if (blocked(nx, ny)) continue;
+      nd = Math.hypot(wp.x - nx, wp.y - ny);
+      score = dist - nd;
+      if (score > bestScore) { bestScore = score; best = { x: nx, y: ny, dx: cdx }; }
+      if (nd < anyScore) { anyScore = nd; any = { x: nx, y: ny, dx: cdx }; }
+    }
+    if (best && bestScore > 0.15) {
+      ent.x = best.x; ent.y = best.y; ent.stuck = 0; ent.face = best.dx < 0 ? -1 : 1;
+      return false;
+    }
+    if (any) {
+      ent.x = any.x; ent.y = any.y;
+      ent.face = any.dx < 0 ? -1 : 1;
+    }
+    ent.stuck = (ent.stuck || 0) + dt;
+    if (ent.stuck > 0.28) {
+      ent.goalKey = "";
+      ent.stuck = 0;
+      ent.repaths = (ent.repaths || 0) + 1;
+      if (ent.repaths > 8 && !any) {
+        ent.tx = null; ent.ty = null; ent.path = null; ent.repaths = 0;
+      }
+    }
     return false;
   }
   function standNear(x, y) {
@@ -663,6 +720,252 @@
       }
     }
     return null;
+  }
+  var CELL = 18;
+  function blockedCell(c, r) { return blocked(c * CELL, r * CELL); }
+  function nearestCell(c, r) {
+    if (!blockedCell(c, r)) return { c: c, r: r };
+    var rad, dc, dr;
+    for (rad = 1; rad <= 8; rad++) {
+      for (dc = -rad; dc <= rad; dc++) {
+        for (dr = -rad; dr <= rad; dr++) {
+          if (Math.abs(dc) !== rad && Math.abs(dr) !== rad) continue;
+          if (!blockedCell(c + dc, r + dr)) return { c: c + dc, r: r + dr };
+        }
+      }
+    }
+    return null;
+  }
+  function route(x0, y0, x1, y1) {
+    var goal = { x: x1, y: y1 };
+    if (blocked(x1, y1)) {
+      var stand = standNear(x1, y1);
+      if (!stand) return [];
+      goal = stand;
+    }
+    if (!blocked(x0, y0) && lineClear(x0, y0, goal.x, goal.y)) return [{ x: goal.x, y: goal.y }];
+    var start = nearestCell(Math.round(x0 / CELL), Math.round(y0 / CELL));
+    var end = nearestCell(Math.round(goal.x / CELL), Math.round(goal.y / CELL));
+    if (!start || !end) return [{ x: goal.x, y: goal.y }];
+    var open = [{ c: start.c, r: start.r, g: 0, f: 0 }];
+    var bestG = {};
+    bestG[start.c + "," + start.r] = 0;
+    var came = {};
+    var guard = 0, found = null, bi, b, cur, dc, dr, nc, nr, step, g, ck, h;
+    while (open.length && guard < 2800) {
+      guard++;
+      bi = 0;
+      for (b = 1; b < open.length; b++) if (open[b].f < open[bi].f) bi = b;
+      cur = open.splice(bi, 1)[0];
+      if (cur.c === end.c && cur.r === end.r) { found = cur; break; }
+      for (dc = -1; dc <= 1; dc++) {
+        for (dr = -1; dr <= 1; dr++) {
+          if (!dc && !dr) continue;
+          if (dc && dr && (blockedCell(cur.c + dc, cur.r) || blockedCell(cur.c, cur.r + dr))) continue;
+          nc = cur.c + dc;
+          nr = cur.r + dr;
+          if (nc < 2 || nr < 17 || nc > 138 || nr > 132) continue;
+          if (blockedCell(nc, nr)) continue;
+          step = dc && dr ? 1.42 : 1;
+          g = cur.g + step;
+          ck = nc + "," + nr;
+          if (bestG[ck] != null && bestG[ck] <= g) continue;
+          bestG[ck] = g;
+          came[ck] = cur.c + "," + cur.r;
+          h = Math.abs(nc - end.c) + Math.abs(nr - end.r);
+          open.push({ c: nc, r: nr, g: g, f: g + h });
+        }
+      }
+    }
+    if (!found) return [{ x: goal.x, y: goal.y }];
+    var pts = [];
+    ck = found.c + "," + found.r;
+    var safety = 0, parts;
+    while (ck && safety < 500) {
+      parts = ck.split(",");
+      pts.push({ x: +parts[0] * CELL, y: +parts[1] * CELL });
+      ck = came[ck];
+      safety++;
+    }
+    pts.reverse();
+    pts.push({ x: goal.x, y: goal.y });
+    if (pts.length < 3) return pts;
+    var out = [pts[0]], anchor = 0, i = 1;
+    while (i < pts.length - 1) {
+      if (lineClear(pts[anchor].x, pts[anchor].y, pts[i + 1].x, pts[i + 1].y)) i++;
+      else { out.push(pts[i]); anchor = i; i++; }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+  function yardSolids() {
+    return [
+      { x: 1196, y: 1108, w: 100, h: 72 },
+      { x: 1376, y: 1096, w: 128, h: 72 },
+      { x: 1528, y: 1136, w: 78, h: 58 },
+      { x: 2236, y: 1208, w: 88, h: 62 },
+      { x: 1436, y: 1216, w: 40, h: 16 }
+    ];
+  }
+  function bedBlock(x, y) {
+    var rect = bedRect(x, y);
+    if (rect.x < 24 || rect.y < 330 || rect.x + rect.w > WORLD_W - 24 || rect.y + rect.h > WORLD_H - 24) return "Too close to the edge";
+    var pts = [
+      [x, y],
+      [rect.x + 8, rect.y + 8],
+      [rect.x + rect.w - 8, rect.y + 8],
+      [rect.x + 8, rect.y + rect.h - 8],
+      [rect.x + rect.w - 8, rect.y + rect.h - 8]
+    ];
+    var i;
+    for (i = 0; i < pts.length; i++) if (blocked(pts[i][0], pts[i][1])) return "Leave the buildings a path";
+    for (i = 0; i < state.beds.length; i++) {
+      if (rectsOverlap(rect, bedRect(state.beds[i].x, state.beds[i].y), 0)) return "That covers a bed";
+    }
+    return "";
+  }
+  function plotBlock(x, y, mi, ignore) {
+    var foot = plotFoot({ mi: mi, x: x, y: y, tier: 1 });
+    if (foot.x < 24 || foot.y < 330 || foot.x + foot.w > WORLD_W - 24 || foot.y + foot.h > WORLD_H - 24) return "Too close to the edge";
+    var yards = yardSolids(), i, p, f;
+    for (i = 0; i < yards.length; i++) if (rectsOverlap(foot, yards[i], 28)) return "Leave a path around the yard";
+    if (Math.hypot(x - 1466, y - 1294) < 48) return "The plodder is there";
+    var pond = (x - POND.x) / (POND.rx + 30);
+    var pondy = (y - POND.y) / (POND.ry + 24);
+    if (pond * pond + pondy * pondy < 1) return "That's the pond";
+    if (state.willows) {
+      for (i = 0; i < state.willows.length; i++) {
+        if (Math.hypot(x - state.willows[i].x, y - state.willows[i].y) < 36) return "A willow is there";
+      }
+    }
+    var homes = [[1240, 1256], [1040, 1340], [1455, 1336], [1310, 1395], [DOOR.x, DOOR.y], [MILLP.x, MILLP.y + 28], [FILL.x, FILL.y], [MOSS.x, MOSS.y]];
+    for (i = 0; i < homes.length; i++) {
+      if (homes[i][0] > foot.x - 8 && homes[i][0] < foot.x + foot.w + 8 && homes[i][1] > foot.y - 8 && homes[i][1] < foot.y + foot.h + 8) return "That's a walk";
+    }
+    for (i = 0; i < state.plots.length; i++) {
+      if (i === ignore) continue;
+      f = plotFoot(state.plots[i]);
+      if (rectsOverlap(foot, f, 28)) return "Leave a path between buildings";
+    }
+    for (i = 0; i < state.beds.length; i++) {
+      if (rectsOverlap(foot, bedRect(state.beds[i].x, state.beds[i].y), 6)) return "A bed is there";
+    }
+    return "";
+  }
+  function beginPlaceBed(soil) {
+    if (state.stones < BED_COST) { toast("Not enough $bober"); return; }
+    placeKind = "bed";
+    placeSoil = soil;
+    placeMove = -1;
+    placeHover = { x: state.player.x, y: state.player.y + 80 };
+    closeSheet();
+    toast("Tap the ground. Beds snap together.");
+  }
+  function beginPlacePlot(mi) {
+    var m = MISSIONS[mi];
+    if (!m || state.level < mi + 1) { toast("Not unlocked"); return; }
+    if (plotOf(mi)) { toast("Already on the acre"); return; }
+    if (state.stones < buildCost(m)) { toast("Not enough $bober"); return; }
+    placeKind = "plot";
+    placeMi = mi;
+    placeMove = -1;
+    placeHover = { x: state.player.x + 70, y: state.player.y + 40 };
+    closeSheet();
+    toast("Tap the ground to place " + m.name);
+  }
+  function beginMove(i) {
+    var p = state.plots[i];
+    if (!p) return;
+    placeKind = "move";
+    placeMove = i;
+    placeMi = p.mi;
+    placeHover = { x: p.x, y: p.y };
+    pathEpoch++;
+    solidKey = "";
+    closeSheet();
+    toast("Tap a new spot for " + MISSIONS[p.mi].name);
+  }
+  function upgradePlot(i) {
+    var p = state.plots[i];
+    if (!p) return "Nothing there";
+    if ((p.tier || 1) >= 3) return "Already finished";
+    var cost = upgradeCost(p);
+    if (state.stones < cost) return "Not enough $bober";
+    state.stones -= cost;
+    p.tier = (p.tier || 1) + 1;
+    pathEpoch++;
+    solidKey = "";
+    save();
+    return "";
+  }
+  function commitPlace(x, y) {
+    if (placeKind === "bed") {
+      var spot = snapBed(x, y);
+      var why = bedBlock(spot.x, spot.y);
+      if (why) {
+        spot = { x: x, y: y };
+        why = bedBlock(spot.x, spot.y);
+      }
+      if (why) { toast(why); return; }
+      if (state.stones < BED_COST) { toast("Not enough $bober"); return; }
+      state.stones -= BED_COST;
+      state.beds.push(bed(spot.x, spot.y, placeSoil, null, 0, placeSoil === "tilled" ? 1 : 0));
+      toast("Bed placed");
+    } else if (placeKind === "plot" || placeKind === "move") {
+      var mi = placeKind === "move" ? state.plots[placeMove].mi : placeMi;
+      var ignore = placeKind === "move" ? placeMove : -1;
+      var block = plotBlock(x, y, mi, ignore);
+      if (block) { toast(block); return; }
+      if (placeKind === "move") {
+        state.plots[placeMove].x = x;
+        state.plots[placeMove].y = y;
+        toast(MISSIONS[mi].name + " moved");
+      } else {
+        if (plotOf(mi)) { toast("Already on the acre"); return; }
+        var cost = buildCost(MISSIONS[mi]);
+        if (state.stones < cost) { toast("Not enough $bober"); return; }
+        state.stones -= cost;
+        state.plots.push({ mi: mi, x: x, y: y, tier: 1 });
+        if (state.level === mi + 1 && MISSIONS[mi].goal === "raise") state.stats["r" + state.level] = 1;
+        toast(MISSIONS[mi].name + " placed");
+      }
+    }
+    placeKind = null;
+    placeMove = -1;
+    placeHover = null;
+    pathEpoch++;
+    solidKey = "";
+    save();
+    hud();
+  }
+  function placeBedAt(x, y, soil) {
+    placeKind = null;
+    var spot = snapBed(x, y);
+    var why = bedBlock(spot.x, spot.y) || bedBlock(x, y);
+    if (bedBlock(spot.x, spot.y)) {
+      if (bedBlock(x, y)) return { ok: false, error: bedBlock(x, y) };
+      spot = { x: x, y: y };
+    }
+    if (state.stones < BED_COST) return { ok: false, error: "money" };
+    state.stones -= BED_COST;
+    state.beds.push(bed(spot.x, spot.y, soil || "tilled", null, 0, soil === "wild" || soil === "stony" ? 0 : 1));
+    save();
+    return { ok: true, x: spot.x, y: spot.y, n: state.beds.length };
+  }
+  function placePlotAt(mi, x, y) {
+    placeKind = null;
+    var block = plotBlock(x, y, mi, -1);
+    if (block) return { ok: false, error: block };
+    var cost = buildCost(MISSIONS[mi]);
+    if (state.stones < cost) return { ok: false, error: "money" };
+    if (plotOf(mi)) return { ok: false, error: "placed" };
+    state.stones -= cost;
+    state.plots.push({ mi: mi, x: x, y: y, tier: 1 });
+    if (state.level === mi + 1 && MISSIONS[mi].goal === "raise") state.stats["r" + state.level] = 1;
+    pathEpoch++;
+    solidKey = "";
+    save();
+    return { ok: true, x: x, y: y, foot: plotFoot(state.plots[state.plots.length - 1]) };
   }
 
   function harvest(i) {
@@ -1091,7 +1394,11 @@
     document.getElementById("slate").textContent = got ? "Slate filled" : ("Slate " + Math.min(have, spec.n) + "/" + spec.n);
     document.getElementById("level").textContent = state.level > 50 ? "Lv 50/50" : ("Lv " + state.level + "/50");
     document.getElementById("job").textContent = missionLine();
-    if (state.player.acting > 0) document.getElementById("verb").textContent = "Working...";
+    if (placeKind) {
+      document.getElementById("verb").textContent = placeKind === "bed"
+        ? "Tap the ground. Beds snap into a row. BUILD cancels."
+        : "Tap the ground to set the building. BUILD cancels.";
+    } else if (state.player.acting > 0) document.getElementById("verb").textContent = "Working...";
     else {
       var near = nearest(state.player.x, state.player.y, REACH + 8);
       document.getElementById("verb").textContent = near ? verbFor(near) : "Tap a thing to read it. Tap the ground to walk.";
@@ -1120,9 +1427,10 @@
     if (hit.kind === "mill") return state.mill.sack ? "Mill is stocked" : "Load a reedbean sack";
     if (hit.kind === "moss") return "Moss's stall · " + seasonName().toLowerCase() + " prices";
     if (hit.kind === "door") return "Sleep in the lodge";
-    if (hit.kind === "site") {
-      var site = MISSIONS[hit.i];
-      return state.level === hit.i + 1 ? site.task : site.name;
+    if (hit.kind === "plot") {
+      var plot = state.plots[hit.i];
+      var pm = MISSIONS[plot.mi];
+      return pm.name + " · tier " + (plot.tier || 1);
     }
     return "";
   }
@@ -1143,9 +1451,8 @@
     consider({ kind: "rack", x: RACK.x, y: RACK.y });
     consider({ kind: "moss", x: MOSS.x, y: MOSS.y });
     consider({ kind: "door", x: DOOR.x, y: DOOR.y });
-    var s;
-    for (s = 0; s < MISSIONS.length && state.level >= s + 1; s++) {
-      consider({ kind: "site", i: s, x: MISSIONS[s].x, y: MISSIONS[s].y });
+    if (state.plots) {
+      state.plots.forEach(function (p, i) { consider({ kind: "plot", i: i, x: p.x, y: p.y }); });
     }
     return best;
   }
@@ -1263,12 +1570,20 @@
     }
     if (hit.kind === "shell") return { title: "Creek shell", status: "Here today.", detail: "Worth 2 $bober. Taken shells come back at dawn.", actions: [{ label: "Pick up the shell", order: { kind: "shell", i: hit.i, x: hit.x, y: hit.y } }] };
     if (hit.kind === "moss") return { title: "Moss's stall", status: seasonName() + " prices are posted.", detail: orderLine() + " Selling is a choice. Seed for this season is here.", actions: [{ label: "Open the stall", order: null, shop: true }] };
-    if (hit.kind === "site") {
-      var site = MISSIONS[hit.i];
-      var current = state.level === hit.i + 1;
-      var siteActions = [];
-      if (current && site.goal === "raise" && !state.stats["r" + state.level]) siteActions.push({ label: "Raise it · " + coins(site.cost), raise: true });
-      return { title: site.name, status: current ? "This job." : "Built.", detail: site.task + " " + site.detail + " " + placeHint(site) + " " + (current ? progressText(site) : ""), actions: siteActions };
+    if (hit.kind === "plot") {
+      var plot = state.plots[hit.i];
+      var site = MISSIONS[plot.mi];
+      var tier = plot.tier || 1;
+      var current = state.level === plot.mi + 1;
+      var siteActions = [{ label: "Walk over", order: { kind: "look", i: hit.i, x: plot.x, y: plot.y } }];
+      if (tier < 3) siteActions.push({ label: "Upgrade to tier " + (tier + 1) + " · " + coins(upgradeCost(plot)), upgrade: true, i: hit.i });
+      siteActions.push({ label: "Move it", move: true, i: hit.i });
+      return {
+        title: site.name,
+        status: "Tier " + tier + " of 3." + (current ? " This job." : ""),
+        detail: site.task + " " + site.detail + " " + placeHint(site) + (current ? " " + progressText(site) : ""),
+        actions: siteActions
+      };
     }
     if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Beds, the swan, the plodder, and the mill resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
     return { title: "Thing", status: "", detail: "", actions: actions };
@@ -1290,6 +1605,15 @@
         btn.addEventListener("click", function () {
           if (act.shop) { openShop(); return; }
           if (act.raise) { raiseCurrent(); return; }
+          if (act.upgrade) {
+            var upErr = upgradePlot(act.i);
+            if (upErr) toast(upErr);
+            else toast("Tier " + state.plots[act.i].tier);
+            closeSheet();
+            hud();
+            return;
+          }
+          if (act.move) { beginMove(act.i); return; }
           queueAct(act.order);
         });
         body.appendChild(btn);
@@ -1518,14 +1842,70 @@
       var detail = document.createElement("p");
       detail.textContent = m.detail;
       body.appendChild(detail);
-      if (m.goal === "raise" && !state.stats["r" + state.level]) {
+      if (m.goal === "raise" && !state.stats["r" + state.level] && !plotOf(state.level - 1)) {
         var btn = document.createElement("button");
         btn.className = "play";
         btn.type = "button";
-        btn.textContent = "Raise it · " + coins(m.cost);
+        btn.textContent = "Place it · " + coins(m.cost);
         btn.addEventListener("click", raiseCurrent);
         body.appendChild(btn);
       }
+    });
+  }
+  function openBuild() {
+    openSheet("Build the acre", function (body) {
+      var note = document.createElement("p");
+      note.textContent = "Buy a piece, then tap the ground. Beds snap edge to edge. Buildings keep a walking path between them. Tap one you already set down to upgrade it or move it.";
+      body.appendChild(note);
+      [["tilled", "Tilled bed"], ["wild", "Wild bed"], ["stony", "Stony bed"]].forEach(function (pair) {
+        var btn = document.createElement("button");
+        btn.className = "play";
+        btn.type = "button";
+        btn.textContent = pair[1] + " · " + coins(BED_COST);
+        btn.addEventListener("click", function () { beginPlaceBed(pair[0]); });
+        body.appendChild(btn);
+      });
+      var shown = 0;
+      MISSIONS.forEach(function (m, i) {
+        if (state.level < i + 1 || plotOf(i)) return;
+        shown++;
+        var btn = document.createElement("button");
+        btn.className = "play";
+        btn.type = "button";
+        btn.textContent = m.name + " · " + coins(buildCost(m));
+        btn.addEventListener("click", function () { beginPlacePlot(i); });
+        body.appendChild(btn);
+      });
+      if (!shown) {
+        var none = document.createElement("p");
+        none.textContent = "Every unlocked building is already on the acre.";
+        body.appendChild(none);
+      }
+      state.plots.forEach(function (p, i) {
+        var row = document.createElement("div");
+        row.className = "row";
+        var label = document.createElement("strong");
+        label.textContent = MISSIONS[p.mi].name + " · tier " + (p.tier || 1);
+        row.appendChild(label);
+        if ((p.tier || 1) < 3) {
+          var up = document.createElement("button");
+          up.type = "button";
+          up.textContent = "UP " + coins(upgradeCost(p));
+          up.addEventListener("click", function () {
+            var err = upgradePlot(i);
+            if (err) toast(err);
+            openBuild();
+            hud();
+          });
+          row.appendChild(up);
+        }
+        var mv = document.createElement("button");
+        mv.type = "button";
+        mv.textContent = "MOVE";
+        mv.addEventListener("click", function () { beginMove(i); });
+        row.appendChild(mv);
+        body.appendChild(row);
+      });
     });
   }
   function museumPlate(parent, img, name, tag, copy) {
@@ -1553,7 +1933,7 @@
     var body = document.getElementById("sheet-body");
     body.innerHTML = "";
     var intro = document.createElement("p");
-    intro.textContent = "The acre, the crew, and every job on the bank. Ahead means the building is not on the land yet.";
+    intro.textContent = "The acre, the crew, and every building you can raise. Ahead means the job has not opened. Blueprint means you can place it. Tier means it is already on the land.";
     body.appendChild(intro);
     var grid = document.createElement("div");
     grid.className = "museum-grid";
@@ -1571,13 +1951,17 @@
       ["assets/world/reedbean.png", "Reedbean", "Spring", "Three watered dawns. The mill wants the sack."],
       ["assets/world/beet.png", "Pond beet", "Summer", "Five watered dawns, once summer is here."],
       ["assets/world/lantern.png", "Lanternpod", "Fall", "Four watered dawns. It withers in the wrong season."],
-      ["assets/world/grass.png", "Bank grass", "Yard", "One cut is one fodder. It grows back, except in winter."]
+      ["assets/world/grass.png", "Bank grass", "Yard", "One cut is one fodder. It grows back, except in winter."],
+      ["assets/world/bed-tilled.png", "Crop bed", "Build", "Place it from BUILD and pack the rows yourself."]
     ];
     worldPlates.forEach(function (row) { museumPlate(grid, row[0], row[1], row[2], row[3]); });
     var level = state && state.level ? state.level : 1;
     MISSIONS.forEach(function (m, i) {
       var ahead = level < i + 1;
-      museumPlate(grid, "assets/sites/" + m.shape + ".png", m.name, ahead ? "Ahead" : "On the acre", ahead ? "Opens when this job starts." : m.detail);
+      var placed = plotOf(i);
+      var tag = ahead ? "Ahead" : (placed ? ("Tier " + (placed.tier || 1)) : "Blueprint");
+      var copy = ahead ? "Opens when this job starts." : (placed ? "On the acre, where you set it." : "Unlocked. Place it from BUILD.");
+      museumPlate(grid, "assets/sites/" + m.shape + ".png", m.name, tag, copy);
     });
     body.appendChild(grid);
     document.getElementById("sheet").classList.remove("hidden");
@@ -1594,7 +1978,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job adds a task, a building, and more land. The fiftieth job fills the map. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 $bober and return at dawn.";
+    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job unlocks a building you buy and place. Beds are placed too, and they pack into rows. The fiftieth job is the hall, set down where you want it. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 $bober and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
@@ -1770,36 +2154,32 @@
     }
   }
   function drawBed(b) {
+    var sprite = b.state === "wild" ? world["bed-wild"] : b.state === "stony" ? world["bed-stony"] : world["bed-tilled"];
+    shadow(b.x, b.y + 4, 22);
+    if (!blit(sprite, b.x, b.y + 6, BED_DRAW_H)) {
+      ctx.fillStyle = "#8b5a2b";
+      ctx.fillRect(b.x - 32, b.y - 18, 64, 36);
+      ctx.strokeStyle = "#14210f";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(b.x - 32, b.y - 18, 64, 36);
+      ctx.fillStyle = b.wet ? "#3e5a28" : "#6b3f22";
+      ctx.fillRect(b.x - 24, b.y - 10, 48, 20);
+    }
     ctx.save();
     ctx.translate(b.x, b.y);
-    ctx.fillStyle = b.wet ? "#3e5a28" : "#6b3f22";
-    ctx.fillRect(-26, -16, 52, 32);
-    ctx.strokeStyle = "#3a2414";
-    ctx.strokeRect(-26, -16, 52, 32);
-    if (b.state === "stony") {
-      ctx.fillStyle = "#b7b1a6";
-      ctx.beginPath(); ctx.arc(-8, 0, 7, 0, Math.PI * 2); ctx.arc(10, 4, 5, 0, Math.PI * 2); ctx.fill();
-    } else if (b.state === "wild") {
-      ctx.strokeStyle = "#2f6b32";
-      ctx.lineWidth = 2;
+    if (b.wet && b.state !== "wild" && b.state !== "stony") {
+      ctx.fillStyle = "rgba(47, 134, 173, 0.28)";
       ctx.beginPath();
-      ctx.moveTo(-8, 8); ctx.lineTo(-10, -8);
-      ctx.moveTo(0, 8); ctx.lineTo(2, -12);
-      ctx.moveTo(8, 8); ctx.lineTo(10, -6);
-      ctx.stroke();
-    } else if (b.state === "tilled" || b.state === "stubble" || b.state === "seeded" || b.state === "growing" || b.state === "ready") {
-      ctx.strokeStyle = "rgba(243,234,210,0.35)";
-      ctx.beginPath();
-      ctx.moveTo(-18, -6); ctx.lineTo(18, -6);
-      ctx.moveTo(-18, 4); ctx.lineTo(18, 4);
-      ctx.stroke();
+      ctx.ellipse(0, -8, 16, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
     if (b.state === "stubble") {
       ctx.strokeStyle = "#e6d7a8";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(-8, 8); ctx.lineTo(-8, -2);
-      ctx.moveTo(0, 8); ctx.lineTo(0, 0);
-      ctx.moveTo(8, 8); ctx.lineTo(8, -4);
+      ctx.moveTo(-8, 2); ctx.lineTo(-8, -10);
+      ctx.moveTo(0, 2); ctx.lineTo(0, -8);
+      ctx.moveTo(8, 2); ctx.lineTo(8, -12);
       ctx.stroke();
     }
     if (b.crop && (b.state === "seeded" || b.state === "growing" || b.state === "ready")) {
@@ -2137,14 +2517,40 @@
     ctx.arc(x, y - 18, 4, 0, Math.PI * 2);
     ctx.fill();
   }
-  function drawOneSite(m) {
-    var x = m.x, y = m.y;
+  function drawPlot(p, ghost) {
+    var m = MISSIONS[p.mi];
+    var tier = p.tier || 1;
+    var h = siteDrawH(m.shape) * (1 + (tier - 1) * 0.08);
+    var x = p.x, y = p.y;
+    ctx.fillStyle = tier >= 3 ? "#cbb892" : "#a98a62";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 4, 26 + tier * 3, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#14210f";
+    ctx.lineWidth = 2;
+    ctx.stroke();
     shadow(x, y + 2, m.shape === "hall" || m.shape === "grand" ? 34 : 22);
-    if (!blit(sites[m.shape], x, y + 4, siteDrawH(m.shape))) {
+    if (!blit(sites[m.shape], x, y + 4, h)) {
       yard(x, y);
       drawAccent(m.shape, x, y);
     }
-    if (state.level === MISSIONS.indexOf(m) + 1) {
+    if (tier >= 2) {
+      ctx.fillStyle = "#f6d36b";
+      ctx.beginPath();
+      ctx.arc(x + 18, y - h * 0.62, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#14210f";
+      ctx.stroke();
+    }
+    if (tier >= 3) {
+      ctx.fillStyle = "#a33b32";
+      ctx.beginPath();
+      ctx.moveTo(x, y - h + 2);
+      ctx.lineTo(x + 16, y - h + 8);
+      ctx.lineTo(x, y - h + 14);
+      ctx.fill();
+    }
+    if (!ghost && state.level === p.mi + 1) {
       ctx.strokeStyle = "#f5c400";
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -2153,48 +2559,38 @@
       plank(x, y + 22, m.short);
     }
   }
-  function drawAcreDress() {
-    if (state.level < 50) return;
-    var lx;
-    for (lx = 140; lx < 2460; lx += 200) {
-      drawLampPost(lx, 400);
-      drawLampPost(lx, 2320);
+  function drawGhost() {
+    if (!placeKind || !placeHover || mode !== "play") return;
+    var spot = placeKind === "bed" ? snapBed(placeHover.x, placeHover.y) : placeHover;
+    var legal = placeKind === "bed" ? !bedBlock(spot.x, spot.y) : !plotBlock(spot.x, spot.y, placeKind === "move" ? state.plots[placeMove].mi : placeMi, placeKind === "move" ? placeMove : -1);
+    ctx.save();
+    ctx.globalAlpha = legal ? 0.78 : 0.45;
+    if (placeKind === "bed") drawBed({ x: spot.x, y: spot.y, state: placeSoil, crop: null, days: 0, need: 0, wet: false, fert: 0 });
+    else drawPlot({ mi: placeKind === "move" ? state.plots[placeMove].mi : placeMi, x: spot.x, y: spot.y, tier: placeKind === "move" ? (state.plots[placeMove].tier || 1) : 1 }, true);
+    if (!legal) {
+      ctx.strokeStyle = "#a33b32";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(spot.x, spot.y, 18, 8, 0, 0, Math.PI * 2);
+      ctx.stroke();
     }
-    var ly;
-    for (ly = 520; ly < 2280; ly += 200) {
-      drawLampPost(110, ly);
-      drawLampPost(2440, ly);
-    }
-    var fy, fx;
-    for (fy = 420; fy < 2360; fy += 28) {
-      for (fx = 70; fx < 2480; fx += 28) {
-        var nx = (fx - POND.x) / 160;
-        var ny = (fy - POND.y) / 110;
-        if (nx * nx + ny * ny < 1) continue;
-        if (fx > 1100 && fx < 1680 && fy > 1020 && fy < 1320) continue;
-        if (fy < 400) continue;
-        ctx.fillStyle = "rgba(92, 52, 22, 0.42)";
-        ctx.fillRect(fx, fy, 20, 8);
-        if ((Math.floor(fx / 28) + Math.floor(fy / 28)) % 2 === 0) {
-          ctx.fillStyle = "#2f6b32";
-          ctx.fillRect(fx + 8, fy - 7, 3, 8);
-        }
-      }
-    }
+    ctx.restore();
   }
   function drawSorted() {
     var batch = [];
     var i;
-    for (i = 0; i < MISSIONS.length; i++) {
-      if (!state || state.level < i + 1) break;
-      batch.push({ y: MISSIONS[i].y, site: MISSIONS[i] });
+    if (state && state.plots) {
+      for (i = 0; i < state.plots.length; i++) {
+        if (placeKind === "move" && i === placeMove) continue;
+        batch.push({ y: state.plots[i].y, plot: state.plots[i] });
+      }
     }
     batch.push({ y: MOSS.y + 28, moss: true });
     state.crew.forEach(function (c) { batch.push({ y: c.y, crew: c }); });
     batch.push({ y: state.player.y, you: true });
     batch.sort(function (a, b) { return a.y - b.y; });
     batch.forEach(function (item) {
-      if (item.site) drawOneSite(item.site);
+      if (item.plot) drawPlot(item.plot, false);
       else if (item.moss) drawBober({ x: MOSS.x - 102, y: MOSS.y + 28, face: 1, id: "moss", tx: null }, false);
       else if (item.crew) drawBober(item.crew, false);
       else drawBober(state.player, true);
@@ -2216,11 +2612,11 @@
     drawGround();
     drawPond();
     drawShells();
-    state.beds.forEach(drawBed);
+    state.beds.slice().sort(function (a, b) { return a.y - b.y; }).forEach(drawBed);
     state.willows.forEach(drawWillow);
     drawBuildings();
-    drawAcreDress();
     drawSorted();
+    drawGhost();
     drawSnow();
     var sun = state.clock / DAY_LEN;
     if (state.season !== 3 && sun > 0.62) {
@@ -2321,6 +2717,19 @@
     markMode();
   });
   document.getElementById("btn-chores").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openChores(); });
+  document.getElementById("btn-build").addEventListener("click", function () {
+    if (mode !== "play" && mode !== "sheet") return;
+    if (placeKind) {
+      placeKind = null;
+      placeMove = -1;
+      placeHover = null;
+      pathEpoch++;
+      solidKey = "";
+      toast("Placement cancelled.");
+      return;
+    }
+    openBuild();
+  });
   document.getElementById("btn-shop").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openShop(); });
   document.getElementById("btn-pack").addEventListener("click", function () { if (mode === "play" || mode === "sheet") openPack(); });
   document.getElementById("btn-sleep").addEventListener("click", function () { if (mode === "play") endDay(); });
@@ -2328,10 +2737,12 @@
 
   canvas.addEventListener("pointerdown", function (ev) {
     if (mode !== "play") return;
+    if (placeKind) placeHover = worldFromEvent(ev);
     ptr = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, moved: 0, camX: camX, camY: camY };
     try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
   });
   canvas.addEventListener("pointermove", function (ev) {
+    if (placeKind && mode === "play") placeHover = worldFromEvent(ev);
     if (!ptr || ptr.id !== ev.pointerId) return;
     var dx = ev.clientX - ptr.x, dy = ev.clientY - ptr.y;
     ptr.moved = Math.max(ptr.moved, Math.hypot(dx, dy));
@@ -2348,6 +2759,7 @@
     ptr = null;
     if (moved > 8) return;
     var w = worldFromEvent(ev);
+    if (placeKind) { commitPlace(w.x, w.y); return; }
     onTap(w.x, w.y);
   });
   window.addEventListener("resize", resize);
@@ -2372,7 +2784,12 @@
     setDay: function (d) { state.day = d; },
     mode: function () { return mode; },
     cam: function () { return { x: camX, y: camY, scale: viewScale, ox: viewOx, oy: viewOy }; },
-    blocked: blocked
+    blocked: blocked,
+    bedSize: bedMetrics,
+    bedPitch: bedPitch,
+    placeBed: placeBedAt,
+    placePlot: placePlotAt,
+    upgrade: upgradePlot
   };
 })();
   </script>
