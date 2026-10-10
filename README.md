@@ -22,6 +22,8 @@ The scope is one acre and one year. Four seasons of seven days. Each season Moss
 
 Fifty jobs open in order. The yellow line under the field is the current job. Tap it for the task and the count. Finish it and the next job opens. BUILD buys a bed or an unlocked building, then you tap the ground to set it down. Beds snap into rows. A placed building can be moved or upgraded, up to tier 3, and the upgrade is paid in $bober. Paying jobs wait until you place them, so $bober is not spent by accident. The fiftieth job is the hall, placed where you want it.
 
+A building is a milestone and a tool. At dawn it works the acre: barrels wet dry crops, the seed bench saves a seed when a crop finishes, ricks fill the trough, compost lifts fertility, and the cellar keeps that fertility. The mill annex, the smokehouse, and the kiln add to what the yard already makes. A higher tier does more of the same work. The farm can keep water, seed, fodder, and soil turning without a trip to Moss for every one of them.
+
 - **Reedbean** — spring, 3 watered dawns
 - **Bank cress** — spring, 2 watered dawns
 - **Pond beet** — summer, 5 watered dawns

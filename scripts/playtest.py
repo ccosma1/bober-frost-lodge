@@ -28,6 +28,9 @@ def static_checks(text: str) -> list[str]:
         "bober-willow-cut-v1",
         "No egg. The trough was empty.",
         "The mill made meal",
+        "The ricks put",
+        "The barrels wet",
+        "The seed bench saved",
         "withered",
     ]
     banned = [
@@ -520,6 +523,249 @@ def play_checks() -> list[str]:
         except Exception as exc:
             errors.append("museum " + repr(exc))
         page.locator("#btn-sheet-close").click()
+
+        page.evaluate("WC.boot()")
+        page.locator("#job").click()
+        try:
+            page.wait_for_function(
+                "() => document.getElementById('sheet-title').textContent.indexOf('Bank post') >= 0",
+                timeout=3000,
+            )
+            job_text = page.locator("#sheet-body").inner_text()
+            if "dry crop" not in job_text:
+                errors.append("job benefit " + job_text[:240])
+        except Exception as exc:
+            errors.append("job benefit open " + repr(exc))
+        if not page.locator("#sheet").evaluate("el => el.classList.contains('hidden')"):
+            page.locator("#btn-sheet-close").click()
+        benefit_place = page.evaluate(
+            """() => {
+              WC.boot();
+              WC.state.stones = 20;
+              const plot = WC.placePlot(2, 1900, 1600);
+              WC.state.player.x = 1900;
+              WC.state.player.y = 1750;
+              WC.state.player.tx = null;
+              WC.state.player.ty = null;
+              WC.state.player.order = null;
+              return plot;
+            }"""
+        )
+        if not benefit_place.get("ok"):
+            errors.append("benefit place " + str(benefit_place))
+        else:
+            try:
+                page.wait_for_function(
+                    """() => {
+                      const c = WC.cam();
+                      const want = Math.max(0, Math.min(2520 - c.w, WC.state.player.x - c.w / 2));
+                      return Math.abs(c.x - want) < 40;
+                    }""",
+                    timeout=4000,
+                )
+                world_click(1900, 1600)
+                page.wait_for_function(
+                    "() => document.getElementById('sheet-title').textContent.indexOf('Hay') >= 0",
+                    timeout=4000,
+                )
+                card = page.locator("#sheet-body").inner_text()
+                if "fodder" not in card or "Tier 1" not in card:
+                    errors.append("plot benefit " + card[:240])
+            except Exception as exc:
+                errors.append("plot card " + repr(exc))
+            if not page.locator("#sheet").evaluate("el => el.classList.contains('hidden')"):
+                page.locator("#btn-sheet-close").click()
+
+        yard = page.evaluate(
+            """() => {
+              const body = () => document.getElementById('dawn-body').innerText;
+              const out = {};
+              const bad = [];
+              let i;
+              for (i = 0; i < 50; i++) {
+                const t = WC.benefit(i, 1);
+                if (!t || t.indexOf('It works the acre') >= 0) bad.push(i);
+              }
+              out.uses = bad;
+              out.tierText = WC.benefit(9, 3).indexOf('2 extra') >= 0 && WC.benefit(9, 1).indexOf('1 extra') >= 0;
+              WC.boot();
+              WC.sleep();
+              out.plain = body().indexOf('No egg. The trough was empty.') >= 0 && body().indexOf('waited') >= 0;
+              WC.boot();
+              WC.state.stones = 40;
+              const rick = WC.placePlot(2, 1900, 1600);
+              WC.sleep();
+              out.rick = { ok: !!rick.ok, egg: WC.state.items.egg, fodder: WC.state.fodder, level: WC.state.level, line: body().indexOf('The ricks put') >= 0, empty: body().indexOf('No egg. The trough was empty.') >= 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              const post = WC.placePlot(0, 1700, 1600);
+              const barrel = WC.placePlot(1, 1900, 1600);
+              WC.sleep();
+              out.water = { ok: !!(post.ok && barrel.ok), err: (post.error || barrel.error || ''), d0: WC.state.beds[0].days, d1: WC.state.beds[1].days, level: WC.state.level, wet: WC.state.stats.wet0 || 0, line: body().indexOf('The barrels wet') >= 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              const one = WC.placePlot(1, 1900, 1600);
+              WC.sleep();
+              out.one = { ok: !!one.ok, d0: WC.state.beds[0].days, d1: WC.state.beds[1].days };
+              WC.boot();
+              WC.state.stones = 40;
+              const bench = WC.placePlot(3, 1900, 1600);
+              WC.state.beds[0].days = 2;
+              WC.state.beds[0].wet = true;
+              WC.sleep();
+              out.seed = { ok: !!bench.ok, seed: WC.state.items.seedReed, state: WC.state.beds[0].state, level: WC.state.level, line: body().indexOf('The seed bench saved') >= 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              const compost = WC.placePlot(13, 1900, 1600);
+              WC.sleep();
+              out.compost = { ok: !!compost.ok, fert: WC.state.beds[0].fert, chaff: WC.state.chaff, stat: WC.state.stats.chaff || 0, level: WC.state.level };
+              WC.boot();
+              WC.state.stones = 40;
+              const shed = WC.placePlot(4, 1900, 1600);
+              WC.sleep();
+              out.shed = { ok: !!shed.ok, wild: WC.state.beds[4].state, stony: WC.state.beds[5].state, cleared: WC.state.stats.cleared || 0, level: WC.state.level };
+              WC.boot();
+              WC.state.stones = 40;
+              const basket = WC.placePlot(7, 1900, 1600);
+              const before = WC.state.stones;
+              WC.sleep();
+              out.shell = { ok: !!basket.ok, gain: WC.state.stones - before, shells: WC.state.stats.shells || 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              const lease = WC.placePlot(14, 1900, 1600);
+              WC.sleep();
+              const grew = WC.state.willows[0].days;
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(14, 1900, 1600);
+              WC.state.season = 3;
+              WC.sleep();
+              out.willow = { ok: !!lease.ok, grew: grew, winter: WC.state.willows[0].days };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(14, 1900, 1600);
+              WC.state.plots[0].tier = 2;
+              WC.state.willows[0].days = 4;
+              out.cut = { err: WC.cutWillow(0), n: WC.state.items.willow, stat: WC.state.stats.willows || 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(11, 1900, 1600);
+              WC.state.items.egg = 1;
+              WC.state.stones = 6;
+              out.sell = { pay: WC.sell('egg'), stones: WC.state.stones, egg: WC.state.items.egg, sold: WC.state.stats.sold || 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              const frame = WC.placePlot(38, 1900, 1600);
+              WC.setDay(7);
+              WC.sleep();
+              out.frame = { ok: !!frame.ok, err: frame.error || '', season: WC.state.season, beet: WC.state.items.seedBeet, bed: WC.state.beds[0].state, line: body().indexOf('The frame saved') >= 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.state.items.reedbean = 1;
+              const annex = WC.placePlot(10, 1900, 1600);
+              WC.loadMill();
+              WC.state.mill.t = 72;
+              WC.sleep();
+              out.annex = { ok: !!annex.ok, meal: WC.state.items.meal, chaff: WC.state.chaff };
+              WC.boot();
+              WC.state.stones = 40;
+              const coop = WC.placePlot(8, 1900, 1600);
+              out.coop = { ok: !!coop.ok, u1: WC.upgrade(0), u2: WC.upgrade(0) };
+              WC.sleep();
+              out.coop.tier = WC.state.plots[0] && WC.state.plots[0].tier;
+              out.coop.egg = WC.state.items.egg;
+              out.coop.kept = body().indexOf('The coop kept an egg.') >= 0;
+              out.coop.empty = body().indexOf('No egg. The trough was empty.') >= 0;
+              WC.boot();
+              WC.state.stones = 40;
+              const gate = WC.placePlot(19, 1900, 1600);
+              WC.cutGrass(0);
+              WC.sleep();
+              out.grass = { ok: !!gate.ok, err: gate.error || '', ready: WC.state.grass[0].ready, wait: WC.state.grass[0].wait };
+              WC.boot();
+              WC.state.stones = 40;
+              const cellar = WC.placePlot(23, 1900, 1600);
+              WC.state.beds[2].state = 'ready';
+              WC.state.beds[2].crop = 'reedbean';
+              WC.state.beds[2].fert = 2;
+              WC.harvest(2);
+              out.cellar = { ok: !!cellar.ok, crop: WC.state.items.reedbean, fert: WC.state.beds[2].fert };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(9, 1900, 1600);
+              WC.state.beds[2].state = 'ready';
+              WC.state.beds[2].crop = 'reedbean';
+              WC.state.beds[2].fert = 0;
+              WC.harvest(2);
+              out.rack = { crop: WC.state.items.reedbean, fert: WC.state.beds[2].fert };
+              WC.boot();
+              WC.state.stones = 40;
+              const hall = WC.placePlot(49, 1900, 1600);
+              WC.sleep();
+              out.hall = { ok: !!hall.ok, err: hall.error || '', egg: WC.state.items.egg, d0: WC.state.beds[0].days, d1: WC.state.beds[1].days, wild: WC.state.beds[4].state, level: WC.state.level, line: body().indexOf('The hall put') >= 0 };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(15, 1900, 1600);
+              WC.state.items.egg = 1;
+              WC.state.stones = 10;
+              out.smoke = { err: WC.smoke(), egg: WC.state.items.egg, stones: WC.state.stones };
+              WC.boot();
+              WC.state.stones = 40;
+              WC.placePlot(17, 1900, 1600);
+              WC.state.season = 3;
+              WC.sleep();
+              out.winter = { egg: WC.state.items.egg, days: WC.state.willows[0].days, line: body().indexOf('The bunk put') >= 0 };
+              return out;
+            }"""
+        )
+        if yard["uses"] or not yard["tierText"] or not yard["plain"]:
+            errors.append("yard basics " + str({k: yard[k] for k in ("uses", "tierText", "plain")}))
+        rick = yard["rick"]
+        if not rick["ok"] or rick["egg"] != 1 or rick["fodder"] != 0 or rick["level"] != 1 or not rick["line"] or rick["empty"]:
+            errors.append("rick " + str(rick))
+        water = yard["water"]
+        if not water["ok"] or water["d0"] != 2 or water["d1"] != 2 or water["level"] != 1 or water["wet"] or not water["line"]:
+            errors.append("barrels " + str(water))
+        if not yard["one"]["ok"] or yard["one"]["d0"] != 2 or yard["one"]["d1"] != 1:
+            errors.append("one pour " + str(yard["one"]))
+        seed = yard["seed"]
+        if not seed["ok"] or seed["seed"] != 3 or seed["state"] != "ready" or seed["level"] != 1 or not seed["line"]:
+            errors.append("seed bench " + str(seed))
+        compost = yard["compost"]
+        if not compost["ok"] or compost["fert"] != 2 or compost["chaff"] or compost["stat"] or compost["level"] != 1:
+            errors.append("compost " + str(compost))
+        shed = yard["shed"]
+        if not shed["ok"] or shed["wild"] != "stony" or shed["stony"] != "stony" or shed["cleared"] or shed["level"] != 1:
+            errors.append("shed " + str(shed))
+        if not yard["shell"]["ok"] or yard["shell"]["gain"] != 2 or yard["shell"]["shells"]:
+            errors.append("basket " + str(yard["shell"]))
+        if not yard["willow"]["ok"] or yard["willow"]["grew"] != 2 or yard["willow"]["winter"] != 0:
+            errors.append("willow yard " + str(yard["willow"]))
+        if yard["cut"]["err"] or yard["cut"]["n"] != 2 or yard["cut"]["stat"] != 1:
+            errors.append("withy " + str(yard["cut"]))
+        if yard["sell"]["pay"] != 6 or yard["sell"]["stones"] != 12 or yard["sell"]["egg"] != 0 or yard["sell"]["sold"] != 1:
+            errors.append("scale " + str(yard["sell"]))
+        frame = yard["frame"]
+        if not frame["ok"] or frame["season"] != 1 or frame["beet"] != 1 or frame["bed"] != "stubble" or not frame["line"]:
+            errors.append("frame " + str(frame))
+        if not yard["annex"]["ok"] or yard["annex"]["meal"] != 1 or yard["annex"]["chaff"] != 2:
+            errors.append("annex " + str(yard["annex"]))
+        coop = yard["coop"]
+        if not coop["ok"] or coop["u1"] or coop["u2"] or coop["tier"] != 3 or coop["egg"] != 1 or not coop["kept"] or coop["empty"]:
+            errors.append("coop " + str(coop))
+        if not yard["grass"]["ok"] or not yard["grass"]["ready"]:
+            errors.append("grass " + str(yard["grass"]))
+        if not yard["cellar"]["ok"] or yard["cellar"]["crop"] != 3 or yard["cellar"]["fert"] != 2:
+            errors.append("cellar " + str(yard["cellar"]))
+        if yard["rack"]["crop"] != 2 or yard["rack"]["fert"] != 0:
+            errors.append("rack " + str(yard["rack"]))
+        hall = yard["hall"]
+        if not hall["ok"] or hall["egg"] != 1 or hall["d0"] != 2 or hall["d1"] != 1 or hall["wild"] != "stony" or hall["level"] != 1 or not hall["line"]:
+            errors.append("hall " + str(hall))
+        if yard["smoke"]["err"] or yard["smoke"]["egg"] != 0 or yard["smoke"]["stones"] != 16:
+            errors.append("smoke " + str(yard["smoke"]))
+        if yard["winter"]["egg"] != 1 or yard["winter"]["days"] != 0 or not yard["winter"]["line"]:
+            errors.append("winter bunk " + str(yard["winter"]))
 
         wide = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
         wide.goto(URL, wait_until="domcontentloaded")

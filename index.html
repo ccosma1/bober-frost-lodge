@@ -157,7 +157,7 @@
           <h1>BOBER WILLOW CUT</h1>
           <p>A farm simulator. Four seasons on the bank.</p>
           <p>One acre. Seven days a season. Each season Moss posts one order. Feed the trough. Cut the willow when it grows back. The year turns on the same land.</p>
-          <p>Fifty jobs. Finish one and the next one opens. BUILD is where you buy a piece, set it down, and upgrade it. Beds pack edge to edge into whatever farm you want.</p>
+          <p>Fifty jobs. Finish one and the next one opens. BUILD is where you buy a piece, set it down, and upgrade it. A placed building works the acre at dawn, and a higher tier does more of that same work. Beds pack edge to edge into whatever farm you want.</p>
           <p>The bank Burrow Hop called home is a farm now. Nightfall is still downriver.</p>
           <p class="fan">Fan game by a holder. No wallet. No ads.</p>
           <button class="play" id="btn-start" type="button">START THE YEAR</button>
@@ -276,6 +276,14 @@
     { goal: "dawns", arg: 10, cost: 0, x: 180, y: 960, vx: 0, vy: 0, name: "Festival lamps", short: "Lamps", shape: "lamps", grow: "grass", soil: "wild", task: "See ten dawns.", detail: "Ten sleeps. The lamps line the north meadow." },
     { goal: "raise", arg: 20, cost: 20, x: 2420, y: 2180, vx: 0, vy: 0, name: "Acre hall", short: "Hall", shape: "hall", grow: "fill", soil: "wild", task: "Raise the acre hall.", detail: "Pay 20 $bober and place the hall where you want it. That finishes the fifty jobs." }
   ];
+  var USE = [
+    "water", "water", "fodder", "seed", "clear", "clear", "water", "shell", "egg", "yield",
+    "mill", "sell", "cress", "fert", "willow", "smoke", "yield", "rest", "fodder", "grass",
+    "grass", "meal", "slate", "store", "clear", "seed", "grass", "willow", "willow", "willow",
+    "egg", "water", "water", "shell", "yield", "kiln", "grass", "fodder", "keep", "seed",
+    "keep", "shell", "grass", "willow", "yield", "yield", "sell", "grass", "rest", "hall"
+  ];
+  var SMOKE_I = 15, KILN_I = 35;
   var BED_STEP = 61;
 
   var canvas = document.getElementById("view");
@@ -428,6 +436,58 @@
   function upgradeCost(p) {
     var tier = p.tier || 1;
     return Math.max(2, buildCost(MISSIONS[p.mi])) * tier;
+  }
+  function yardTier(use) {
+    var sum = 0, i, p;
+    if (!state || !state.plots) return 0;
+    for (i = 0; i < state.plots.length; i++) {
+      p = state.plots[i];
+      if (USE[p.mi] === use) sum += (p.tier || 1);
+    }
+    return sum;
+  }
+  function bestTier(use) {
+    var best = 0, i, p, t;
+    if (!state || !state.plots) return 0;
+    for (i = 0; i < state.plots.length; i++) {
+      p = state.plots[i];
+      if (USE[p.mi] !== use) continue;
+      t = p.tier || 1;
+      if (t > best) best = t;
+    }
+    return best;
+  }
+  function hallBonus() {
+    var t = bestTier("hall");
+    if (t >= 3) return 2;
+    if (t >= 1) return 1;
+    return 0;
+  }
+  function benefitText(mi, tier) {
+    var use = USE[mi];
+    tier = tier || 1;
+    if (use === "water") return "At dawn it wets " + tier + " dry crop" + (tier > 1 ? "s" : "") + ". A higher tier wets more. The pond bucket still works.";
+    if (use === "fodder") return "At dawn it puts " + tier + " fodder in the trough. Every rick together stops at 3. The swan still eats first.";
+    if (use === "seed") return "When a crop finishes at dawn, it saves a seed of that crop. This tier can save " + tier + " in one morning.";
+    if (use === "cress") return "When bank cress finishes at dawn, it saves a cress seed. This tier can save " + tier + ".";
+    if (use === "clear") return "At dawn it works " + tier + " bed" + (tier > 1 ? "s" : "") + " one step, from brush to stones to tilled soil. The job still waits for you.";
+    if (use === "shell") return "At dawn it finds a shell worth 2 $bober. A second one, or a higher tier, pays 4. It does not count as a shell you picked.";
+    if (use === "egg") return "If the swan lays, it leaves " + (tier >= 2 ? "2 more eggs" : "1 more egg") + ". Tier 3 can also keep one egg when the trough is empty.";
+    if (use === "yield") return "Each harvest gives " + (tier >= 3 ? "2 extra" : "1 extra") + ". The best drying building on the acre sets that bonus.";
+    if (use === "mill") return "When the mill finishes, it leaves " + tier + " more chaff, up to 3.";
+    if (use === "sell") return "Each sale at the stall pays " + tier + " $bober extra, up to 3 from the scale and the crates together.";
+    if (use === "fert") return "At dawn it lifts fertility on " + tier + " bed" + (tier > 1 ? "s" : "") + ", up to 2. It does not spend chaff.";
+    if (use === "willow") return "Stools gain " + (tier >= 3 ? "two extra dawns" : "one extra dawn") + " of growth, spring through fall. From tier 2, a cut also keeps a second withy.";
+    if (use === "smoke") return "The morning an egg is laid, it pays " + tier + " $bober. Smoke an egg and it pays the egg price plus " + tier + ".";
+    if (use === "rest") return "In winter it puts " + Math.min(2, tier) + " fodder in the trough. Grass still rests.";
+    if (use === "grass") return tier >= 3 ? "Grass is ready again the next dawn." : "Grass skips one rest dawn. Tier 3 makes it ready the next morning.";
+    if (use === "meal") return tier >= 2 ? "When the mill finishes, the bin keeps a second meal and one more chaff." : "When the mill finishes, the bin sweeps up one more chaff. Tier 2 also keeps a second meal.";
+    if (use === "slate") return "Filling the slate pays " + (tier * 2) + " $bober on top of the posted bonus.";
+    if (use === "store") return tier >= 3 ? "Harvests keep their fertility, and this tier also gives one extra crop." : "Harvests keep their fertility. Tier 3 also gives one extra crop.";
+    if (use === "kiln") return "The morning a beet finishes, it pays " + tier + " $bober. Fire a beet and it pays the beet price plus " + tier + ".";
+    if (use === "keep") return "When the season turns, it saves " + tier + " seeds of the crop that season grows, up to 3 from every frame.";
+    if (use === "hall") return tier >= 3 ? "Each dawn it adds 2 fodder, wets 2 beds, works 2 beds, and can save 2 seeds." : "Each dawn it adds 1 fodder, wets 1 bed, works 1 bed, and can save 1 seed. Tier 3 does two of each.";
+    return "It works the acre.";
   }
   function plotFoot(p) {
     var m = MISSIONS[p.mi];
@@ -972,8 +1032,12 @@
     var b = state.beds[i];
     if (b.state !== "ready" || !b.crop) return;
     var n = 1 + (b.fert || 0);
+    var y = bestTier("yield");
+    if (y >= 3) n += 2;
+    else if (y >= 1) n += 1;
+    if (bestTier("store") >= 3) n += 1;
     state.items[b.crop] += n;
-    b.fert = Math.max(0, (b.fert || 0) - 1);
+    if (bestTier("store") < 1) b.fert = Math.max(0, (b.fert || 0) - 1);
     b.state = "stubble";
     b.crop = null;
     b.days = 0;
@@ -1070,7 +1134,7 @@
     if (state.slate.got >= spec.n) return "Slate is filled";
     if ((state.items[spec.key] || 0) < spec.n) return "Need " + spec.n + " " + spec.name;
     state.items[spec.key] -= spec.n;
-    var pay = spec.n * price(spec.key) + spec.bonus;
+    var pay = spec.n * price(spec.key) + spec.bonus + Math.min(8, yardTier("slate") * 2);
     state.stones += pay;
     state.slate.got = spec.n;
     bump("slates");
@@ -1084,8 +1148,9 @@
     if (w.days < 4) return "Not ready to cut";
     w.days = 0;
     state.items.willow += 1;
+    if (bestTier("willow") >= 2) state.items.willow += 1;
     bump("willows");
-    toast("Willow cut");
+    toast(bestTier("willow") >= 2 ? "Willow cut. The pile kept another." : "Willow cut");
     save();
     return null;
   }
@@ -1101,6 +1166,38 @@
     if (err) toast(err);
   }
 
+  function smokeEgg() {
+    var p = plotOf(SMOKE_I);
+    if (!p) return "No smokehouse";
+    if ((state.items.egg || 0) < 1) return "No egg";
+    var pay = price("egg") + (p.tier || 1);
+    state.items.egg -= 1;
+    state.stones += pay;
+    toast("Smoked for " + coins(pay));
+    save();
+    return "";
+  }
+  function fireBeet() {
+    var p = plotOf(KILN_I);
+    if (!p) return "No kiln";
+    if ((state.items.beet || 0) < 1) return "No beet";
+    var pay = price("beet") + (p.tier || 1);
+    state.items.beet -= 1;
+    state.stones += pay;
+    toast("Fired for " + coins(pay));
+    save();
+    return "";
+  }
+  function sellStack(key) {
+    var n = state.items[key] || 0;
+    if (n <= 0) return 0;
+    var pay = n * price(key) + Math.min(3, yardTier("sell"));
+    state.stones += pay;
+    state.items[key] = 0;
+    bump("sold");
+    save();
+    return pay;
+  }
   function endDay() {
     if (mode === "dawn") return;
     var lines = [];
@@ -1109,18 +1206,48 @@
       state.mill.t = 0;
       state.items.meal += 1;
       state.chaff += 1;
+      var millExtra = Math.min(3, yardTier("mill"));
+      if (millExtra) state.chaff += millExtra;
+      var mealTier = bestTier("meal");
+      if (mealTier >= 1) state.chaff += 1;
+      if (mealTier >= 2) state.items.meal += 1;
       bump("meals");
       lines.push("The mill made meal and left chaff.");
+      if (millExtra) lines.push("The annex left more chaff.");
+      if (mealTier >= 2) lines.push("The bin kept a second meal.");
+      else if (mealTier >= 1) lines.push("The bin swept up chaff.");
     } else if (state.mill.sack > 0) {
       lines.push("The mill is still working.");
     }
+    var fodderAdd = Math.min(3, yardTier("fodder") + hallBonus() + (state.season === 3 ? Math.min(2, yardTier("rest")) : 0));
+    if (fodderAdd > 0) {
+      state.fodder += fodderAdd;
+      if (yardTier("fodder") > 0) lines.push("The ricks put " + fodderAdd + " fodder in the trough.");
+      else if (state.season === 3 && yardTier("rest") > 0) lines.push("The bunk put " + fodderAdd + " fodder in the trough.");
+      else lines.push("The hall put " + fodderAdd + " fodder in the trough.");
+    }
+    var fromTrough = false;
     if (state.fodder > 0) {
       state.fodder -= 1;
       state.items.egg += 1;
       bump("eggs");
+      fromTrough = true;
       lines.push("The reedswan left an egg.");
+    } else if (bestTier("egg") >= 3) {
+      state.items.egg += 1;
+      lines.push("The coop kept an egg.");
     } else {
       lines.push("No egg. The trough was empty.");
+    }
+    if (fromTrough && bestTier("egg") > 0) {
+      var extraEggs = bestTier("egg") >= 2 ? 2 : 1;
+      state.items.egg += extraEggs;
+      lines.push("The coop left " + extraEggs + " more.");
+    }
+    if (fromTrough && plotOf(SMOKE_I)) {
+      var smokePay = plotOf(SMOKE_I).tier || 1;
+      state.stones += smokePay;
+      lines.push("The smokehouse paid " + coins(smokePay) + ".");
     }
     if (state.fodder > 0) {
       state.fodder -= 1;
@@ -1147,6 +1274,12 @@
       if (fogged) lines.push("Creek fog wet the beds.");
     }
     if (turned) {
+      var keepN = Math.min(3, yardTier("keep"));
+      var incoming = state.season === 1 ? "beet" : (state.season === 2 ? "lantern" : (state.season === 0 ? "reedbean" : null));
+      if (keepN && incoming) {
+        state.items[SEED_KEY[incoming]] += keepN;
+        lines.push("The frame saved " + keepN + " " + CROP_NAME[incoming] + " seed" + (keepN > 1 ? "s" : "") + ".");
+      }
       state.beds.forEach(function (b) {
         if (!b.crop) return;
         if (SEASON_OF[b.crop] !== state.season && b.state !== "stubble" && b.state !== "tilled") {
@@ -1160,31 +1293,92 @@
       });
     }
     noteProgress();
+    var pours = Math.min(8, yardTier("water") + hallBonus());
+    var wetN = 0;
+    state.beds.forEach(function (b) {
+      if (wetN >= pours) return;
+      if ((b.state === "seeded" || b.state === "growing") && !b.wet && b.crop && SEASON_OF[b.crop] === state.season) {
+        b.wet = true;
+        wetN++;
+      }
+    });
+    if (wetN) lines.push("The barrels wet " + wetN + " bed" + (wetN > 1 ? "s" : "") + ".");
+    var finished = [];
     state.beds.forEach(function (b) {
       if (b.state !== "seeded" && b.state !== "growing") return;
       if (b.wet && b.crop && SEASON_OF[b.crop] === state.season) {
         b.days += 1;
-        if (b.days >= b.need) b.state = "ready";
-        else b.state = "growing";
+        if (b.days >= b.need) {
+          b.state = "ready";
+          finished.push(b.crop);
+        } else b.state = "growing";
         lines.push(CROP_NAME[b.crop] + " " + Math.min(b.days, b.need) + " of " + b.need + ".");
       } else if (b.crop) {
         lines.push(CROP_NAME[b.crop] + " waited. Still " + b.days + " of " + b.need + ".");
       }
       b.wet = false;
     });
+    var seedLeft = Math.min(3, yardTier("seed") + hallBonus());
+    var cressLeft = Math.min(2, yardTier("cress"));
+    var kilnPay = 0;
+    finished.forEach(function (crop) {
+      if (crop === "cress" && cressLeft > 0) {
+        state.items.seedCress += 1;
+        cressLeft--;
+        lines.push("The cress row saved a seed.");
+      }
+      if (seedLeft > 0 && SEED_KEY[crop]) {
+        state.items[SEED_KEY[crop]] += 1;
+        seedLeft--;
+        lines.push("The seed bench saved a " + CROP_NAME[crop] + " seed.");
+      }
+      if (crop === "beet" && plotOf(KILN_I)) kilnPay += (plotOf(KILN_I).tier || 1);
+    });
+    if (kilnPay) {
+      state.stones += kilnPay;
+      lines.push("The kiln paid " + coins(kilnPay) + ".");
+    }
+    var steps = Math.min(4, yardTier("clear") + hallBonus());
+    var worked = 0;
+    state.beds.forEach(function (b) {
+      if (worked >= steps) return;
+      if (b.state === "wild") { b.state = "stony"; worked++; }
+      else if (b.state === "stony") { b.state = "tilled"; worked++; }
+      else if (b.state === "stubble") { b.state = "tilled"; worked++; }
+    });
+    if (worked) lines.push("The sheds worked " + worked + " bed" + (worked > 1 ? "s" : "") + ".");
+    var fertLeft = Math.min(4, yardTier("fert"));
+    var lifted = 0;
+    state.beds.forEach(function (b) {
+      if (lifted >= fertLeft) return;
+      if (b.state === "wild" || b.state === "stony") return;
+      if ((b.fert || 0) >= 2) return;
+      b.fert = (b.fert || 0) + 1;
+      lifted++;
+    });
+    if (lifted) lines.push("Compost lifted " + lifted + " bed" + (lifted > 1 ? "s" : "") + ".");
+    var willowGrow = bestTier("willow") >= 3 ? 2 : (bestTier("willow") >= 1 ? 1 : 0);
     state.willows.forEach(function (w) {
       if (state.season === 3) return;
       if (w.days < 4) w.days += 1;
+      if (willowGrow && w.days < 4) w.days = Math.min(4, w.days + willowGrow);
     });
     var willowReady = state.willows.some(function (w) { return w.days >= 4; });
     lines.push(willowReady ? "A willow stool is ready to cut." : "Willow is not ready to cut.");
+    var shellN = Math.min(2, yardTier("shell"));
+    if (shellN) {
+      state.stones += shellN * 2;
+      lines.push("The basket found a shell. " + coins(shellN * 2) + ".");
+    }
     checkMission();
     lines.unshift(missionLine());
     if (state.season !== 3) {
+      var rush = bestTier("grass") >= 3 ? 2 : (bestTier("grass") >= 1 ? 1 : 0);
       state.grass.forEach(function (g) {
         if (g.ready) return;
         g.wait -= 1;
-        if (g.wait <= 0) g.ready = true;
+        if (rush && g.wait > 0) g.wait -= rush;
+        if (g.wait <= 0) { g.wait = 0; g.ready = true; }
       });
     }
     state.forage = [1, 1, 1];
@@ -1531,7 +1725,15 @@
           : "Winter rests. The beds wait.";
         return { title: "Empty bed", status: "Tilled. Fertility " + (b.fert || 0) + ".", detail: seedLine, actions: plantActions };
       }
-      if (b.state === "ready") return { title: CROP_NAME[b.crop] || "Bed", status: "Ready.", detail: "Harvest pays " + (1 + (b.fert || 0)) + ". Fertility then drops by 1.", actions: [{ label: "Harvest", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      if (b.state === "ready") {
+        var payN = 1 + (b.fert || 0);
+        var yieldTier = bestTier("yield");
+        if (yieldTier >= 3) payN += 2;
+        else if (yieldTier >= 1) payN += 1;
+        if (bestTier("store") >= 3) payN += 1;
+        var fertLine = bestTier("store") >= 1 ? " Fertility stays." : " Fertility then drops by 1.";
+        return { title: CROP_NAME[b.crop] || "Bed", status: "Ready.", detail: "Harvest pays " + payN + "." + fertLine, actions: [{ label: "Harvest", order: { kind: "bed", i: hit.i, x: hit.x, y: hit.y } }] };
+      }
       var wet = b.wet ? "Watered." : "Dry.";
       var waterActions = [];
       var waterDetail = CROP_NAME[b.crop] + " advances at dawn only if it was watered. Bucket " + (state.bucket || 0) + " of 8.";
@@ -1556,8 +1758,10 @@
     if (hit.kind === "willow") {
       var w = state.willows[hit.i];
       if (state.season === 3) return { title: "Willow stool", status: "Resting.", detail: "Winter rest. It does not grow and it cannot be cut.", actions: [] };
-      if (w.days >= 4) return { title: "Willow stool", status: "Ready to cut.", detail: "A cut is one willow. Three willow tie into a bundle at the lease rack. It then starts the 4 dawns again.", actions: [{ label: "Cut the willow", order: { kind: "willow", i: hit.i, x: hit.x, y: hit.y } }] };
-      return { title: "Willow stool", status: w.days + " of 4.", detail: "Not ready. It regrows in 4 dawns from spring through fall.", actions: [] };
+      var withy = bestTier("willow") >= 2 ? " A willow building of tier 2 keeps a second withy." : "";
+      var faster = bestTier("willow") >= 1 ? " A willow building adds growth at dawn." : "";
+      if (w.days >= 4) return { title: "Willow stool", status: "Ready to cut.", detail: "A cut is one willow. Three willow tie into a bundle at the lease rack. It then starts the 4 dawns again." + withy, actions: [{ label: "Cut the willow", order: { kind: "willow", i: hit.i, x: hit.x, y: hit.y } }] };
+      return { title: "Willow stool", status: w.days + " of 4.", detail: "Not ready. It regrows in 4 dawns from spring through fall." + faster, actions: [] };
     }
     if (hit.kind === "rack") {
       var held = state.items.willow || 0;
@@ -1576,16 +1780,18 @@
       var tier = plot.tier || 1;
       var current = state.level === plot.mi + 1;
       var siteActions = [{ label: "Walk over", order: { kind: "look", i: hit.i, x: plot.x, y: plot.y } }];
+      if (USE[plot.mi] === "smoke") siteActions.push({ label: "Smoke an egg · " + coins(price("egg") + tier), smoke: true });
+      if (USE[plot.mi] === "kiln") siteActions.push({ label: "Fire a beet · " + coins(price("beet") + tier), kiln: true });
       if (tier < 3) siteActions.push({ label: "Upgrade to tier " + (tier + 1) + " · " + coins(upgradeCost(plot)), upgrade: true, i: hit.i });
       siteActions.push({ label: "Move it", move: true, i: hit.i });
       return {
         title: site.name,
         status: "Tier " + tier + " of 3." + (current ? " This job." : ""),
-        detail: site.task + " " + site.detail + " " + placeHint(site) + (current ? " " + progressText(site) : ""),
+        detail: benefitText(plot.mi, tier) + " " + site.task + " " + site.detail,
         actions: siteActions
       };
     }
-    if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Beds, the swan, the plodder, and the mill resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
+    if (hit.kind === "door") return { title: "Lodge", status: clockText() + " · " + whenText() + ".", detail: "Sleep ends the day now. Crops, the animals, the mill, and the buildings you placed resolve at dawn.", actions: [{ label: "Sleep until dawn", order: { kind: "door", i: 0, x: hit.x, y: hit.y } }] };
     return { title: "Thing", status: "", detail: "", actions: actions };
   }
   function openInspect(hit) {
@@ -1609,6 +1815,20 @@
             var upErr = upgradePlot(act.i);
             if (upErr) toast(upErr);
             else toast("Tier " + state.plots[act.i].tier);
+            closeSheet();
+            hud();
+            return;
+          }
+          if (act.smoke) {
+            var smokeErr = smokeEgg();
+            if (smokeErr) toast(smokeErr);
+            closeSheet();
+            hud();
+            return;
+          }
+          if (act.kiln) {
+            var kilnErr = fireBeet();
+            if (kilnErr) toast(kilnErr);
             closeSheet();
             hud();
             return;
@@ -1732,16 +1952,10 @@
         btn.textContent = "SELL";
         btn.disabled = have <= 0;
         btn.addEventListener("click", function () {
-          var n = state.items[key];
-          if (n > 0) {
-            state.stones += n * price(key);
-            state.items[key] = 0;
-            bump("sold");
-            toast("Sold for " + coins(n * price(key)));
-          }
+          var pay = sellStack(key);
+          if (pay > 0) toast("Sold for " + coins(pay));
           openShop();
           hud();
-          save();
         });
         row.appendChild(btn);
         body.appendChild(row);
@@ -1842,6 +2056,10 @@
       var detail = document.createElement("p");
       detail.textContent = m.detail;
       body.appendChild(detail);
+      var benefit = document.createElement("p");
+      var placedNow = plotOf(state.level - 1);
+      benefit.textContent = "On the acre: " + benefitText(state.level - 1, placedNow ? (placedNow.tier || 1) : 1);
+      body.appendChild(benefit);
       if (m.goal === "raise" && !state.stats["r" + state.level] && !plotOf(state.level - 1)) {
         var btn = document.createElement("button");
         btn.className = "play";
@@ -1855,7 +2073,7 @@
   function openBuild() {
     openSheet("Build the acre", function (body) {
       var note = document.createElement("p");
-      note.textContent = "Buy a piece, then tap the ground. Beds snap edge to edge. Buildings keep a walking path between them. Tap one you already set down to upgrade it or move it.";
+      note.textContent = "Buy a piece, then tap the ground. Beds snap edge to edge. Buildings keep a walking path between them. A building works the acre at dawn, and a higher tier does more of that work. Tap one you already set down to upgrade it or move it.";
       body.appendChild(note);
       [["tilled", "Tilled bed"], ["wild", "Wild bed"], ["stony", "Stony bed"]].forEach(function (pair) {
         var btn = document.createElement("button");
@@ -1872,7 +2090,7 @@
         var btn = document.createElement("button");
         btn.className = "play";
         btn.type = "button";
-        btn.textContent = m.name + " · " + coins(buildCost(m));
+        btn.textContent = m.name + " · " + coins(buildCost(m)) + " — " + benefitText(i, 1);
         btn.addEventListener("click", function () { beginPlacePlot(i); });
         body.appendChild(btn);
       });
@@ -1960,7 +2178,7 @@
       var ahead = level < i + 1;
       var placed = plotOf(i);
       var tag = ahead ? "Ahead" : (placed ? ("Tier " + (placed.tier || 1)) : "Blueprint");
-      var copy = ahead ? "Opens when this job starts." : (placed ? "On the acre, where you set it." : "Unlocked. Place it from BUILD.");
+      var copy = ahead ? "Opens when this job starts. " + benefitText(i, 1) : (placed ? benefitText(i, placed.tier || 1) : "Place it from BUILD. " + benefitText(i, 1));
       museumPlate(grid, "assets/sites/" + m.shape + ".png", m.name, tag, copy);
     });
     body.appendChild(grid);
@@ -1978,7 +2196,7 @@
     p.textContent = "The bank Burrow Hop called home is a farm now. Nightfall is still downriver. Fan game by a holder.";
     body.appendChild(p);
     var q = document.createElement("p");
-    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job unlocks a building you buy and place. Beds are placed too, and they pack into rows. The fiftieth job is the hall, set down where you want it. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 $bober and return at dawn.";
+    q.textContent = "The game is one acre for a year. Fifty jobs open in order. Finish one and the next one starts. Each job unlocks a building you buy and place. A placed building works the acre at dawn. Water, seed, fodder, soil, and the mill can keep going, and a higher tier does more of that same work. Beds are placed too, and they pack into rows. The fiftieth job is the hall, set down where you want it. Each season Moss posts one order. Reedbean takes 3 watered dawns in spring. Bank cress takes 2. Pond beet takes 5 in summer. Lanternpod takes 4 in fall. Willow on the lease regrows in 4 dawns from spring through fall, then rests. A wrong season withers the bed. The pond bucket holds 8. Creek shells are worth 2 $bober and return at dawn.";
     body.appendChild(q);
     var r = document.createElement("p");
     r.textContent = "Reedswans lay only if the trough had fodder. Plodders leave cream only if fodder remains after the swan. The mill turns one reedbean sack into meal and chaff while it is stocked. Moss posts a price each season.";
@@ -2789,7 +3007,12 @@
     bedPitch: bedPitch,
     placeBed: placeBedAt,
     placePlot: placePlotAt,
-    upgrade: upgradePlot
+    upgrade: upgradePlot,
+    harvest: harvest,
+    sell: sellStack,
+    smoke: smokeEgg,
+    fire: fireBeet,
+    benefit: benefitText
   };
 })();
   </script>
